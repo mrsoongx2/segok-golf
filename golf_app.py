@@ -34,7 +34,7 @@ def load_data():
         except Exception:
             pass
     
-    # 초기 기록이 없으므로 핸디캡/참석률/참석횟수 모두 0으로 시작
+    # 초기 기록 0 설정 (상태: approved)
     member_db = {}
     for name in DEFAULT_MEMBERS:
         member_db[name] = {
@@ -43,11 +43,12 @@ def load_data():
             "attendance": 0,
             "rounds_played": 0,
             "score_history": [],
+            "status": "approved", # 기존 기본 회원은 승인 상태
             "is_admin": True if name in ADMIN_MEMBERS else False
         }
     pair_history = {m1: {m2: 0 for m2 in DEFAULT_MEMBERS} for m1 in DEFAULT_MEMBERS}
-    feed_posts = [] # 깨끗한 피드
-    rounds_data = [] # 라운드별 시상 및 성적 데이터
+    feed_posts = [] # 깨끗한 피드 (하트 0개)
+    rounds_data = [] 
     match_logs = []
     
     return {
@@ -112,12 +113,16 @@ if not st.session_state.logged_in_user:
         
         with tab1:
             st.caption("초기 비밀번호는 '1234' 입니다.")
-            login_name = st.selectbox("회원 이름 선택", ["선택하세요"] + list(member_db.keys()))
+            approved_members = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
+            login_name = st.selectbox("회원 이름 선택", ["선택하세요"] + approved_members)
             login_pw = st.text_input("비밀번호 입력", type="password")
             
             if st.button("로그인", type="primary", use_container_width=True):
                 if login_name in member_db:
-                    if login_pw == member_db[login_name].get("password", "1234"):
+                    user = member_db[login_name]
+                    if user.get("status") != "approved":
+                        st.error("⌛ 아직 운영진 가입 승인 대기 중입니다. 승인 후 로그인할 수 있습니다.")
+                    elif login_pw == user.get("password", "1234"):
                         st.session_state.logged_in_user = login_name
                         st.success(f"{login_name}님 환영합니다!")
                         st.rerun()
@@ -127,11 +132,11 @@ if not st.session_state.logged_in_user:
                     st.warning("회원 이름을 선택해 주세요.")
                     
         with tab2:
-            st.caption("성함과 원하시는 비밀번호를 입력하시면 즉시 가입됩니다.")
+            st.caption("가입 신청 후 운영진 승인을 거쳐 접속할 수 있습니다.")
             new_name = st.text_input("신입 회원 이름")
             new_pw = st.text_input("비밀번호 설정", type="password")
             
-            if st.button("신규 회원 가입하기", use_container_width=True):
+            if st.button("신규 회원 가입 신청하기", use_container_width=True):
                 if new_name and new_pw:
                     if new_name in member_db:
                         st.error("이미 등록되어 있는 이름입니다.")
@@ -142,6 +147,7 @@ if not st.session_state.logged_in_user:
                             "attendance": 0,
                             "rounds_played": 0,
                             "score_history": [],
+                            "status": "pending", # 가입 승인 대기 상태
                             "is_admin": True if new_name in ADMIN_MEMBERS else False
                         }
                         pair_history[new_name] = {m: 0 for m in member_db.keys()}
@@ -149,7 +155,7 @@ if not st.session_state.logged_in_user:
                             pair_history[m][new_name] = 0
                             
                         save_data(db)
-                        st.success(f"🎉 {new_name}님 가입을 축하합니다! 바로 로그인해 주세요.")
+                        st.success(f"🎉 {new_name}님 가입 신청 완료! 운영진 승인 후 로그인하실 수 있습니다.")
                 else:
                     st.warning("이름과 비밀번호를 모두 입력해 주세요.")
     st.stop()
@@ -165,7 +171,7 @@ with st.sidebar:
     <div style="background-color:#FFFFFF; padding:15px; border-radius:12px; border:1px solid #D6CBBF; margin-top:10px; margin-bottom:15px;">
         <h4 style="margin:0; color:#1B3B2B;">{current_user} 님 {admin_badge}</h4>
         <hr style="margin:10px 0; border-top:1px solid #EAE3D9;">
-        <span class="badge-hc">핸디캡 {user_info['handicap']}타</span>
+        <span class="badge-hc">핸디캡 {user_info['handicap']}</span>
         <span class="badge-user">참석률 {user_info['attendance']}%</span>
     </div>
     """, unsafe_allow_html=True)
@@ -175,12 +181,16 @@ with st.sidebar:
         st.rerun()
         
     st.divider()
+    
+    pending_count = len([k for k, v in member_db.items() if v.get("status") == "pending"])
+    menu_title_member = f"📊 회원 명부 & 승인 ({pending_count})" if pending_count > 0 and user_info['is_admin'] else "📊 회원 명부 & 승인"
+    
     menu = st.radio("📱 메뉴 이동", [
         "📸 피드 (Segok Feed)", 
         "🎲 조편성기 (운영진)", 
         "🏆 라운드별 성적 & 시상", 
         "📜 지난 조편성 이력 관리",
-        "📊 회원 명부 & 자동 핸디"
+        menu_title_member
     ])
 
 # 1. 📸 피드
@@ -196,7 +206,7 @@ if menu == "📸 피드 (Segok Feed)":
                     "author": current_user,
                     "date": datetime.now().strftime("%Y-%m-%d %H:%M"),
                     "content": post_text,
-                    "likes": 0,
+                    "likes": 0, # 초기 하트 0개
                     "comments": []
                 })
                 save_data(db)
@@ -231,13 +241,13 @@ if menu == "📸 피드 (Segok Feed)":
                     save_data(db)
                     st.rerun()
 
-# 2. 🎲 조편성기
+# 2. 🎲 조편성기 (자동 + 수동 변경 기능)
 elif menu == "🎲 조편성기 (운영진)":
     st.subheader("🎲 중복 방지 & 실력 균등 조편성기")
     if not user_info['is_admin']:
         st.error("⛔ 조편성 기능은 운영진 전용 메뉴입니다.")
     else:
-        st.success("👑 **운영자 권한 확인 완료** | 모임 선택 및 조편성을 진행해 주세요.")
+        st.success("👑 **운영자 권한 확인 완료** | 자동 조편성 후 수동으로 조 위치를 변경할 수 있습니다.")
         
         c_mode1, c_mode2 = st.columns(2)
         with c_mode1:
@@ -245,7 +255,8 @@ elif menu == "🎲 조편성기 (운영진)":
         with c_mode2:
             balance_rule = st.radio("조편성 방식", ["과거 동반 중복 방지 (기본)", "핸디캡 균등 배정 (고수+초보 믹스)"])
         
-        selected_attendees = st.multiselect("오늘 참석자 선택", list(member_db.keys()), default=list(member_db.keys())[:16])
+        approved_names = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
+        selected_attendees = st.multiselect("오늘 참석자 선택", approved_names, default=approved_names[:16])
         
         def generate_teams_smart(attendees, pair_hist, mem_db, rule="중복방지", team_sz=4, iterations=300):
             if not attendees:
@@ -270,26 +281,47 @@ elif menu == "🎲 조편성기 (운영진)":
                     best_teams = teams
             return best_teams
 
-        if st.button("🎲 최적 조편성 실행하기", type="primary", use_container_width=True):
+        if st.button("🎲 자동 조편성 실행하기", type="primary", use_container_width=True):
             teams = generate_teams_smart(selected_attendees, pair_history, member_db, balance_rule)
             st.session_state.generated_teams = teams
             st.session_state.current_event_type = event_type
-            st.success("🎉 최적의 조편성이 완료되었습니다!")
-            
+            st.success("🎉 자동 조편성이 완료되었습니다! 아래에서 필요시 수동으로 조를 이동하세요.")
+
         if 'generated_teams' in st.session_state:
             teams = st.session_state.generated_teams
             e_type = st.session_state.get('current_event_type', event_type)
-            cols = st.columns(min(len(teams), 4))
             
+            # [운영진 조 수동 이동 변경 기능]
+            with st.expander("✏️ [운영진 전용] 조 구성원 수동으로 변경하기"):
+                st.info("특정 회원을 선택하여 원하는 조로 바꿀 수 있습니다.")
+                col_m1, col_m2 = st.columns(2)
+                with col_m1:
+                    move_mem = st.selectbox("이동시킬 회원 선택", selected_attendees)
+                with col_m2:
+                    target_team_num = st.selectbox("이동할 조 선택", [f"{i+1}조" for i in range(len(teams))])
+                    
+                if st.button("🔄 해당 회원을 선택한 조로 이동"):
+                    # 기존 조에서 제거
+                    for t in teams:
+                        if move_mem in t:
+                            t.remove(move_mem)
+                    # 새 조에 추가
+                    target_idx = int(target_team_num.replace("조", "")) - 1
+                    teams[target_idx].append(move_mem)
+                    st.session_state.generated_teams = teams
+                    st.success(f"{move_mem} 회원이 {target_team_num}로 이동되었습니다.")
+                    st.rerun()
+
+            cols = st.columns(min(len(teams), 4))
             notice_text = f"📢 Segok Golf Club [{e_type}] 조편성 안내\n"
             notice_text += f"🗓️ 참석 인원: 총 {len(selected_attendees)}명 ({len(teams)}개 조)\n"
             notice_text += "-------------------------\n"
             
             for idx, team in enumerate(teams):
                 with cols[idx % 4]:
-                    team_html = f"<div class='team-box'><h3>⛳ {idx+1}조</h3>" + "<br>".join([f"• <b>{m}</b> ({member_db[m]['handicap']}타)" for m in team]) + "</div>"
+                    team_html = f"<div class='team-box'><h3>⛳ {idx+1}조</h3>" + "<br>".join([f"• <b>{m}</b> ({member_db[m]['handicap']})" for m in team]) + "</div>"
                     st.markdown(team_html, unsafe_allow_html=True)
-                team_str = ", ".join([f"{m}({member_db[m]['handicap']}타)" for m in team])
+                team_str = ", ".join([f"{m}({member_db[m]['handicap']})" for m in team])
                 notice_text += f"🔹 {idx+1}조: {team_str}\n"
             
             notice_text += "-------------------------\n"
@@ -298,7 +330,7 @@ elif menu == "🎲 조편성기 (운영진)":
             st.subheader("📱 카카오톡 공지문 복사")
             st.code(notice_text, language="text")
             
-            if st.button("💾 이 조편성을 이력에 반영 및 저장", use_container_width=True):
+            if st.button("💾 이 조편성을 이력에 반영 및 최종 저장", use_container_width=True):
                 for team in teams:
                     for i in range(len(team)):
                         for j in range(i + 1, len(team)):
@@ -314,7 +346,7 @@ elif menu == "🎲 조편성기 (운영진)":
                     "teams": teams
                 })
                 save_data(db)
-                st.success("🎉 조편성 기록이 성공적으로 저장되었습니다!")
+                st.success("🎉 최종 조편성 기록이 성공적으로 저장되었습니다!")
 
 # 3. 🏆 라운드별 성적 & 시상
 elif menu == "🏆 라운드별 성적 & 시상":
@@ -326,7 +358,8 @@ elif menu == "🏆 라운드별 성적 & 시상":
             r_date = st.date_input("라운드 날짜").strftime("%Y-%m-%d")
             r_type = st.selectbox("구분", ["필드 월례회", "스크린 월례회"])
             
-            attendees_round = st.multiselect("참석 회원 선택", list(member_db.keys()))
+            approved_names = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
+            attendees_round = st.multiselect("참석 회원 선택", approved_names)
             
             st.markdown("---")
             st.markdown("##### 📝 회원별 성적 및 롱기/니어 기록 입력")
@@ -335,7 +368,7 @@ elif menu == "🏆 라운드별 성적 & 시상":
             for m in attendees_round:
                 c1, c2, c3 = st.columns([2, 2, 2])
                 with c1:
-                    score = st.number_input(f"[{m}] 타수", min_value=50, max_value=140, value=85, key=f"sc_{m}")
+                    score = st.number_input(f"[{m}] 스코어", min_value=50, max_value=140, value=85, key=f"sc_{m}")
                 with c2:
                     long_dist = st.number_input(f"[{m}] 비거리(m)", min_value=0, max_value=350, value=0, key=f"ld_{m}")
                 with c3:
@@ -359,7 +392,7 @@ elif menu == "🏆 라운드별 성적 & 시상":
                         "type": r_type,
                         "scores": player_scores,
                         "awards": {
-                            "medalist": f"{medalist[0]} ({medalist[1]['score']}타)",
+                            "medalist": f"{medalist[0]} ({medalist[1]['score']})",
                             "longist": f"{longist[0]} ({longist[1]['long']}m)" if longist else "기록 없음",
                             "nearest": f"{nearest[0]} ({nearest[1]['near']}m)" if nearest else "기록 없음"
                         }
@@ -367,7 +400,6 @@ elif menu == "🏆 라운드별 성적 & 시상":
                     rounds_data.insert(0, round_entry)
                     db["total_events"] = db.get("total_events", 0) + 1
                     
-                    # 핸디캡 및 참석률 자동 계산
                     for name, data in member_db.items():
                         if name in attendees_round:
                             sc = player_scores[name]["score"]
@@ -404,7 +436,7 @@ elif menu == "🏆 라운드별 성적 & 시상":
                 for p_name, p_info in r['scores'].items():
                     score_table.append({
                         "회원 이름": p_name,
-                        "스코어(타수)": f"{p_info['score']}타",
+                        "스코어": f"{p_info['score']}",
                         "드라이버 비거리": f"{p_info['long']}m" if p_info['long'] > 0 else "-",
                         "니어 거리에 근접": f"{p_info['near']}m" if p_info['near'] > 0 else "-"
                     })
@@ -432,25 +464,44 @@ elif menu == "📜 지난 조편성 이력 관리":
                 cols = st.columns(min(len(log['teams']), 4))
                 for t_idx, team in enumerate(log['teams']):
                     with cols[t_idx % 4]:
-                        team_names = ", ".join([f"{m}({member_db.get(m, {}).get('handicap', '0')}타)" for m in team])
+                        team_names = ", ".join([f"{m}({member_db.get(m, {}).get('handicap', '0')})" for m in team])
                         st.markdown(f"**⛳ {t_idx+1}조:** {team_names}")
                 st.divider()
 
-# 5. 📊 회원 명부 (자동 연동)
-elif menu == "📊 회원 명부 & 자동 핸디":
+# 5. 📊 회원 명부 & 승인 관리
+elif menu.startswith("📊 회원 명부"):
     st.subheader("📊 Segok Golf Club 회원 명부")
-    st.caption("💡 핸디캡과 참석률은 라운딩 성적 입력 시 자동으로 실시간 계산 및 갱신됩니다.")
     
-    # 구분/직책 열 삭제 및 순수 명부 출력
+    # 승인된 회원만 표에 표시
     df_data = [{
         "이름": k, 
-        "자동 산출 핸디캡": f"{v['handicap']}타", 
+        "자동 산출 핸디캡": v['handicap'], 
         "연간 참석률": f"{v['attendance']}%", 
         "총 라운드 참석": f"{v.get('rounds_played', 0)}회"
-    } for k, v in member_db.items()]
+    } for k, v in member_db.items() if v.get("status", "approved") == "approved"]
     
     st.dataframe(pd.DataFrame(df_data), use_container_width=True)
     
+    # [운영진 전용 신입회원 승인 센터]
+    if user_info['is_admin']:
+        st.divider()
+        st.subheader("👑 [운영진 전용] 신입회원 가입 승인 센터")
+        pending_members = [k for k, v in member_db.items() if v.get("status") == "pending"]
+        
+        if not pending_members:
+            st.info("현재 가입 승인 대기 중인 신입 회원이 없습니다.")
+        else:
+            for p_name in pending_members:
+                col_p1, col_p2 = st.columns([3, 1])
+                with col_p1:
+                    st.write(f"👤 **신입 신청 회원:** `{p_name}`")
+                with col_p2:
+                    if st.button(f"✅ {p_name} 가입 승인", key=f"app_{p_name}"):
+                        member_db[p_name]["status"] = "approved"
+                        save_data(db)
+                        st.success(f"🎉 {p_name} 회원의 가입 승인이 완료되었습니다!")
+                        st.rerun()
+                        
     st.divider()
     st.subheader("✏️ 내 비밀번호 설정")
     new_pw_val = st.text_input("새 비밀번호 변경", value=user_info.get('password', '1234'), type="password")
