@@ -129,30 +129,38 @@ rounds_data = db.setdefault("rounds_data", [])
 match_logs = db.setdefault("match_logs", [])
 notices = db.setdefault("notices", [])
 
+# --- 인스타그램 피드 감성 디자인 및 UI CSS ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,600&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
     
-    .stApp { background-color: #F8F5F0 !important; font-family: 'Noto Sans KR', sans-serif; color: #1B3B2B; }
-    .brand-header { background-color: #FFFFFF; text-align: center; padding: 25px 10px; border-bottom: 2px solid #E6DEC9; margin-bottom: 25px; box-shadow: 0 4px 20px rgba(27, 59, 43, 0.03); }
-    .brand-title { font-family: 'Playfair Display', serif; color: #1B3B2B; font-size: 2.5rem; font-weight: 700; margin: 5px 0 0 0; }
-    .brand-subtitle { color: #A88B58; font-size: 0.85rem; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; }
-    .css-card { background-color: #FFFFFF; border-radius: 16px; padding: 22px; margin-bottom: 18px; box-shadow: 0 6px 20px rgba(27, 59, 43, 0.04); border: 1px solid #EBE4D8; }
-    .team-box { background-color: #1B3B2B; color: #F8F5F0; padding: 20px; border-radius: 14px; margin-bottom: 14px; border: 1px solid #C5A059; box-shadow: 0 6px 15px rgba(0,0,0,0.08); }
-    .team-box h3 { color: #E5C585 !important; font-family: 'Playfair Display', serif; margin-bottom: 12px; border-bottom: 1px solid #2C523D; padding-bottom: 8px; }
-    .badge-admin { background-color: #1B3B2B; color: #F8F5F0; padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; border: 1px solid #C5A059; }
-    .badge-user { background-color: #EFE9E0; color: #1B3B2B; padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
-    .badge-hc { background-color: #F4EEDC; color: #9A7B45; padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; border: 1px solid #D6CBBF; }
-    .profile-avatar { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2px solid #C5A059; margin-right: 12px; }
-    .stButton>button { background-color: #1B3B2B !important; color: #F8F5F0 !important; border-radius: 10px !important; border: 1px solid #C5A059 !important; font-weight: 600 !important; padding: 0.5rem 1rem !important; }
-    .stButton>button:hover { background-color: #27523C !important; color: #FFFFFF !important; }
-    section[data-testid="stSidebar"] { background-color: #F1ECE4 !important; border-right: 1px solid #E2D9CC; }
+    .stApp { background-color: #FAFAFA !important; font-family: 'Noto Sans KR', sans-serif; color: #262626; }
+    .brand-header { background-color: #FFFFFF; text-align: center; padding: 22px 10px; border-bottom: 1px solid #DBDBDB; margin-bottom: 25px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+    .brand-title { font-family: 'Playfair Display', serif; color: #1B3B2B; font-size: 2.3rem; font-weight: 700; margin: 0; }
+    .brand-subtitle { color: #8E8E8E; font-size: 0.8rem; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; margin-top: 4px; }
+    
+    /* 인스타 피드 카드 스타일 */
+    .insta-card { background-color: #FFFFFF; border-radius: 12px; border: 1px solid #DBDBDB; max-width: 650px; margin: 0 auto 24px auto; box-shadow: 0 2px 8px rgba(0,0,0,0.03); overflow: hidden; }
+    .insta-header { display: flex; align-items: center; padding: 14px 16px; border-bottom: 1px solid #EFEFEF; background-color: #FFFFFF; }
+    .insta-body { padding: 16px; font-size: 0.95rem; color: #262626; line-height: 1.5; }
+    .insta-footer { padding: 12px 16px; border-top: 1px solid #EFEFEF; background-color: #FAFAFA; display: flex; align-items: center; gap: 12px; }
+    
+    .team-box { background-color: #1B3B2B; color: #FFFFFF; padding: 18px; border-radius: 12px; margin-bottom: 14px; border: 1px solid #C5A059; }
+    .team-box h3 { color: #E5C585 !important; font-family: 'Playfair Display', serif; margin-bottom: 10px; border-bottom: 1px solid #2C523D; padding-bottom: 6px; }
+    .badge-admin { background-color: #1B3B2B; color: #FFFFFF; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; border: 1px solid #C5A059; }
+    .badge-user { background-color: #EFEFEF; color: #262626; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+    .badge-hc { background-color: #FDF8F0; color: #B38F4E; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; border: 1px solid #E5DEC3; }
+    .profile-avatar { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 1.5px solid #C5A059; margin-right: 12px; }
+    
+    .stButton>button { background-color: #1B3B2B !important; color: #FFFFFF !important; border-radius: 8px !important; border: none !important; font-weight: 600 !important; }
+    .stButton>button:hover { background-color: #27523C !important; }
+    section[data-testid="stSidebar"] { background-color: #F8F8F8 !important; border-right: 1px solid #DBDBDB; }
     </style>
 """, unsafe_allow_html=True)
 
 st.markdown("""
 <div class="brand-header">
-    <div style="font-size: 2.2rem;">⛳</div>
+    <div style="font-size: 2rem;">⛳</div>
     <div class="brand-title">Segok Golf Club</div>
     <div class="brand-subtitle">PREMIUM GOLF SOCIETY</div>
 </div>
@@ -230,9 +238,9 @@ with st.sidebar:
     display_nickname = user_info.get('nickname', current_user)
     
     st.markdown(f"""
-    <div style="background-color:#FFFFFF; padding:16px; border-radius:14px; border:1px solid #E2D9CC; margin-top:10px; margin-bottom:15px; box-shadow: 0 4px 10px rgba(0,0,0,0.02);">
+    <div style="background-color:#FFFFFF; padding:14px; border-radius:12px; border:1px solid #DBDBDB; margin-top:8px; margin-bottom:15px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
         <h4 style="margin:0; color:#1B3B2B; font-size:1.05rem;">{display_nickname} 님 {admin_badge}</h4>
-        <hr style="margin:10px 0; border-top:1px solid #EFE9E0;">
+        <hr style="margin:8px 0; border-top:1px solid #EFEFEF;">
         <span class="badge-hc">핸디캡 {user_info.get('handicap', 0)}</span>
         <span class="badge-user">참석률 {user_info.get('attendance', 0)}%</span>
     </div>
@@ -244,7 +252,6 @@ with st.sidebar:
         
     st.divider()
     
-    # 메뉴 구성 (운영진 / 일반 회원 권한 분리 및 세련된 명칭 적용)
     menu_options = [
         "💬 소통 광장 (Feed)",
         "🏆 경기 결과 및 랭킹",
@@ -254,11 +261,7 @@ with st.sidebar:
     ]
     
     if is_admin:
-        admin_menus = [
-            "⛳ 티타임 조편성",
-            "👥 클럽 회원 명부"
-        ]
-        # 원하는 위치에 운영진 메뉴 삽입
+        admin_menus = ["⛳ 티타임 조편성"]
         menu_options.insert(1, admin_menus[0])
         pending_count = len([k for k, v in member_db.items() if v.get("status") == "pending"])
         m_label = f"👥 클럽 회원 명부 ({pending_count})" if pending_count > 0 else "👥 클럽 회원 명부"
@@ -266,9 +269,9 @@ with st.sidebar:
         
     menu = st.radio("📱 클럽 메뉴", menu_options)
 
-# 1. 💬 소통 광장 (인스타 피드 스타일: 상단 미디어 + 하단 코멘트 + 동영상 지원)
+# 1. 💬 소통 광장 (인스타그램 스타일 감성 피드)
 if menu == "💬 소통 광장 (Feed)":
-    st.subheader("💬 클럽 소통 광장")
+    st.subheader("💬 소통 광장")
     with st.expander("✍️ 새 라운딩 소식 및 미디어 공유하기", expanded=True):
         post_text = st.text_area("내용 작성", placeholder="오늘의 멋진 라운딩 추억을 사진이나 영상과 함께 공유해 보세요...")
         uploaded_file = st.file_uploader("사진 또는 동영상 첨부 (선택)", type=["jpg", "png", "jpeg", "mp4", "mov", "avi"])
@@ -313,33 +316,34 @@ if menu == "💬 소통 광장 (Feed)":
             if p_img:
                 avatar_html = f'<img src="data:image/png;base64,{p_img}" class="profile-avatar">'
             else:
-                avatar_html = '<span style="font-size:1.6rem; margin-right:12px;">👤</span>'
+                avatar_html = '<span style="font-size:1.5rem; margin-right:10px;">👤</span>'
                 
-            # 인스타 스타일: 상단 프로필 -> 미디어 -> 내용 코멘트 순서
+            # 인스타 스타일 카드 프레임
             st.markdown(f"""
-            <div class="css-card">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-                    <div style="display:flex; align-items:center;">
-                        {avatar_html}
-                        <strong style="color:#1B3B2B; font-size:1.1rem;">{p_nickname}</strong>
+            <div class="insta-card">
+                <div class="insta-header">
+                    {avatar_html}
+                    <div>
+                        <strong style="color:#262626; font-size:0.95rem;">{p_nickname}</strong><br>
+                        <span style="color:#8E8E8E; font-size:0.75rem;">{post['date']}</span>
                     </div>
-                    <span style="color:#A88B58; font-size:0.8rem;">{post['date']}</span>
                 </div>
             """, unsafe_allow_html=True)
             
-            # 미디어 출력 (인스타 피드 본문 상단)
+            # 미디어 출력 (상단)
             m_path = post.get("media_path")
             if m_path and os.path.exists(m_path):
                 if post.get("media_type") == "video":
                     st.video(m_path)
                 else:
                     st.image(m_path, use_column_width=True)
-                st.markdown("<div style='margin-top: 12px;'></div>", unsafe_allow_html=True)
 
-            # 코멘트 텍스트 (인스타 피드 본문 하단)
+            # 코멘트 텍스트 (하단)
             if post.get('content'):
                 st.markdown(f"""
-                <p style="font-size:1.05rem; margin-bottom:14px; color:#2C4A3B; line-height:1.5;">{post['content']}</p>
+                <div class="insta-body">
+                    <p style="margin:0; color:#262626; word-break:break-all;">{post['content']}</p>
+                </div>
                 """, unsafe_allow_html=True)
                 
             st.markdown("</div>", unsafe_allow_html=True)
@@ -500,14 +504,13 @@ elif menu == "⛳ 티타임 조편성":
                 save_data(db)
                 st.success("🎉 조편성이 최종 확정되었으며, [🏆 경기 결과 및 랭킹] 메뉴에 결과 입력 카드가 자동으로 생성되었습니다!")
 
-# 3. 🏆 경기 결과 및 랭킹 (라운드별 선택 수정/삭제 + 누적 통계)
+# 3. 🏆 경기 결과 및 랭킹 (에러 수정된 안전한 데이터프레임 출력 반영)
 elif menu == "🏆 경기 결과 및 랭킹":
     st.subheader("🏆 경기 결과 및 클럽 랭킹 통계")
     
     if not rounds_data:
         st.info("등록된 경기 결과가 없습니다. 운영진이 조편성을 확정하면 입력 카드가 생성됩니다.")
     else:
-        # 라운드별 선택 관리 UI 제공
         round_titles = [f"{r['date']} | {r['title']} ({'완료' if r.get('completed') else '대기'})" for r in rounds_data]
         selected_round_label = st.selectbox("🔍 조회 및 관리할 라운드 선택", round_titles)
         selected_r_idx = round_titles.index(selected_round_label)
@@ -537,7 +540,8 @@ elif menu == "🏆 경기 결과 및 랭킹":
                     "드라이버 비거리": f"{p_info['long']}m" if p_info['long'] > 0 else "-",
                     "니어 근접거리": f"{p_info['near']}m" if p_info['near'] > 0 else "-"
                 })
-            st.dataframe(pd.DataFrame(score_table), use_column_width=True)
+            # 에러 방지를 위한 파라미터 호환 테이블 렌더링
+            st.table(pd.DataFrame(score_table))
             
         if is_admin:
             st.markdown("---")
@@ -616,7 +620,7 @@ elif menu == "🏆 경기 결과 및 랭킹":
                     st.success("해당 라운드가 삭제되었습니다.")
                     st.rerun()
 
-    # --- 누적 통계 & TOP 10 랭킹 (요청하신 최저타수, 롱기/니어 횟수+거리 표기) ---
+    # --- 누적 통계 & 랭킹 ---
     st.divider()
     st.subheader("📊 클럽 누적 통계 & TOP 10 랭킹")
     st.caption("💡 진행된 모든 라운드 공식 기록을 바탕으로 산출된 종합 통계입니다.")
@@ -670,7 +674,7 @@ elif menu == "🏆 경기 결과 및 랭킹":
                     med_list.append({"회원": nick, "우승 횟수": f"{val[0]}회", "최소 타수": f"{val[1]}타"})
                 df_med = pd.DataFrame(med_list).sort_values(by="우승 횟수", ascending=False).head(10).reset_index(drop=True)
                 df_med.index += 1
-                st.dataframe(df_med, use_container_width=True)
+                st.table(df_med)
             else:
                 st.info("기록 없음")
 
@@ -682,7 +686,7 @@ elif menu == "🏆 경기 결과 및 랭킹":
                     long_list.append({"회원": nick, "달성 횟수": f"{val[0]}회", "최고 비거리": f"{val[1]}m"})
                 df_long = pd.DataFrame(long_list).sort_values(by="달성 횟수", ascending=False).head(10).reset_index(drop=True)
                 df_long.index += 1
-                st.dataframe(df_long, use_container_width=True)
+                st.table(df_long)
             else:
                 st.info("기록 없음")
 
@@ -695,7 +699,7 @@ elif menu == "🏆 경기 결과 및 랭킹":
                     near_list.append({"회원": nick, "달성 횟수": f"{val[0]}회", "최단 거리": f"{val[1]}m"})
                 df_near = pd.DataFrame(near_list).sort_values(by="달성 횟수", ascending=False).head(10).reset_index(drop=True)
                 df_near.index += 1
-                st.dataframe(df_near, use_container_width=True)
+                st.table(df_near)
             else:
                 st.info("기록 없음")
 
@@ -704,11 +708,11 @@ elif menu == "🏆 경기 결과 및 랭킹":
                 att_list = [{"회원": member_db.get(k, {}).get("nickname", k), "참석 횟수": f"{v}회"} for k, v in attendance_counts.items()]
                 df_att = pd.DataFrame(att_list).sort_values(by="참석 횟수", ascending=False).head(10).reset_index(drop=True)
                 df_att.index += 1
-                st.dataframe(df_att, use_container_width=True)
+                st.table(df_att)
             else:
                 st.info("기록 없음")
 
-# 4. 📁 역대 조편성 아카이브 (선택형 삭제 기능)
+# 4. 📁 역대 조편성 아카이브
 elif menu == "📁 역대 조편성 아카이브":
     st.subheader("📁 역대 조편성 아카이브")
     if not match_logs:
@@ -792,7 +796,7 @@ elif menu.startswith("👥 클럽 회원 명부"):
         "총 라운드 참석": f"{v.get('rounds_played', 0)}회"
     } for k, v in member_db.items() if v.get("status", "approved") == "approved"]
     
-    st.dataframe(pd.DataFrame(df_data), use_container_width=True)
+    st.table(pd.DataFrame(df_data))
     
     if is_admin:
         st.divider()
