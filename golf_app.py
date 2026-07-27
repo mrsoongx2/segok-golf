@@ -80,6 +80,45 @@ def save_data(data):
     except Exception:
         pass
 
+def recalculate_all_stats(db_obj):
+    """모든 라운드 데이터를 바탕으로 회원별 스코어 이력, 라운드 참석 횟수, 핸디캡, 참석률 전체 재계산"""
+    r_list = db_obj.get("rounds_data", [])
+    m_db = db_obj.get("member_db", {})
+    
+    # 1. 회원별 라운드 성적 초기화
+    for name, m_info in m_db.items():
+        m_info["score_history"] = []
+        m_info["rounds_played"] = 0
+        m_info["handicap"] = 0
+        m_info["attendance"] = 0
+        
+    total_r_count = len(r_list)
+    db_obj["total_events"] = total_r_count
+    
+    if total_r_count == 0:
+        return
+
+    # 2. 존재하는 모든 라운드 데이터를 순서대로 누적 산출 (오래된 순부터)
+    for r in reversed(r_list):
+        scores_dict = r.get("scores", {})
+        for name, p_info in scores_dict.items():
+            if name in m_db:
+                sc = p_info.get("score", 85)
+                m_db[name]["score_history"].append(sc)
+                m_db[name]["rounds_played"] += 1
+
+    # 3. 최신 핸디캡 및 참석률 집계
+    for name, m_info in m_db.items():
+        hist = m_info.get("score_history", [])
+        if hist:
+            recent_5 = hist[-5:]
+            avg_score = sum(recent_5) / len(recent_5)
+            m_info["handicap"] = round(avg_score - 72)
+        else:
+            m_info["handicap"] = 0
+            
+        m_info["attendance"] = round((m_info["rounds_played"] / total_r_count) * 100)
+
 if 'db_data' not in st.session_state:
     st.session_state.db_data = load_data()
 
@@ -119,10 +158,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- LOGIN & SIGNUP ---
-if 'logged_in_user' not in st.session_state:
-    st.session_state.logged_in_user = None
-
-if not st.session_state.logged_in_user:
+if not st.session_state.get('logged_in_user'):
     col_login, _ = st.columns([2, 1])
     with col_login:
         tab1, tab2 = st.tabs(["🔑 회원 로그인", "✨ 초간단 신입회원 가입"])
@@ -401,7 +437,7 @@ elif menu == "🎲 조편성기 (운영진)":
                 save_data(db)
                 st.success("🎉 최종 조편성 기록이 성공적으로 저장되었습니다!")
 
-# 3. 🏆 라운드별 성적 & 시상
+# 3. 🏆 라운드별 성적 & 시상 (라운드 삭제/수정 시 전체 회원 지표 연동 재계산)
 elif menu == "🏆 라운드별 성적 & 시상":
     st.subheader("🏆 라운드별 성적 입력 및 자동 시상 내역")
     
@@ -471,18 +507,7 @@ elif menu == "🏆 라운드별 성적 & 시상":
                         }
                     }
                     rounds_data.insert(0, round_entry)
-                    db["total_events"] = db.get("total_events", 0) + 1
-                    
-                    for name, data in member_db.items():
-                        if name in all_entered_scores:
-                            sc = all_entered_scores[name]["score"]
-                            data.setdefault("score_history", []).append(sc)
-                            data["rounds_played"] = data.get("rounds_played", 0) + 1
-                            recent_scores = data["score_history"][-5:]
-                            data["handicap"] = round((sum(recent_scores) / len(recent_scores)) - 72)
-                        if db["total_events"] > 0:
-                            data["attendance"] = round((data.get("rounds_played", 0) / db["total_events"]) * 100)
-                    
+                    recalculate_all_stats(db)
                     save_data(db)
                     st.success("🎉 성적 저장 완료! 핸디캡, 참석률, 시상 내역이 자동 업데이트 되었습니다.")
                     st.rerun()
@@ -506,9 +531,9 @@ elif menu == "🏆 라운드별 성적 & 시상":
                     with col_act1:
                         if st.button(f"🗑️ 이 라운드 삭제", key=f"del_rnd_{r['id']}"):
                             rounds_data.pop(r_idx)
-                            db["total_events"] = max(0, db.get("total_events", 1) - 1)
+                            recalculate_all_stats(db)
                             save_data(db)
-                            st.success("해당 라운드 기록이 삭제되었습니다.")
+                            st.success("해당 라운드 기록 삭제 및 전체 회원 데이터가 즉시 연동되어 재계산되었습니다.")
                             st.rerun()
                     with col_act2:
                         with st.expander("✏️ 성적 수정하기"):
@@ -538,8 +563,9 @@ elif menu == "🏆 라운드별 성적 & 시상":
                                     "longist": f"{longist[0]} ({longist[1]['long']}m)" if longist else "기록 없음",
                                     "nearest": f"{nearest[0]} ({nearest[1]['near']}m)" if nearest else "기록 없음"
                                 }
+                                recalculate_all_stats(db)
                                 save_data(db)
-                                st.success("성적이 변경 및 재계산 되었습니다.")
+                                st.success("성적 변경 및 회원 데이터가 재계산 되었습니다.")
                                 st.rerun()
 
                 st.markdown("##### 📊 회원별 성적 상세 표")
