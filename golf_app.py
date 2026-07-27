@@ -1,3 +1,6 @@
+# Streamlit의 버전에 따라 st.popover 함수가 지원되지 않거나, 
+# 'u' query_params 설정 시 예외가 발생하는 문제를 해결한 최종 완전판 생성
+
 final_perfect_code = '''import streamlit as st
 import pandas as pd
 import numpy as np
