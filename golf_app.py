@@ -34,20 +34,20 @@ def load_data():
         except Exception:
             pass
     
+    # 초기 기록이 없으므로 핸디캡/참석률/참석횟수 모두 0으로 시작
     member_db = {}
     for name in DEFAULT_MEMBERS:
         member_db[name] = {
             "password": "1234",
-            "handicap": 20,
-            "attendance": 100,
+            "handicap": 0,
+            "attendance": 0,
             "rounds_played": 0,
             "score_history": [],
             "is_admin": True if name in ADMIN_MEMBERS else False
         }
     pair_history = {m1: {m2: 0 for m2 in DEFAULT_MEMBERS} for m1 in DEFAULT_MEMBERS}
-    feed_posts = [] # 깨끗한 피드로 시작
-    finances = []
-    rounds_data = [] # 라운드별 시상 및 성적 데이터 저장소
+    feed_posts = [] # 깨끗한 피드
+    rounds_data = [] # 라운드별 시상 및 성적 데이터
     match_logs = []
     
     return {
@@ -55,7 +55,6 @@ def load_data():
         "member_db": member_db,
         "pair_history": pair_history,
         "feed_posts": feed_posts,
-        "finances": finances,
         "rounds_data": rounds_data,
         "match_logs": match_logs
     }
@@ -71,7 +70,6 @@ db = st.session_state.db_data
 member_db = db["member_db"]
 pair_history = db["pair_history"]
 feed_posts = db["feed_posts"]
-finances = db["finances"]
 rounds_data = db.setdefault("rounds_data", [])
 match_logs = db.setdefault("match_logs", [])
 
@@ -129,10 +127,9 @@ if not st.session_state.logged_in_user:
                     st.warning("회원 이름을 선택해 주세요.")
                     
         with tab2:
-            st.caption("성함과 원하시는 비밀번호, 현재 핸디캡을 입력하시면 즉시 가입됩니다.")
+            st.caption("성함과 원하시는 비밀번호를 입력하시면 즉시 가입됩니다.")
             new_name = st.text_input("신입 회원 이름")
             new_pw = st.text_input("비밀번호 설정", type="password")
-            new_hc = st.number_input("초기 핸디캡(타수)", min_value=0, max_value=40, value=20)
             
             if st.button("신규 회원 가입하기", use_container_width=True):
                 if new_name and new_pw:
@@ -141,8 +138,8 @@ if not st.session_state.logged_in_user:
                     else:
                         member_db[new_name] = {
                             "password": new_pw,
-                            "handicap": new_hc,
-                            "attendance": 100,
+                            "handicap": 0,
+                            "attendance": 0,
                             "rounds_played": 0,
                             "score_history": [],
                             "is_admin": True if new_name in ADMIN_MEMBERS else False
@@ -183,11 +180,10 @@ with st.sidebar:
         "🎲 조편성기 (운영진)", 
         "🏆 라운드별 성적 & 시상", 
         "📜 지난 조편성 이력 관리",
-        "📊 회원 명부 & 자동 핸디", 
-        "💸 회비/정산 내역"
+        "📊 회원 명부 & 자동 핸디"
     ])
 
-# 1. 📸 피드 (누구나 자유 업로드)
+# 1. 📸 피드
 if menu == "📸 피드 (Segok Feed)":
     st.subheader("📸 Segok Member Feed")
     with st.expander("✍️ 새 라운딩 사진 및 소식 올리기", expanded=True):
@@ -320,11 +316,10 @@ elif menu == "🎲 조편성기 (운영진)":
                 save_data(db)
                 st.success("🎉 조편성 기록이 성공적으로 저장되었습니다!")
 
-# 3. 🏆 라운드별 성적 & 시상 (수동 입력 ➔ 자동 핸디/시상 계산)
+# 3. 🏆 라운드별 성적 & 시상
 elif menu == "🏆 라운드별 성적 & 시상":
     st.subheader("🏆 라운드별 성적 입력 및 자동 시상 내역")
     
-    # [운영진 수동 성적 입력 창]
     if user_info['is_admin']:
         with st.expander("✍️ [운영진 전용] 새 라운딩 성적 입력하기", expanded=False):
             r_title = st.text_input("라운드 명칭", placeholder="예: 8월 필드 월례회 (남서울CC)")
@@ -349,14 +344,11 @@ elif menu == "🏆 라운드별 성적 & 시상":
             
             if st.button("🏆 성적 저장 및 핸디/시상 자동 계산", type="primary", use_container_width=True):
                 if attendees_round and r_title:
-                    # 1. 시상자 자동 계산
                     medalist = min(player_scores.items(), key=lambda x: x[1]["score"])
                     
-                    # 롱기스트 (비거리 최고)
                     valid_longs = {k: v for k, v in player_scores.items() if v["long"] > 0}
                     longist = max(valid_longs.items(), key=lambda x: x[1]["long"]) if valid_longs else None
                     
-                    # 니어리스트 (거리 최저)
                     valid_nears = {k: v for k, v in player_scores.items() if v["near"] > 0}
                     nearest = min(valid_nears.items(), key=lambda x: x[1]["near"]) if valid_nears else None
                     
@@ -375,19 +367,17 @@ elif menu == "🏆 라운드별 성적 & 시상":
                     rounds_data.insert(0, round_entry)
                     db["total_events"] = db.get("total_events", 0) + 1
                     
-                    # 2. 회원별 핸디캡 & 참석률 자동 업데이트
+                    # 핸디캡 및 참석률 자동 계산
                     for name, data in member_db.items():
                         if name in attendees_round:
                             sc = player_scores[name]["score"]
                             data.setdefault("score_history", []).append(sc)
                             data["rounds_played"] = data.get("rounds_played", 0) + 1
                             
-                            # 최근 성적 기반 핸디캡 자동 계산 (기준 72타 대비 평균 오버파)
-                            recent_scores = data["score_history"][-5:] # 최근 최대 5게임 평균
+                            recent_scores = data["score_history"][-5:]
                             avg_score = sum(recent_scores) / len(recent_scores)
                             data["handicap"] = round(avg_score - 72)
                             
-                        # 참석률 자동 계산
                         if db["total_events"] > 0:
                             data["attendance"] = round((data.get("rounds_played", 0) / db["total_events"]) * 100)
                     
@@ -395,9 +385,8 @@ elif menu == "🏆 라운드별 성적 & 시상":
                     st.success("🎉 성적 저장 완료! 핸디캡, 참석률, 시상 내역이 자동 업데이트 되었습니다.")
                     st.rerun()
 
-    # [라운드별 시상 조회 목록 (클릭시 확장)]
     if not rounds_data:
-        st.info("등록된 라운드 성적 내역이 없습니다. 운영진이 라운딩 후 성적을 등록하면 이곳에 자동으로 시상 카드가 생성됩니다.")
+        st.info("등록된 라운드 성적 내역이 없습니다. 라운딩 후 운영진이 성적을 등록하면 이곳에 자동으로 시상 카드가 생성됩니다.")
     else:
         for r in rounds_data:
             with st.expander(f"🚩 {r['date']} | {r['title']} (시상 결과 보기)", expanded=True):
@@ -443,21 +432,21 @@ elif menu == "📜 지난 조편성 이력 관리":
                 cols = st.columns(min(len(log['teams']), 4))
                 for t_idx, team in enumerate(log['teams']):
                     with cols[t_idx % 4]:
-                        team_names = ", ".join([f"{m}({member_db.get(m, {}).get('handicap', '20')}타)" for m in team])
+                        team_names = ", ".join([f"{m}({member_db.get(m, {}).get('handicap', '0')}타)" for m in team])
                         st.markdown(f"**⛳ {t_idx+1}조:** {team_names}")
                 st.divider()
 
-# 5. 📊 회원 명부 & 자동 핸디
+# 5. 📊 회원 명부 (자동 연동)
 elif menu == "📊 회원 명부 & 자동 핸디":
-    st.subheader("📊 Segok Golf Club 회원 명부 (자동 연동)")
+    st.subheader("📊 Segok Golf Club 회원 명부")
     st.caption("💡 핸디캡과 참석률은 라운딩 성적 입력 시 자동으로 실시간 계산 및 갱신됩니다.")
     
+    # 구분/직책 열 삭제 및 순수 명부 출력
     df_data = [{
         "이름": k, 
         "자동 산출 핸디캡": f"{v['handicap']}타", 
         "연간 참석률": f"{v['attendance']}%", 
-        "총 라운드 참석": f"{v.get('rounds_played', 0)}회",
-        "구분": "운영진" if v['is_admin'] else "회원"
+        "총 라운드 참석": f"{v.get('rounds_played', 0)}회"
     } for k, v in member_db.items()]
     
     st.dataframe(pd.DataFrame(df_data), use_container_width=True)
@@ -469,36 +458,3 @@ elif menu == "📊 회원 명부 & 자동 핸디":
         user_info['password'] = new_pw_val
         save_data(db)
         st.success("비밀번호가 업데이트되었습니다.")
-
-# 6. 💸 회비/정산 내역
-elif menu == "💸 회비/정산 내역":
-    st.subheader("💸 투명 회비 및 정산 현황")
-    
-    if not finances:
-        st.info("등록된 정산 내역이 없습니다.")
-    else:
-        df_fin = pd.DataFrame(finances)
-        total_in = df_fin[df_fin['type']=='수입']['amount'].sum()
-        total_out = df_fin[df_fin['type']=='지출']['amount'].sum()
-        balance = total_in - total_out
-        
-        col1, col2, col3 = st.columns(3)
-        col1.metric("총 수입", f"{total_in:,}원")
-        col2.metric("총 지출", f"{total_out:,}원")
-        col3.metric("현재 잔액", f"{balance:,}원")
-        
-        st.divider()
-        st.dataframe(df_fin, use_container_width=True)
-    
-    if user_info['is_admin']:
-        with st.expander("✍️ [운영진] 정산 내역 추가 입력"):
-            f_date = st.date_input("날짜").strftime("%Y-%m-%d")
-            f_type = st.selectbox("구분", ["수입", "지출"])
-            f_cat = st.text_input("항목", placeholder="예: 월례회비 / 그린피 정산 / 음료 지원")
-            f_desc = st.text_input("상세 내용")
-            f_amt = st.number_input("금액(원)", min_value=0, step=10000)
-            if st.button("내역 저장"):
-                finances.insert(0, {"date": f_date, "type": f_type, "category": f_cat, "desc": f_desc, "amount": f_amt})
-                save_data(db)
-                st.success("정산 내역이 기록되었습니다!")
-                st.rerun()
