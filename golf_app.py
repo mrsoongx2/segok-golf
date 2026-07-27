@@ -291,7 +291,7 @@ last_l = user_info.get("last_lounge_seen", "")
 latest_lounge_date = feed_posts[0]["date"] if feed_posts else ""
 has_new_lounge = latest_lounge_date > last_l if latest_lounge_date else False
 
-# --- 상단 고정 헤더 (이름 옆에 작은 크기 로그아웃 버튼 배치) ---
+# --- 상단 고정 헤더 (로그아웃 버튼 제거 및 이름 옆 깔끔한 유저 정보 배치) ---
 col_h1, col_h2 = st.columns([3, 2])
 with col_h1:
     if st.button("⛳ Segok Golf Club", key="logo_home_btn"):
@@ -300,25 +300,13 @@ with col_h1:
 with col_h2:
     hc_val = user_info.get('handicap', 0)
     att_val = user_info.get('attendance', 0)
-    
-    sub_c1, sub_c2 = st.columns([4, 1])
-    with sub_c1:
-        st.markdown(f"""
-        <div style="display: flex; justify-content: flex-end; align-items: center; gap: 8px; padding-top: 6px; font-size: 0.9rem;">
-            <span><b>{display_nickname}</b>님 {admin_badge}</span>
-            <span class="badge-hc">HC {hc_val}</span>
-            <span class="badge-user">참석 {att_val}%</span>
-        </div>
-        """, unsafe_allow_html=True)
-    with sub_c2:
-        if st.button("로그아웃", key="header_logout_btn", use_container_width=True):
-            st.session_state.logged_in_user = None
-            set_menu("HOME")
-            try:
-                st.query_params.clear()
-            except Exception:
-                pass
-            st.rerun()
+    st.markdown(f"""
+    <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; padding-top: 6px;">
+        <span style="font-size:0.95rem;"><b>{display_nickname}</b>님 {admin_badge}</span>
+        <span class="badge-hc">HC {hc_val}</span>
+        <span class="badge-user">참석 {att_val}%</span>
+    </div>
+    """, unsafe_allow_html=True)
 
 st.markdown("<hr style='margin: 10px 0 20px 0; border-top: 1px solid #DBDBDB;'>", unsafe_allow_html=True)
 
@@ -391,7 +379,7 @@ if st.session_state.current_menu == "HOME":
         st.markdown("""
         <div class="menu-card" style="margin-top: 20px;">
             <h3>👤 마이페이지</h3>
-            <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">회원 성함, 닉네임, 비밀번호, 프로필 사진 및 클럽 탈퇴</p>
+            <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">프로필 설정, 로그아웃 및 클럽 탈퇴</p>
         </div>
         """, unsafe_allow_html=True)
         if st.button("마이페이지 입장", use_container_width=True, key="go_mypage"):
@@ -447,7 +435,7 @@ else:
     reverse_map = {v: k for k, v in current_label_map.items()}
     curr_label = current_label_map.get(st.session_state.current_menu, notice_label)
 
-    nav_c1, nav_c2, nav_c3 = st.columns([3, 3, 2])
+    nav_c1, _ = st.columns([4, 1])
     with nav_c1:
         selected_nav = st.selectbox("📌 빠른 메뉴 이동", menu_list, index=menu_list.index(curr_label) if curr_label in menu_list else 0)
         target_menu = reverse_map.get(selected_nav, "HOME")
@@ -456,15 +444,6 @@ else:
         
         if target_menu != st.session_state.current_menu:
             set_menu(target_menu)
-            st.rerun()
-    with nav_c3:
-        if st.button("🚪 로그아웃", use_container_width=True, key="top_logout"):
-            st.session_state.logged_in_user = None
-            set_menu("HOME")
-            try:
-                st.query_params.clear()
-            except Exception:
-                pass
             st.rerun()
 
     st.markdown("<hr style='margin: 15px 0 20px 0; border-top: 1px solid #DBDBDB;'>", unsafe_allow_html=True)
@@ -656,21 +635,20 @@ else:
                         save_data(db)
                         st.rerun()
 
-    # 3. ⛳ 티타임 조편성 (필드 월례회 전용 + 개별 코스 및 조별 개별 티오프 시간 입력 + 깔끔한 1줄 포맷 연동)
+    # 3. ⛳ 티타임 조편성 (필드 월례회 전용 + 조별 개별 티오프 시간 및 조별 코스 정보 입력)
     elif menu == "티타임 조편성":
         st.subheader("⛳ 필드 월례회 티타임 조편성")
         if not is_admin:
             st.error("⛔ 조편성 기능은 운영진 전용 메뉴입니다.")
         else:
-            st.success("👑 **운영자 권한 확인 완료** | 필드 모임 일정, 장소, 코스 정보 및 조별 티오프 시간을 설정합니다.")
+            st.success("👑 **운영자 권한 확인 완료** | 필드 모임 일정, 장소 및 각 조별 티오프 시간과 코스 정보를 개별 설정합니다.")
             
             st.markdown("##### 📌 기본 라운드 정보 입력")
             col_t1, col_t2 = st.columns(2)
             with col_t1:
-                r_date_input = st.date_input("라운드 일정 (날짜)")
-                golf_location = st.text_input("골프장 장소", placeholder="예: 남서울CC")
+                r_date_input = r_date_input = st.date_input("라운드 일정 (날짜)")
             with col_t2:
-                course_name = st.text_input("코스 정보", placeholder="예: 레이크 / 밸류 코스")
+                golf_location = st.text_input("골프장 장소", placeholder="예: 남서울CC")
 
             balance_rule = st.radio("조편성 방식", ["과거 동반 중복 방지 (기본)", "핸디캡 균등 배정 (고수+초보 믹스)"])
             
@@ -727,34 +705,41 @@ else:
                         st.rerun()
 
                 st.markdown("---")
-                st.markdown("##### ⏰ 각 조별 티오프 시간 개별 설정")
+                st.markdown("##### ⏰ 각 조별 티오프 시간 및 코스 정보 개별 설정")
                 
                 group_tee_times = []
-                t_cols = st.columns(min(len(teams), 4))
+                group_courses = []
+                
                 for idx in range(len(teams)):
-                    with t_cols[idx % 4]:
+                    st.markdown(f"**⛳ {idx+1}조 설정**")
+                    gc1, gc2 = st.columns(2)
+                    with gc1:
                         t_val = st.text_input(f"{idx+1}조 티오프 시간", value=f"08:{(idx*8):02d}", key=f"tee_group_{idx}")
                         group_tee_times.append(t_val)
+                    with gc2:
+                        c_val = st.text_input(f"{idx+1}조 코스 정보", value="IN 코스" if idx%2==1 else "OUT 코스", key=f"course_group_{idx}")
+                        group_courses.append(c_val)
 
                 cols = st.columns(min(len(teams), 4))
                 date_str = r_date_input.strftime("%Y-%m-%d")
                 
-                # 요청하신 깔끔한 1줄 형태 조별 공지 포맷 생성
+                # 조별 상세 정보(티오프 시간 + 코스 정보)가 포함된 세련된 공지 포맷 생성
                 notice_text = f"📢 [필드 월례회 조편성 공식 안내]\n\n"
-                notice_text += f"🗓️ 일정: {date_str}\n"
-                notice_text += f"🏟️ 장소: {golf_location or '장소 미입력'} ({course_name or '코스 미입력'})\n"
+                notice_text += f"🗓️ 일정: {date_str}  |  🏟️ 장소: {golf_location or '장소 미입력'}\n"
                 notice_text += f"----------------------------------------\n"
                 for idx, team in enumerate(teams):
                     t_time = group_tee_times[idx] if idx < len(group_tee_times) else "미정"
+                    c_info = group_courses[idx] if idx < len(group_courses) else "미정"
                     team_str = ", ".join(team)
-                    notice_text += f"• {idx+1}조 ({t_time}): {team_str}\n"
+                    notice_text += f"• {idx+1}조 ({t_time} / {c_info}): {team_str}\n"
                 notice_text += f"----------------------------------------\n"
                 notice_text += f"즐거운 라운딩 되세요! 🏌️‍♂️✨"
 
                 for idx, team in enumerate(teams):
                     with cols[idx % 4]:
                         t_time = group_tee_times[idx] if idx < len(group_tee_times) else "미정"
-                        team_html = f"<div class='team-box'><h3>⛳ {idx+1}조 ({t_time})</h3>" + "<br>".join([f"• <b>{m}</b> ({member_db.get(m, {}).get('handicap', 0)})" for m in team]) + "</div>"
+                        c_info = group_courses[idx] if idx < len(group_courses) else ""
+                        team_html = f"<div class='team-box'><h3>⛳ {idx+1}조 ({t_time})</h3><div style='font-size:0.8rem; color:#E5C585; margin-bottom:6px;'>🏟️ {c_info}</div>" + "<br>".join([f"• <b>{m}</b> ({member_db.get(m, {}).get('handicap', 0)})" for m in team]) + "</div>"
                         st.markdown(team_html, unsafe_allow_html=True)
                 
                 st.subheader("📱 카카오톡 공지문 미리보기")
@@ -1185,7 +1170,7 @@ else:
     # 8. 👤 마이페이지
     elif menu == "마이페이지":
         st.subheader("👤 마이페이지 & 프로필 설정")
-        st.info("💡 회원 성함, 닉네임, 비밀번호, 프로필 사진 변경 및 클럽 탈퇴를 관리할 수 있습니다.")
+        st.info("💡 회원 성함, 닉네임, 비밀번호, 프로필 사진 변경, 로그아웃 및 클럽 탈퇴를 관리할 수 있습니다.")
         
         with st.form("edit_profile_form"):
             col_f1, col_f2 = st.columns(2)
@@ -1221,6 +1206,17 @@ else:
                 st.rerun()
 
         st.markdown("<div style='margin-top: 30px;'></div>", unsafe_allow_html=True)
+        st.markdown("##### 🚪 세션 관리: 로그아웃")
+        if st.button("🚪 클럽 로그아웃", type="secondary", use_container_width=True, key="mypage_logout"):
+            st.session_state.logged_in_user = None
+            set_menu("HOME")
+            try:
+                st.query_params.clear()
+            except Exception:
+                pass
+            st.rerun()
+
+        st.markdown("<div style='margin-top: 30px;'></div>", unsafe_allow_html=True)
         st.markdown("##### ❌ 위험 구역: 클럽 탈퇴")
         with st.expander("⚠️ 클럽 탈퇴하기 (계정 삭제)"):
             conf_withdraw = st.checkbox("정말로 클럽에서 탈퇴하시겠습니까? 계정 정보가 영구 삭제됩니다.", key="conf_withdraw_mypage")
@@ -1232,3 +1228,9 @@ else:
                     set_menu("HOME")
                     st.success("클럽 탈퇴가 정상적으로 처리되었습니다.")
                     st.rerun()
+''', encoding="utf-8")
+
+print("golf_app.py updated successfully with group-level tee times and individual course information.")
+}
+""")
+}저는 그런 것을 하도록 프로그램되지 않았습니다.
