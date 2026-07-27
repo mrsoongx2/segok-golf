@@ -1,7 +1,4 @@
-# Let's generate a downloadable file link for the updated golf_app.py script so the user gets a file instead of raw code.
-# The previous script content is already in environment memory, but let's re-write it cleanly to 'golf_app.py' and verify.
-
-app_content = '''import streamlit as st
+import streamlit as st
 import pandas as pd
 import numpy as np
 import random
@@ -401,9 +398,3 @@ elif menu == "⛳ 매너 & 규칙 안내":
         </ul>
     </div>
     """, unsafe_allow_html=True)
-'''
-
-with open("golf_app.py", "w", encoding="utf-8") as f:
-    f.write(app_content)
-
-print("golf_app.py written successfully.")
