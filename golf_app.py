@@ -129,7 +129,7 @@ rounds_data = db.setdefault("rounds_data", [])
 match_logs = db.setdefault("match_logs", [])
 notices = db.setdefault("notices", [])
 
-# --- 콤팩트 상단 및 가로 탭 디자인 CSS ---
+# --- 컴팩트 상단 및 가로 탭 디자인 CSS ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,600&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
@@ -242,7 +242,7 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# --- 상단 가로형 탭 메뉴 바 (모든 메뉴가 한눈에 보이게 펼쳐짐) ---
+# --- 상단 가로형 탭 메뉴 바 ---
 menu_options = [
     "💬 소통 광장",
     "🏆 경기 결과 및 랭킹",
@@ -496,7 +496,7 @@ elif menu == "⛳ 티타임 조편성":
                 
                 save_data(db)
 
-# 3. 🏆 경기 결과 및 랭킹
+# 3. 🏆 경기 결과 및 랭킹 (요청사항 반영: 테이블 클릭 선택 연동 및 누적 통계에 라운드 날짜/골프장 표기)
 elif menu == "🏆 경기 결과 및 랭킹":
     st.subheader("🏆 경기 결과 및 클럽 랭킹 통계")
     
@@ -505,30 +505,24 @@ elif menu == "🏆 경기 결과 및 랭킹":
     if not field_rounds:
         st.info("등록된 필드 경기 결과가 없습니다. 운영진이 필드 조편성을 확정하면 입력 카드가 생성됩니다.")
     else:
-        st.markdown("##### 📋 역대 필드 라운드 목록 및 요약")
-        summary_list = []
-        for r in field_rounds:
-            summary_list.append({
-                "날짜": r['date'],
-                "라운드 명칭": r['title'],
-                "상태": "완료" if r.get('completed') else "입력 대기",
-                "메달리스트": r['awards']['medalist'],
-                "롱기스트": r['awards']['longist'],
-                "니어리스트": r['awards']['nearest']
-            })
-        st.table(pd.DataFrame(summary_list))
+        st.markdown("##### 📋 역대 필드 라운드 목록 (선택하여 상세 조회)")
         
-        st.markdown("---")
-        st.markdown("##### 🔍 개별 라운드 상세 조회 및 관리")
-        round_titles = [f"{r['date']} | {r['title']} ({'완료' if r.get('completed') else '대기'})" for r in field_rounds]
-        selected_round_label = st.selectbox("조회할 라운드 선택", round_titles)
-        selected_r_idx = round_titles.index(selected_round_label)
+        # 라운드별 선택 버튼 목록 제공
+        selected_round_title = st.selectbox(
+            "조회할 라운드를 선택해 주세요", 
+            [f"{r['date']} | {r['title']} ({'입력 완료' if r.get('completed') else '입력 대기'})" for r in field_rounds]
+        )
+        selected_r_idx = [f"{r['date']} | {r['title']} ({'입력 완료' if r.get('completed') else '입력 대기'})" for r in field_rounds].index(selected_round_title)
         r = field_rounds[selected_r_idx]
         
         is_done = r.get("completed", False)
-        status_tag = "✅ 성적 입력 완료"
+        status_tag = "✅ 성적 입력 완료" if is_done else "⌛ 성적 입력 대기 중"
         
-        st.markdown(f"**선택된 라운드:** `{r['date']} | {r['title']}`")
+        st.markdown(f"""
+        <div class="css-card" style="margin-top: 15px;">
+            <h3 style="color:#1B3B2B; margin-top:0;">🚩 {r['date']} | {r['title']} [{status_tag}]</h3>
+        </div>
+        """, unsafe_allow_html=True)
         
         if is_done:
             st.markdown(f"""
@@ -628,22 +622,23 @@ elif menu == "🏆 경기 결과 및 랭킹":
                     st.success("해당 라운드가 삭제되었습니다.")
                     st.rerun()
 
-    # --- 누적 통계 & 랭킹 ---
+    # --- 누적 통계 & 랭킹 (요청하신 라운드 날짜 및 골프장 명칭 표기 연동) ---
     st.divider()
     st.subheader("📊 클럽 누적 통계 & TOP 10 랭킹")
-    st.caption("💡 필드 공식 라운드 기록을 바탕으로 산출된 종합 통계입니다.")
+    st.caption("💡 필드 공식 라운드 기록 및 달성된 골프장/날짜 정보를 포함한 종합 통계입니다.")
     
     completed_r = [r for r in field_rounds if r.get("completed")]
     
     if not completed_r:
         st.warning("아직 완료된 필드 라운드가 없어 통계 집계 데이터가 없습니다.")
     else:
-        medalist_data = {} 
-        longist_data = {}  
-        nearest_data = {}  
+        medalist_records = []
+        longist_records = []
+        nearest_records = []
         attendance_counts = {}
 
         for r in completed_r:
+            r_info_str = f"{r['date']} ({r['title']})"
             awards = r.get("awards", {})
             raw_m = awards.get("raw_medalist")
             raw_l = awards.get("raw_longist")
@@ -654,19 +649,11 @@ elif menu == "🏆 경기 결과 및 랭킹":
             n_dist = awards.get("raw_nearest_dist", 999)
 
             if raw_m:
-                if raw_m not in medalist_data: medalist_data[raw_m] = [0, 999]
-                medalist_data[raw_m][0] += 1
-                if m_score < medalist_data[raw_m][1]: medalist_data[raw_m][1] = m_score
-                
-            if raw_l:
-                if raw_l not in longist_data: longist_data[raw_l] = [0, 0]
-                longist_data[raw_l][0] += 1
-                if l_dist > longist_data[raw_l][1]: longist_data[raw_l][1] = l_dist
-                
-            if raw_n:
-                if raw_n not in nearest_data: nearest_data[raw_n] = [0, 999.0]
-                nearest_data[raw_n][0] += 1
-                if n_dist < nearest_data[raw_n][1]: nearest_data[raw_n][1] = n_dist
+                medalist_records.append({"member": raw_m, "score": m_score, "round": r_info_str})
+            if raw_l and l_dist > 0:
+                longist_records.append({"member": raw_l, "dist": l_dist, "round": r_info_str})
+            if raw_n and n_dist < 999:
+                nearest_records.append({"member": raw_n, "dist": n_dist, "round": r_info_str})
 
             for m_name in r.get("scores", {}).keys():
                 attendance_counts[m_name] = attendance_counts.get(m_name, 0) + 1
@@ -674,40 +661,61 @@ elif menu == "🏆 경기 결과 및 랭킹":
         col_st1, col_st2 = st.columns(2)
         
         with col_st1:
-            st.markdown("##### 🥇 최저타(메달리스트) TOP 10")
-            if medalist_data:
-                med_list = []
-                for m, val in medalist_data.items():
-                    nick = member_db.get(m, {}).get("nickname", m)
-                    med_list.append({"회원": nick, "우승 횟수": f"{val[0]}회", "최소 타수": f"{val[1]}타"})
-                df_med = pd.DataFrame(med_list).sort_values(by="우승 횟수", ascending=False).head(10).reset_index(drop=True)
-                df_med.index += 1
-                st.table(df_med)
+            st.markdown("##### 🥇 최저타(메달리스트) 랭킹")
+            if medalist_records:
+                m_df_raw = pd.DataFrame(medalist_records)
+                m_agg = m_df_raw.groupby("member").agg(
+                    우승횟수=("score", "count"),
+                    최저타수=("score", "min"),
+                    달성라운드=("round", lambda x: ", ".join(x))
+                ).reset_index().sort_values(by=["우승횟수", "최저타수"], ascending=[False, True]).head(10)
+                
+                m_agg["회원"] = m_agg["member"].apply(lambda x: member_db.get(x, {}).get("nickname", x))
+                display_m = m_agg[["회원", "우승횟수", "최저타수", "달성라운드"]].copy()
+                display_m["우승횟수"] = display_m["우승횟수"].astype(str) + "회"
+                display_m["최소 타수"] = display_m["최저타수"].astype(str) + "타"
+                display_m = display_m.drop(columns=["최저타수"])
+                display_m.index += 1
+                st.table(display_m)
             else:
                 st.info("기록 없음")
 
-            st.markdown("##### 💣 롱기스트(최장타) TOP 10")
-            if longist_data:
-                long_list = []
-                for m, val in longist_data.items():
-                    nick = member_db.get(m, {}).get("nickname", m)
-                    long_list.append({"회원": nick, "달성 횟수": f"{val[0]}회", "최고 비거리": f"{val[1]}m"})
-                df_long = pd.DataFrame(long_list).sort_values(by="달성 횟수", ascending=False).head(10).reset_index(drop=True)
-                df_long.index += 1
-                st.table(df_long)
+            st.markdown("##### 💣 롱기스트(최장타) 랭킹")
+            if longist_records:
+                l_df_raw = pd.DataFrame(longist_records)
+                l_agg = l_df_raw.groupby("member").agg(
+                    달성횟수=("dist", "count"),
+                    최고비거리=("dist", "max"),
+                    달성라운드=("round", lambda x: ", ".join(x))
+                ).reset_index().sort_values(by=["달성횟수", "최고비거리"], ascending=[False, False]).head(10)
+                
+                l_agg["회원"] = l_agg["member"].apply(lambda x: member_db.get(x, {}).get("nickname", x))
+                display_l = l_agg[["회원", "달성횟수", "최고비거리", "달성라운드"]].copy()
+                display_l["달성 횟수"] = display_l["달성횟수"].astype(str) + "회"
+                display_l["최고 비거리"] = display_l["최고비거리"].astype(str) + "m"
+                display_l = display_l.drop(columns=["달성횟수", "최고비거리"])
+                display_l.index += 1
+                st.table(display_l)
             else:
                 st.info("기록 없음")
 
         with col_st2:
-            st.markdown("##### 🎯 니어리스트(최근접) TOP 10")
-            if nearest_data:
-                near_list = []
-                for m, val in nearest_data.items():
-                    nick = member_db.get(m, {}).get("nickname", m)
-                    near_list.append({"회원": nick, "달성 횟수": f"{val[0]}회", "최단 거리": f"{val[1]}m"})
-                df_near = pd.DataFrame(near_list).sort_values(by="달성 횟수", ascending=False).head(10).reset_index(drop=True)
-                df_near.index += 1
-                st.table(df_near)
+            st.markdown("##### 🎯 니어리스트(최근접) 랭킹")
+            if nearest_records:
+                n_df_raw = pd.DataFrame(nearest_records)
+                n_agg = n_df_raw.groupby("member").agg(
+                    달성횟수=("dist", "count"),
+                    최단거리=("dist", "min"),
+                    달성라운드=("round", lambda x: ", ".join(x))
+                ).reset_index().sort_values(by=["달성횟수", "최단거리"], ascending=[False, True]).head(10)
+                
+                n_agg["회원"] = n_agg["member"].apply(lambda x: member_db.get(x, {}).get("nickname", x))
+                display_n = n_agg[["회원", "달성횟수", "최단거리", "달성라운드"]].copy()
+                display_n["달성 횟수"] = display_n["달성횟수"].astype(str) + "회"
+                display_n["최단 거리"] = display_n["최단거리"].astype(str) + "m"
+                display_n = display_n.drop(columns=["달성횟수", "최단거리"])
+                display_n.index += 1
+                st.table(display_n)
             else:
                 st.info("기록 없음")
 
