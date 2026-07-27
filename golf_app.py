@@ -30,11 +30,16 @@ def load_data():
     if os.path.exists(DB_FILE):
         try:
             with open(DB_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
+                data = json.load(f)
+                # 기존 데이터가 있더라도 기본 회원들은 무조건 승인 상태로 보장
+                for m in DEFAULT_MEMBERS:
+                    if m in data["member_db"]:
+                        data["member_db"][m]["status"] = "approved"
+                return data
         except Exception:
             pass
     
-    # 초기 기록 0 설정 (상태: approved)
+    # 초기 회원 전부 승인(approved) 상태로 바로 가입
     member_db = {}
     for name in DEFAULT_MEMBERS:
         member_db[name] = {
@@ -43,11 +48,11 @@ def load_data():
             "attendance": 0,
             "rounds_played": 0,
             "score_history": [],
-            "status": "approved", # 기존 기본 회원은 승인 상태
+            "status": "approved", # 기존 회원은 승인 필요 없이 바로 접속
             "is_admin": True if name in ADMIN_MEMBERS else False
         }
     pair_history = {m1: {m2: 0 for m2 in DEFAULT_MEMBERS} for m1 in DEFAULT_MEMBERS}
-    feed_posts = [] # 깨끗한 피드 (하트 0개)
+    feed_posts = [] 
     rounds_data = [] 
     match_logs = []
     
@@ -113,6 +118,7 @@ if not st.session_state.logged_in_user:
         
         with tab1:
             st.caption("초기 비밀번호는 '1234' 입니다.")
+            # 승인된 회원은 바로 드롭다운에 표시
             approved_members = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
             login_name = st.selectbox("회원 이름 선택", ["선택하세요"] + approved_members)
             login_pw = st.text_input("비밀번호 입력", type="password")
@@ -132,7 +138,7 @@ if not st.session_state.logged_in_user:
                     st.warning("회원 이름을 선택해 주세요.")
                     
         with tab2:
-            st.caption("가입 신청 후 운영진 승인을 거쳐 접속할 수 있습니다.")
+            st.caption("외부 신규 회원은 가입 신청 후 운영진 승인을 거쳐 접속할 수 있습니다.")
             new_name = st.text_input("신입 회원 이름")
             new_pw = st.text_input("비밀번호 설정", type="password")
             
@@ -147,7 +153,7 @@ if not st.session_state.logged_in_user:
                             "attendance": 0,
                             "rounds_played": 0,
                             "score_history": [],
-                            "status": "pending", # 가입 승인 대기 상태
+                            "status": "pending", # 새로 신청하는 사람만 대기
                             "is_admin": True if new_name in ADMIN_MEMBERS else False
                         }
                         pair_history[new_name] = {m: 0 for m in member_db.keys()}
@@ -206,7 +212,7 @@ if menu == "📸 피드 (Segok Feed)":
                     "author": current_user,
                     "date": datetime.now().strftime("%Y-%m-%d %H:%M"),
                     "content": post_text,
-                    "likes": 0, # 초기 하트 0개
+                    "likes": 0,
                     "comments": []
                 })
                 save_data(db)
@@ -241,7 +247,7 @@ if menu == "📸 피드 (Segok Feed)":
                     save_data(db)
                     st.rerun()
 
-# 2. 🎲 조편성기 (자동 + 수동 변경 기능)
+# 2. 🎲 조편성기
 elif menu == "🎲 조편성기 (운영진)":
     st.subheader("🎲 중복 방지 & 실력 균등 조편성기")
     if not user_info['is_admin']:
@@ -285,13 +291,12 @@ elif menu == "🎲 조편성기 (운영진)":
             teams = generate_teams_smart(selected_attendees, pair_history, member_db, balance_rule)
             st.session_state.generated_teams = teams
             st.session_state.current_event_type = event_type
-            st.success("🎉 자동 조편성이 완료되었습니다! 아래에서 필요시 수동으로 조를 이동하세요.")
+            st.success("🎉 자동 조편성이 완료되었습니다!")
 
         if 'generated_teams' in st.session_state:
             teams = st.session_state.generated_teams
             e_type = st.session_state.get('current_event_type', event_type)
             
-            # [운영진 조 수동 이동 변경 기능]
             with st.expander("✏️ [운영진 전용] 조 구성원 수동으로 변경하기"):
                 st.info("특정 회원을 선택하여 원하는 조로 바꿀 수 있습니다.")
                 col_m1, col_m2 = st.columns(2)
@@ -301,11 +306,9 @@ elif menu == "🎲 조편성기 (운영진)":
                     target_team_num = st.selectbox("이동할 조 선택", [f"{i+1}조" for i in range(len(teams))])
                     
                 if st.button("🔄 해당 회원을 선택한 조로 이동"):
-                    # 기존 조에서 제거
                     for t in teams:
                         if move_mem in t:
                             t.remove(move_mem)
-                    # 새 조에 추가
                     target_idx = int(target_team_num.replace("조", "")) - 1
                     teams[target_idx].append(move_mem)
                     st.session_state.generated_teams = teams
@@ -472,7 +475,6 @@ elif menu == "📜 지난 조편성 이력 관리":
 elif menu.startswith("📊 회원 명부"):
     st.subheader("📊 Segok Golf Club 회원 명부")
     
-    # 승인된 회원만 표에 표시
     df_data = [{
         "이름": k, 
         "자동 산출 핸디캡": v['handicap'], 
@@ -482,7 +484,6 @@ elif menu.startswith("📊 회원 명부"):
     
     st.dataframe(pd.DataFrame(df_data), use_container_width=True)
     
-    # [운영진 전용 신입회원 승인 센터]
     if user_info['is_admin']:
         st.divider()
         st.subheader("👑 [운영진 전용] 신입회원 가입 승인 센터")
