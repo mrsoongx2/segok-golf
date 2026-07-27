@@ -129,8 +129,30 @@ rounds_data = db.setdefault("rounds_data", [])
 match_logs = db.setdefault("match_logs", [])
 notices = db.setdefault("notices", [])
 
+# 브라우저 뒤로가기 및 새로고침 시 세션 유지 (Query Params 활용)
+query_user = None
+query_menu = None
+try:
+    query_user = st.query_params.get("u", None)
+    query_menu = st.query_params.get("m", "HOME")
+except Exception:
+    pass
+
+if 'logged_in_user' not in st.session_state or st.session_state.logged_in_user is None:
+    if query_user and query_user in member_db and member_db[query_user].get("status") == "approved":
+        st.session_state.logged_in_user = query_user
+
 if 'current_menu' not in st.session_state:
-    st.session_state.current_menu = "HOME"
+    st.session_state.current_menu = query_menu if query_menu else "HOME"
+
+def set_menu(menu_name):
+    st.session_state.current_menu = menu_name
+    try:
+        st.query_params["m"] = menu_name
+        if st.session_state.get('logged_in_user'):
+            st.query_params["u"] = st.session_state.logged_in_user
+    except Exception:
+        pass
 
 st.markdown("""
     <style>
@@ -141,7 +163,7 @@ st.markdown("""
     .compact-header { background-color: #FFFFFF; padding: 12px 24px; border-bottom: 1px solid #DBDBDB; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
     .header-title { font-family: 'Playfair Display', serif; color: #1B3B2B; font-size: 1.5rem; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 8px; cursor: pointer; }
     
-    .logo-hero { text-align: center; padding: 35px 20px 25px 20px; background: linear-gradient(135deg, #1B3B2B 0%, #2C523D 100%); border-radius: 16px; color: #FFFFFF; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(27,59,43,0.15); }
+    .logo-hero { text-align: center; padding: 40px 20px 30px 20px; background: linear-gradient(135deg, #1B3B2B 0%, #2C523D 100%); border-radius: 16px; color: #FFFFFF; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(27,59,43,0.15); }
     .logo-hero h1 { font-family: 'Playfair Display', serif; font-size: 2.8rem; margin: 10px 0 5px 0; color: #F8F5F0; }
     .logo-hero p { color: #D4B475; font-size: 0.9rem; letter-spacing: 4px; text-transform: uppercase; font-weight: 600; margin: 0; }
     
@@ -191,7 +213,11 @@ if not st.session_state.get('logged_in_user'):
                         st.error("⌛ 운영진 승인 대기 중입니다.")
                     elif login_pw == user.get("password", "1234"):
                         st.session_state.logged_in_user = login_name
-                        st.session_state.current_menu = "HOME"
+                        set_menu("HOME")
+                        try:
+                            st.query_params["u"] = login_name
+                        except Exception:
+                            pass
                         st.success(f"{login_name}님 환영합니다!")
                         st.rerun()
                     else:
@@ -244,7 +270,7 @@ admin_badge = '<span class="badge-admin">👑 운영진</span>' if is_admin else
 col_h1, col_h2 = st.columns([3, 2])
 with col_h1:
     if st.button("⛳ Segok Golf Club", key="logo_home_btn"):
-        st.session_state.current_menu = "HOME"
+        set_menu("HOME")
         st.rerun()
 with col_h2:
     hc_val = user_info.get('handicap', 0)
@@ -281,7 +307,7 @@ if st.session_state.current_menu == "HOME":
         </div>
         """, unsafe_allow_html=True)
         if st.button("클럽 라운지 입장", use_container_width=True, key="go_lounge"):
-            st.session_state.current_menu = "클럽 라운지"
+            set_menu("클럽 라운지")
             st.rerun()
             
         if is_admin:
@@ -292,7 +318,7 @@ if st.session_state.current_menu == "HOME":
             </div>
             """, unsafe_allow_html=True)
             if st.button("티타임 조편성 입장", use_container_width=True, key="go_match"):
-                st.session_state.current_menu = "티타임 조편성"
+                set_menu("티타임 조편성")
                 st.rerun()
 
     with c2:
@@ -303,7 +329,7 @@ if st.session_state.current_menu == "HOME":
         </div>
         """, unsafe_allow_html=True)
         if st.button("경기 결과 및 랭킹 입장", use_container_width=True, key="go_result"):
-            st.session_state.current_menu = "경기 결과 및 랭킹"
+            set_menu("경기 결과 및 랭킹")
             st.rerun()
             
         if is_admin:
@@ -316,7 +342,7 @@ if st.session_state.current_menu == "HOME":
             </div>
             """, unsafe_allow_html=True)
             if st.button("클럽 회원 명부 입장", use_container_width=True, key="go_members"):
-                st.session_state.current_menu = "클럽 회원 명부"
+                set_menu("클럽 회원 명부")
                 st.rerun()
 
     with c3:
@@ -327,7 +353,7 @@ if st.session_state.current_menu == "HOME":
         </div>
         """, unsafe_allow_html=True)
         if st.button("역대 조편성 입장", use_container_width=True, key="go_archive"):
-            st.session_state.current_menu = "역대 조편성 아카이브"
+            set_menu("역대 조편성 아카이브")
             st.rerun()
             
         st.markdown("""
@@ -337,34 +363,82 @@ if st.session_state.current_menu == "HOME":
         </div>
         """, unsafe_allow_html=True)
         if st.button("클럽 공지사항 입장", use_container_width=True, key="go_notice"):
-            st.session_state.current_menu = "클럽 공지사항"
+            set_menu("클럽 공지사항")
             st.rerun()
 
     st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
     c_m1, c_m2 = st.columns(2)
     with c_m1:
         if st.button("👤 마이페이지 설정", use_container_width=True, key="go_mypage"):
-            st.session_state.current_menu = "마이페이지"
+            set_menu("마이페이지")
             st.rerun()
     with c_m2:
         if st.button("🚪 클럽 로그아웃", use_container_width=True, key="home_logout_btn"):
             st.session_state.logged_in_user = None
-            st.session_state.current_menu = "HOME"
+            set_menu("HOME")
+            try:
+                st.query_params.clear()
+            except Exception:
+                pass
             st.rerun()
 
 else:
-    nav_cols = st.columns([6, 1])
-    with nav_cols[0]:
-        if st.button("🏠 메인 홈으로 가기"):
-            st.session_state.current_menu = "HOME"
+    # --- 각 메뉴 내부 화면: 상단 네비게이션 및 드롭다운으로 메인 홈 안 거치고 다른 메뉴 이동 가능 ---
+    col_h1, col_h2 = st.columns([3, 2])
+    with col_h1:
+        if st.button("⛳ Segok Golf Club", key="logo_home_btn2"):
+            set_menu("HOME")
             st.rerun()
-    with nav_cols[1]:
-        if st.button("🚪 로그아웃"):
+    with col_h2:
+        hc_val = user_info.get('handicap', 0)
+        att_val = user_info.get('attendance', 0)
+        st.markdown(f"""
+        <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; padding-top: 5px;">
+            <span style="font-size:0.9rem;"><b>{display_nickname}</b>님 {admin_badge}</span>
+            <span class="badge-hc">HC {hc_val}</span>
+            <span class="badge-user">참석 {att_val}%</span>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("<hr style='margin: 10px 0 15px 0; border-top: 1px solid #DBDBDB;'>", unsafe_allow_html=True)
+
+    # 드롭다운으로 메인 홈 안 거치고 각 메뉴 바로 이동 + 메인 홈 가기 + 로그아웃 버튼 배치
+    menu_list = ["메인 홈", "💬 클럽 라운지", "🏆 경기 결과 및 랭킹", "📁 역대 조편성 아카이브", "📢 클럽 공지사항", "👤 마이페이지"]
+    if is_admin:
+        menu_list.insert(1, "⛳ 티타임 조편성")
+        menu_list.append("👥 회원 명부")
+        
+    current_label_map = {
+        "HOME": "메인 홈",
+        "클럽 라운지": "💬 클럽 라운지",
+        "티타임 조편성": "⛳ 티타임 조편성",
+        "경기 결과 및 랭킹": "🏆 경기 결과 및 랭킹",
+        "역대 조편성 아카이브": "📁 역대 조편성 아카이브",
+        "클럽 공지사항": "📢 클럽 공지사항",
+        "회원 명부": "👥 회원 명부",
+        "마이페이지": "👤 마이페이지"
+    }
+    reverse_map = {v: k for k, v in current_label_map.items()}
+    curr_label = current_label_map.get(st.session_state.current_menu, "💬 클럽 라운지")
+
+    nav_c1, nav_c2, nav_c3 = st.columns([3, 3, 2])
+    with nav_c1:
+        selected_nav = st.selectbox("📌 빠른 메뉴 이동", menu_list, index=menu_list.index(curr_label) if curr_label in menu_list else 0)
+        target_menu = reverse_map.get(selected_nav, "HOME")
+        if target_menu != st.session_state.current_menu:
+            set_menu(target_menu)
+            st.rerun()
+    with nav_c3:
+        if st.button("🚪 로그아웃", use_container_width=True, key="top_logout"):
             st.session_state.logged_in_user = None
-            st.session_state.current_menu = "HOME"
+            set_menu("HOME")
+            try:
+                st.query_params.clear()
+            except Exception:
+                pass
             st.rerun()
 
-    st.markdown("<hr style='margin: 10px 0 20px 0; border-top: 1px solid #DBDBDB;'>", unsafe_allow_html=True)
+    st.markdown("<hr style='margin: 15px 0 20px 0; border-top: 1px solid #DBDBDB;'>", unsafe_allow_html=True)
     
     menu = st.session_state.current_menu
 
@@ -908,7 +982,7 @@ else:
                         st.rerun()
 
     # 6. 👥 회원 명부 (운영진 전용)
-    elif menu.startswith("클럽 회원 명부"):
+    elif menu.startswith("회원 명부"):
         st.subheader("👥 클럽 회원 명부")
         
         df_data = [{
@@ -954,7 +1028,7 @@ else:
             with col_f2:
                 p_img_file = st.file_uploader("프로필 아바타 등록 (선택)", type=["jpg", "png", "jpeg"])
                 if user_info.get("profile_img"):
-                    st.image(base64.b64decode(user_info["profile_img"]), width=100, caption="현재 등록된 프로필 사진")
+                    st.image(base64.b64decode(user_info["profile_img"], width=100, caption="현재 등록된 프로필 사진"))
                 
             submit_btn = st.form_submit_button("💾 정보 저장하기", type="primary", use_container_width=True)
             
