@@ -15,6 +15,10 @@ st.set_page_config(
 )
 
 DB_FILE = "club_data.json"
+UPLOAD_DIR = "uploads"
+
+if not os.path.exists(UPLOAD_DIR):
+    os.makedirs(UPLOAD_DIR)
 
 ADMIN_MEMBERS = ["이승환", "김성모", "김경수", "김지윤"]
 
@@ -36,6 +40,8 @@ def load_data():
                         if m in data["member_db"]:
                             data["member_db"][m]["status"] = "approved"
                             data["member_db"][m]["is_admin"] = True if m in ADMIN_MEMBERS else False
+                    if "notices" not in data:
+                        data["notices"] = []
                     return data
         except Exception:
             pass
@@ -57,6 +63,7 @@ def load_data():
     feed_posts = [] 
     rounds_data = [] 
     match_logs = []
+    notices = []
     
     return {
         "total_events": 0,
@@ -64,7 +71,8 @@ def load_data():
         "pair_history": pair_history,
         "feed_posts": feed_posts,
         "rounds_data": rounds_data,
-        "match_logs": match_logs
+        "match_logs": match_logs,
+        "notices": notices
     }
 
 def save_data(data):
@@ -119,33 +127,34 @@ pair_history = db.get("pair_history", {})
 feed_posts = db.setdefault("feed_posts", [])
 rounds_data = db.setdefault("rounds_data", [])
 match_logs = db.setdefault("match_logs", [])
+notices = db.setdefault("notices", [])
 
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,600&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
     
-    .stApp { background-color: #F7F4EF !important; font-family: 'Noto Sans KR', sans-serif; color: #1B3B2B; }
-    .brand-header { background-color: #F7F4EF; text-align: center; padding: 20px 10px; border-bottom: 2px solid #D6CBBF; margin-bottom: 25px; }
-    .brand-title { font-family: 'Playfair Display', serif; color: #1B3B2B; font-size: 2.2rem; font-weight: 700; margin: 5px 0 0 0; }
-    .brand-subtitle { color: #A88B58; font-size: 0.9rem; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; }
-    .css-card { background-color: #FFFFFF; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 15px rgba(27, 59, 43, 0.05); border: 1px solid #E5DEC3; }
-    .team-box { background-color: #1B3B2B; color: #F7F4EF; padding: 18px; border-radius: 12px; margin-bottom: 14px; border: 1px solid #A88B58; box-shadow: 0 4px 10px rgba(0,0,0,0.08); }
-    .team-box h3 { color: #D4B475 !important; font-family: 'Playfair Display', serif; margin-bottom: 10px; border-bottom: 1px solid #325843; padding-bottom: 6px; }
-    .badge-admin { background-color: #1B3B2B; color: #F7F4EF; padding: 4px 12px; border-radius: 15px; font-size: 0.8rem; font-weight: 600; }
-    .badge-user { background-color: #EAE3D9; color: #1B3B2B; padding: 4px 12px; border-radius: 15px; font-size: 0.8rem; font-weight: 600; }
-    .badge-hc { background-color: #F3EBDD; color: #A88B58; padding: 4px 12px; border-radius: 15px; font-size: 0.8rem; font-weight: 700; border: 1px solid #D6CBBF; }
-    .profile-avatar { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 2px solid #A88B58; margin-right: 10px; }
-    .stButton>button { background-color: #1B3B2B !important; color: #F7F4EF !important; border-radius: 8px !important; border: 1px solid #A88B58 !important; font-weight: 600 !important; }
+    .stApp { background-color: #F8F5F0 !important; font-family: 'Noto Sans KR', sans-serif; color: #1B3B2B; }
+    .brand-header { background-color: #FFFFFF; text-align: center; padding: 25px 10px; border-bottom: 2px solid #E6DEC9; margin-bottom: 25px; box-shadow: 0 4px 20px rgba(27, 59, 43, 0.03); }
+    .brand-title { font-family: 'Playfair Display', serif; color: #1B3B2B; font-size: 2.5rem; font-weight: 700; margin: 5px 0 0 0; }
+    .brand-subtitle { color: #A88B58; font-size: 0.85rem; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; }
+    .css-card { background-color: #FFFFFF; border-radius: 16px; padding: 22px; margin-bottom: 18px; box-shadow: 0 6px 20px rgba(27, 59, 43, 0.04); border: 1px solid #EBE4D8; }
+    .team-box { background-color: #1B3B2B; color: #F8F5F0; padding: 20px; border-radius: 14px; margin-bottom: 14px; border: 1px solid #C5A059; box-shadow: 0 6px 15px rgba(0,0,0,0.08); }
+    .team-box h3 { color: #E5C585 !important; font-family: 'Playfair Display', serif; margin-bottom: 12px; border-bottom: 1px solid #2C523D; padding-bottom: 8px; }
+    .badge-admin { background-color: #1B3B2B; color: #F8F5F0; padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; border: 1px solid #C5A059; }
+    .badge-user { background-color: #EFE9E0; color: #1B3B2B; padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+    .badge-hc { background-color: #F4EEDC; color: #9A7B45; padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; border: 1px solid #D6CBBF; }
+    .profile-avatar { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2px solid #C5A059; margin-right: 12px; }
+    .stButton>button { background-color: #1B3B2B !important; color: #F8F5F0 !important; border-radius: 10px !important; border: 1px solid #C5A059 !important; font-weight: 600 !important; padding: 0.5rem 1rem !important; }
     .stButton>button:hover { background-color: #27523C !important; color: #FFFFFF !important; }
-    section[data-testid="stSidebar"] { background-color: #EFE9E0 !important; border-right: 1px solid #D6CBBF; }
+    section[data-testid="stSidebar"] { background-color: #F1ECE4 !important; border-right: 1px solid #E2D9CC; }
     </style>
 """, unsafe_allow_html=True)
 
 st.markdown("""
 <div class="brand-header">
-    <div style="font-size: 2.5rem;">🚩</div>
+    <div style="font-size: 2.2rem;">⛳</div>
     <div class="brand-title">Segok Golf Club</div>
-    <div class="brand-subtitle">GOLF SOCIETY</div>
+    <div class="brand-subtitle">PREMIUM GOLF SOCIETY</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -153,19 +162,19 @@ st.markdown("""
 if not st.session_state.get('logged_in_user'):
     col_login, _ = st.columns([2, 1])
     with col_login:
-        tab1, tab2 = st.tabs(["🔑 회원 로그인", "✨ 초간단 신입회원 가입"])
+        tab1, tab2 = st.tabs(["🔑 클럽 회원 로그인", "✨ 신입 회원 가입 신청"])
         
         with tab1:
             st.caption("초기 비밀번호는 '1234' 입니다.")
             approved_members = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
-            login_name = st.selectbox("회원 이름 선택", ["선택하세요"] + approved_members)
+            login_name = st.selectbox("회원 성함 선택", ["선택하세요"] + approved_members)
             login_pw = st.text_input("비밀번호 입력", type="password")
             
             if st.button("로그인", type="primary", use_container_width=True):
                 if login_name in member_db:
                     user = member_db[login_name]
                     if user.get("status") != "approved":
-                        st.error("⌛ 아직 운영진 가입 승인 대기 중입니다.")
+                        st.error("⌛ 운영진 승인 대기 중입니다.")
                     elif login_pw == user.get("password", "1234"):
                         st.session_state.logged_in_user = login_name
                         st.success(f"{login_name}님 환영합니다!")
@@ -173,18 +182,18 @@ if not st.session_state.get('logged_in_user'):
                     else:
                         st.error("비밀번호가 올바르지 않습니다.")
                 else:
-                    st.warning("회원 이름을 선택해 주세요.")
+                    st.warning("회원 성함을 선택해 주세요.")
                     
         with tab2:
-            st.caption("외부 신규 회원은 가입 신청 후 운영진 승인을 거쳐 접속할 수 있습니다.")
-            new_name = st.text_input("신입 회원 이름")
-            new_nick = st.text_input("닉네임 설정 (선택)")
+            st.caption("가입 신청 후 운영진 승인을 거쳐 클럽 활동에 참여하실 수 있습니다.")
+            new_name = st.text_input("회원 성함")
+            new_nick = st.text_input("클럽 닉네임 (선택)")
             new_pw = st.text_input("비밀번호 설정", type="password")
             
-            if st.button("신규 회원 가입 신청하기", use_container_width=True):
+            if st.button("가입 신청서 제출", use_container_width=True):
                 if new_name and new_pw:
                     if new_name in member_db:
-                        st.error("이미 등록되어 있는 이름입니다.")
+                        st.error("이미 등록된 회원 성함입니다.")
                     else:
                         member_db[new_name] = {
                             "password": new_pw,
@@ -202,9 +211,9 @@ if not st.session_state.get('logged_in_user'):
                             pair_history[m][new_name] = 0
                             
                         save_data(db)
-                        st.success(f"🎉 {new_name}님 가입 신청 완료! 운영진 승인 후 로그인하실 수 있습니다.")
+                        st.success(f"🎉 {new_name}님 가입 신청이 완료되었습니다! 운영진 승인 후 이용 가능합니다.")
                 else:
-                    st.warning("이름과 비밀번호를 모두 입력해 주세요.")
+                    st.warning("성함과 비밀번호를 모두 입력해 주세요.")
     st.stop()
 
 current_user = st.session_state.logged_in_user
@@ -217,13 +226,13 @@ is_admin = user_info.get('is_admin', False)
 with st.sidebar:
     st.title("⛳ Segok Golf Club")
     
-    admin_badge = '<span class="badge-admin">👑 운영진</span>' if is_admin else '<span class="badge-user">👤 일반회원</span>'
+    admin_badge = '<span class="badge-admin">👑 운영진</span>' if is_admin else '<span class="badge-user">👤 정회원</span>'
     display_nickname = user_info.get('nickname', current_user)
     
     st.markdown(f"""
-    <div style="background-color:#FFFFFF; padding:15px; border-radius:12px; border:1px solid #D6CBBF; margin-top:10px; margin-bottom:15px;">
-        <h4 style="margin:0; color:#1B3B2B;">{display_nickname} 님 {admin_badge}</h4>
-        <hr style="margin:10px 0; border-top:1px solid #EAE3D9;">
+    <div style="background-color:#FFFFFF; padding:16px; border-radius:14px; border:1px solid #E2D9CC; margin-top:10px; margin-bottom:15px; box-shadow: 0 4px 10px rgba(0,0,0,0.02);">
+        <h4 style="margin:0; color:#1B3B2B; font-size:1.05rem;">{display_nickname} 님 {admin_badge}</h4>
+        <hr style="margin:10px 0; border-top:1px solid #EFE9E0;">
         <span class="badge-hc">핸디캡 {user_info.get('handicap', 0)}</span>
         <span class="badge-user">참석률 {user_info.get('attendance', 0)}%</span>
     </div>
@@ -235,35 +244,46 @@ with st.sidebar:
         
     st.divider()
     
-    menu_options = ["📸 피드 (Segok Feed)"]
-    if is_admin:
-        menu_options.append("🎲 조편성기 (운영진)")
-        
-    menu_options.append("🏆 라운드별 성적 & 시상")
-    menu_options.append("📜 지난 조편성 이력 관리")
+    # 메뉴 구성 (운영진 / 일반 회원 권한 분리 및 세련된 명칭 적용)
+    menu_options = [
+        "💬 소통 광장 (Feed)",
+        "🏆 경기 결과 및 랭킹",
+        "📁 역대 조편성 아카이브",
+        "📢 클럽 공지사항",
+        "👤 마이페이지"
+    ]
     
     if is_admin:
+        admin_menus = [
+            "⛳ 티타임 조편성",
+            "👥 클럽 회원 명부"
+        ]
+        # 원하는 위치에 운영진 메뉴 삽입
+        menu_options.insert(1, admin_menus[0])
         pending_count = len([k for k, v in member_db.items() if v.get("status") == "pending"])
-        m_label = f"📊 회원 명부 & 승인 ({pending_count})" if pending_count > 0 else "📊 회원 명부 & 승인"
+        m_label = f"👥 클럽 회원 명부 ({pending_count})" if pending_count > 0 else "👥 클럽 회원 명부"
         menu_options.append(m_label)
         
-    menu_options.append("⚙️ 내 정보 / 프로필 수정")
-    
-    menu = st.radio("📱 메뉴 이동", menu_options)
+    menu = st.radio("📱 클럽 메뉴", menu_options)
 
-# 1. 📸 피드
-if menu == "📸 피드 (Segok Feed)":
-    st.subheader("📸 Segok Member Feed")
-    with st.expander("✍️ 새 라운딩 사진 및 소식 올리기", expanded=True):
-        post_text = st.text_area("내용", placeholder="오늘의 라운딩 일상을 자유롭게 나눠보세요...")
-        uploaded_img = st.file_uploader("사진 첨부 (선택)", type=["jpg", "png", "jpeg"])
+# 1. 💬 소통 광장 (인스타 피드 스타일: 상단 미디어 + 하단 코멘트 + 동영상 지원)
+if menu == "💬 소통 광장 (Feed)":
+    st.subheader("💬 클럽 소통 광장")
+    with st.expander("✍️ 새 라운딩 소식 및 미디어 공유하기", expanded=True):
+        post_text = st.text_area("내용 작성", placeholder="오늘의 멋진 라운딩 추억을 사진이나 영상과 함께 공유해 보세요...")
+        uploaded_file = st.file_uploader("사진 또는 동영상 첨부 (선택)", type=["jpg", "png", "jpeg", "mp4", "mov", "avi"])
         
-        if st.button("피드 공유하기", type="primary", use_container_width=True):
-            if post_text or uploaded_img:
-                img_b64 = None
-                if uploaded_img is not None:
-                    bytes_data = uploaded_img.getvalue()
-                    img_b64 = base64.b64encode(bytes_data).decode()
+        if st.button("피드 발행하기", type="primary", use_container_width=True):
+            if post_text or uploaded_file:
+                media_path = None
+                media_type = None
+                if uploaded_file is not None:
+                    file_ext = uploaded_file.name.split('.')[-1].lower()
+                    file_name = f"{int(datetime.now().timestamp())}_{uploaded_file.name}"
+                    media_path = os.path.join(UPLOAD_DIR, file_name)
+                    with open(media_path, "wb") as f:
+                        f.write(uploaded_file.getbuffer())
+                    media_type = "video" if file_ext in ["mp4", "mov", "avi"] else "image"
                 
                 feed_posts.insert(0, {
                     "id": int(datetime.now().timestamp()),
@@ -272,16 +292,17 @@ if menu == "📸 피드 (Segok Feed)":
                     "profile_img": user_info.get("profile_img", None),
                     "date": datetime.now().strftime("%Y-%m-%d %H:%M"),
                     "content": post_text,
-                    "image": img_b64,
+                    "media_path": media_path,
+                    "media_type": media_type,
                     "likes": 0,
                     "comments": []
                 })
                 save_data(db)
-                st.success("피드가 작성되었습니다!")
+                st.success("피드가 발행되었습니다!")
                 st.rerun()
 
     if not feed_posts:
-        st.info("아직 등록된 피드가 없습니다. 첫 일상을 공유해 보세요!")
+        st.info("아직 등록된 피드가 없습니다. 첫 소식을 공유해 보세요!")
     else:
         for idx, post in enumerate(feed_posts):
             p_author = post.get("author", "알수없음")
@@ -292,23 +313,36 @@ if menu == "📸 피드 (Segok Feed)":
             if p_img:
                 avatar_html = f'<img src="data:image/png;base64,{p_img}" class="profile-avatar">'
             else:
-                avatar_html = '<span style="font-size:1.5rem; margin-right:8px;">👤</span>'
+                avatar_html = '<span style="font-size:1.6rem; margin-right:12px;">👤</span>'
                 
+            # 인스타 스타일: 상단 프로필 -> 미디어 -> 내용 코멘트 순서
             st.markdown(f"""
             <div class="css-card">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
                     <div style="display:flex; align-items:center;">
                         {avatar_html}
-                        <strong style="color:#1B3B2B; font-size:1.05rem;">{p_nickname}</strong>
+                        <strong style="color:#1B3B2B; font-size:1.1rem;">{p_nickname}</strong>
                     </div>
                     <span style="color:#A88B58; font-size:0.8rem;">{post['date']}</span>
                 </div>
-                <p style="font-size:1rem; margin-bottom:10px; color:#1B3B2B;">{post['content']}</p>
-            </div>
             """, unsafe_allow_html=True)
             
-            if post.get("image"):
-                st.image(base64.b64decode(post["image"]), use_column_width=True)
+            # 미디어 출력 (인스타 피드 본문 상단)
+            m_path = post.get("media_path")
+            if m_path and os.path.exists(m_path):
+                if post.get("media_type") == "video":
+                    st.video(m_path)
+                else:
+                    st.image(m_path, use_column_width=True)
+                st.markdown("<div style='margin-top: 12px;'></div>", unsafe_allow_html=True)
+
+            # 코멘트 텍스트 (인스타 피드 본문 하단)
+            if post.get('content'):
+                st.markdown(f"""
+                <p style="font-size:1.05rem; margin-bottom:14px; color:#2C4A3B; line-height:1.5;">{post['content']}</p>
+                """, unsafe_allow_html=True)
+                
+            st.markdown("</div>", unsafe_allow_html=True)
                 
             c_lk, c_edit, c_del, _ = st.columns([1.5, 1.5, 1.5, 2.5])
             
@@ -347,13 +381,13 @@ if menu == "📸 피드 (Segok Feed)":
                     save_data(db)
                     st.rerun()
 
-# 2. 🎲 조편성기
-elif menu == "🎲 조편성기 (운영진)":
-    st.subheader("🎲 중복 방지 & 실력 균등 조편성기")
+# 2. ⛳ 티타임 조편성 (운영진 전용)
+elif menu == "⛳ 티타임 조편성":
+    st.subheader("⛳ 티타임 조편성 및 매칭 시스템")
     if not is_admin:
         st.error("⛔ 조편성 기능은 운영진 전용 메뉴입니다.")
     else:
-        st.success("👑 **운영자 권한 확인 완료** | 자동 조편성 후 수동으로 조 위치를 변경할 수 있습니다.")
+        st.success("👑 **운영자 권한 확인 완료** | 중복 방지 및 균등 조편성을 실행할 수 있습니다.")
         
         c_mode1, c_mode2 = st.columns(2)
         with c_mode1:
@@ -398,7 +432,7 @@ elif menu == "🎲 조편성기 (운영진)":
             teams = st.session_state.generated_teams
             e_type = st.session_state.get('current_event_type', event_type)
             
-            with st.expander("✏️ [운영진 전용] 조 구성원 수동으로 변경하기"):
+            with st.expander("✏️ 조 구성원 수동으로 변경하기"):
                 st.info("특정 회원을 선택하여 원하는 조로 바꿀 수 있습니다.")
                 col_m1, col_m2 = st.columns(2)
                 with col_m1:
@@ -434,7 +468,7 @@ elif menu == "🎲 조편성기 (운영진)":
             st.subheader("📱 카카오톡 공지문 복사")
             st.code(notice_text, language="text")
             
-            if st.button("💾 이 조편성을 최종 확정 및 성적 입력 카드 자동 생성", use_container_width=True):
+            if st.button("💾 이 조편성을 최종 확정 및 경기 결과 카드 생성", use_container_width=True):
                 for team in teams:
                     for i in range(len(team)):
                         for j in range(i + 1, len(team)):
@@ -464,132 +498,137 @@ elif menu == "🎲 조편성기 (운영진)":
                 rounds_data.insert(0, round_entry)
                 
                 save_data(db)
-                st.success("🎉 조편성이 최종 확정되었으며, [🏆 라운드별 성적 & 시상] 메뉴에 성적 입력 카드가 자동으로 생성되었습니다!")
+                st.success("🎉 조편성이 최종 확정되었으며, [🏆 경기 결과 및 랭킹] 메뉴에 결과 입력 카드가 자동으로 생성되었습니다!")
 
-# 3. 🏆 라운드별 성적 & 시상 (개선된 깔끔한 통계 통틀어 표기)
-elif menu == "🏆 라운드별 성적 & 시상":
-    st.subheader("🏆 라운드별 성적 및 자동 시상 내역")
+# 3. 🏆 경기 결과 및 랭킹 (라운드별 선택 수정/삭제 + 누적 통계)
+elif menu == "🏆 경기 결과 및 랭킹":
+    st.subheader("🏆 경기 결과 및 클럽 랭킹 통계")
     
     if not rounds_data:
-        st.info("등록된 라운드가 없습니다. 운영진이 조편성을 확정하면 성적 입력 카드가 자동 생성됩니다.")
+        st.info("등록된 경기 결과가 없습니다. 운영진이 조편성을 확정하면 입력 카드가 생성됩니다.")
     else:
-        for r_idx, r in enumerate(rounds_data):
-            is_done = r.get("completed", False)
-            status_tag = "✅ 성적 입력 완료" if is_done else "⌛ 성적 입력 대기 중"
+        # 라운드별 선택 관리 UI 제공
+        round_titles = [f"{r['date']} | {r['title']} ({'완료' if r.get('completed') else '대기'})" for r in rounds_data]
+        selected_round_label = st.selectbox("🔍 조회 및 관리할 라운드 선택", round_titles)
+        selected_r_idx = round_titles.index(selected_round_label)
+        r = rounds_data[selected_r_idx]
+        
+        is_done = r.get("completed", False)
+        status_tag = "✅ 성적 입력 완료" if is_done else "⌛ 성적 입력 대기 중"
+        
+        st.markdown(f"### 🚩 {r['date']} | {r['title']} [{status_tag}]")
+        
+        if is_done:
+            st.markdown(f"""
+            <div class="css-card">
+                <h4 style="color:#A88B58; margin-bottom:10px;">🏆 공식 시상 내역</h4>
+                <p>🥇 <b>메달리스트 (최저타):</b> {r['awards']['medalist']}</p>
+                <p>💣 <b>롱기스트 (최장타):</b> {r['awards']['longist']}</p>
+                <p>🎯 <b>니어리스트 (최근접):</b> {r['awards']['nearest']}</p>
+            </div>
+            """, unsafe_allow_html=True)
             
-            with st.expander(f"🚩 {r['date']} | {r['title']} [{status_tag}]", expanded=not is_done):
-                if is_done:
-                    st.markdown(f"""
-                    <div class="css-card">
-                        <h4 style="color:#A88B58; margin-bottom:10px;">🏆 공식 시상 내역</h4>
-                        <p>🥇 <b>메달리스트 (최저타):</b> {r['awards']['medalist']}</p>
-                        <p>💣 <b>롱기스트 (최장타):</b> {r['awards']['longist']}</p>
-                        <p>🎯 <b>니어리스트 (최근접):</b> {r['awards']['nearest']}</p>
-                    </div>
-                    """, unsafe_allow_html=True)
+            st.markdown("##### 📊 회원별 스코어 기록표")
+            score_table = []
+            for p_name, p_info in r['scores'].items():
+                score_table.append({
+                    "회원 성함(닉네임)": f"{p_name} ({member_db.get(p_name, {}).get('nickname', p_name)})",
+                    "스코어": f"{p_info['score']}타",
+                    "드라이버 비거리": f"{p_info['long']}m" if p_info['long'] > 0 else "-",
+                    "니어 근접거리": f"{p_info['near']}m" if p_info['near'] > 0 else "-"
+                })
+            st.dataframe(pd.DataFrame(score_table), use_column_width=True)
+            
+        if is_admin:
+            st.markdown("---")
+            col_a1, col_a2 = st.columns(2)
+            with col_a1:
+                btn_label = "✏️ 해당 라운드 성적 수정하기" if is_done else "✍️ 해당 라운드 스코어/롱기/니어 입력하기"
+                with st.expander(btn_label):
+                    teams = r.get("teams", [])
+                    entered_mod_scores = {}
                     
-                    st.markdown("##### 📊 회원별 스코어 기록표")
-                    score_table = []
-                    for p_name, p_info in r['scores'].items():
-                        score_table.append({
-                            "회원 이름": member_db.get(p_name, {}).get("nickname", p_name),
-                            "스코어": f"{p_info['score']}타",
-                            "드라이버 비거리": f"{p_info['long']}m" if p_info['long'] > 0 else "-",
-                            "니어 거리에 근접": f"{p_info['near']}m" if p_info['near'] > 0 else "-"
-                        })
-                    st.dataframe(pd.DataFrame(score_table), use_container_width=True)
-                    
-                if is_admin:
-                    st.markdown("---")
-                    col_a1, col_a2 = st.columns(2)
-                    with col_a1:
-                        btn_label = "✏️ 성적 수정하기" if is_done else "✍️ 스코어/롱기/니어 바로 입력하기"
-                        with st.expander(btn_label):
-                            teams = r.get("teams", [])
-                            entered_mod_scores = {}
+                    if teams:
+                        for t_idx, team in enumerate(teams):
+                            st.markdown(f"##### ⛳ {t_idx+1}조")
+                            for m in team:
+                                curr = r.get("scores", {}).get(m, {"score": 85, "long": 0, "near": 0.0})
+                                m_nick = member_db.get(m, {}).get("nickname", m)
+                                c1, c2, c3 = st.columns(3)
+                                with c1:
+                                    sc = st.number_input(f"[{m_nick}] 스코어", min_value=50, max_value=140, value=curr['score'], key=f"sc_{r['id']}_{m}")
+                                with c2:
+                                    ld = st.number_input(f"[{m_nick}] 비거리(m)", min_value=0, max_value=350, value=curr['long'], key=f"ld_{r['id']}_{m}")
+                                with c3:
+                                    nd = st.number_input(f"[{m_nick}] 니어(m)", min_value=0.0, max_value=50.0, value=float(curr['near']), step=0.1, key=f"nd_{r['id']}_{m}")
+                                entered_mod_scores[m] = {"score": sc, "long": ld, "near": nd}
+                    else:
+                        approved_names = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
+                        sel_mems = st.multiselect("참석 회원 선택", approved_names, default=list(r.get("scores", {}).keys()), key=f"melsel_{r['id']}")
+                        for m in sel_mems:
+                            curr = r.get("scores", {}).get(m, {"score": 85, "long": 0, "near": 0.0})
+                            m_nick = member_db.get(m, {}).get("nickname", m)
+                            c1, c2, c3 = st.columns(3)
+                            with c1:
+                                sc = st.number_input(f"[{m_nick}] 스코어", min_value=50, max_value=140, value=curr['score'], key=f"sc_{r['id']}_{m}")
+                            with c2:
+                                ld = st.number_input(f"[{m_nick}] 비거리(m)", min_value=0, max_value=350, value=curr['long'], key=f"ld_{r['id']}_{m}")
+                            with c3:
+                                nd = st.number_input(f"[{m_nick}] 니어(m)", min_value=0.0, max_value=50.0, value=float(curr['near']), step=0.1, key=f"nd_{r['id']}_{m}")
+                            entered_mod_scores[m] = {"score": sc, "long": ld, "near": nd}
+
+                    if st.button("🏆 성적 최종 저장 및 시상 자동 계산", key=f"sv_rnd_{r['id']}", type="primary"):
+                        if entered_mod_scores:
+                            r['scores'] = entered_mod_scores
+                            r['completed'] = True
                             
-                            if teams:
-                                for t_idx, team in enumerate(teams):
-                                    st.markdown(f"##### ⛳ {t_idx+1}조")
-                                    for m in team:
-                                        curr = r.get("scores", {}).get(m, {"score": 85, "long": 0, "near": 0.0})
-                                        m_nick = member_db.get(m, {}).get("nickname", m)
-                                        c1, c2, c3 = st.columns(3)
-                                        with c1:
-                                            sc = st.number_input(f"[{m_nick}] 스코어", min_value=50, max_value=140, value=curr['score'], key=f"sc_{r['id']}_{m}")
-                                        with c2:
-                                            ld = st.number_input(f"[{m_nick}] 비거리(m)", min_value=0, max_value=350, value=curr['long'], key=f"ld_{r['id']}_{m}")
-                                        with c3:
-                                            nd = st.number_input(f"[{m_nick}] 니어(m)", min_value=0.0, max_value=50.0, value=float(curr['near']), step=0.1, key=f"nd_{r['id']}_{m}")
-                                        entered_mod_scores[m] = {"score": sc, "long": ld, "near": nd}
-                            else:
-                                approved_names = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
-                                sel_mems = st.multiselect("참석 회원 선택", approved_names, default=list(r.get("scores", {}).keys()), key=f"melsel_{r['id']}")
-                                for m in sel_mems:
-                                    curr = r.get("scores", {}).get(m, {"score": 85, "long": 0, "near": 0.0})
-                                    m_nick = member_db.get(m, {}).get("nickname", m)
-                                    c1, c2, c3 = st.columns(3)
-                                    with c1:
-                                        sc = st.number_input(f"[{m_nick}] 스코어", min_value=50, max_value=140, value=curr['score'], key=f"sc_{r['id']}_{m}")
-                                    with c2:
-                                        ld = st.number_input(f"[{m_nick}] 비거리(m)", min_value=0, max_value=350, value=curr['long'], key=f"ld_{r['id']}_{m}")
-                                    with c3:
-                                        nd = st.number_input(f"[{m_nick}] 니어(m)", min_value=0.0, max_value=50.0, value=float(curr['near']), step=0.1, key=f"nd_{r['id']}_{m}")
-                                    entered_mod_scores[m] = {"score": sc, "long": ld, "near": nd}
-
-                            if st.button("🏆 성적 최종 저장 및 시상 자동 계산", key=f"sv_rnd_{r['id']}", type="primary"):
-                                if entered_mod_scores:
-                                    r['scores'] = entered_mod_scores
-                                    r['completed'] = True
-                                    
-                                    medalist = min(entered_mod_scores.items(), key=lambda x: x[1]["score"])
-                                    v_longs = {k: v for k, v in entered_mod_scores.items() if v["long"] > 0}
-                                    longist = max(v_longs.items(), key=lambda x: x[1]["long"]) if v_longs else None
-                                    v_nears = {k: v for k, v in entered_mod_scores.items() if v["near"] > 0}
-                                    nearest = min(v_nears.items(), key=lambda x: x[1]["near"]) if v_nears else None
-                                    
-                                    medalist_nick = member_db.get(medalist[0], {}).get("nickname", medalist[0])
-                                    longist_nick = member_db.get(longist[0], {}).get("nickname", longist[0]) if longist else ""
-                                    nearest_nick = member_db.get(nearest[0], {}).get("nickname", nearest[0]) if nearest else ""
-                                    
-                                    r['awards'] = {
-                                        "medalist": f"{medalist_nick} ({medalist[1]['score']}타)",
-                                        "longist": f"{longist_nick} ({longist[1]['long']}m)" if longist else "기록 없음",
-                                        "nearest": f"{nearest_nick} ({nearest[1]['near']}m)" if nearest else "기록 없음",
-                                        "raw_medalist": medalist[0],
-                                        "raw_longist": longist[0] if longist else None,
-                                        "raw_nearest": nearest[0] if nearest else None,
-                                        "raw_medalist_score": medalist[1]['score'],
-                                        "raw_longist_dist": longist[1]['long'] if longist else 0,
-                                        "raw_nearest_dist": nearest[1]['near'] if nearest else 999
-                                    }
-                                    recalculate_all_stats(db)
-                                    save_data(db)
-                                    st.success("🎉 라운드 성적이 성공적으로 등록되었습니다!")
-                                    st.rerun()
-
-                    with col_a2:
-                        if st.button(f"🗑️ 라운드 전체 삭제", key=f"del_rnd_{r['id']}"):
-                            rounds_data.pop(r_idx)
+                            medalist = min(entered_mod_scores.items(), key=lambda x: x[1]["score"])
+                            v_longs = {k: v for k, v in entered_mod_scores.items() if v["long"] > 0}
+                            longist = max(v_longs.items(), key=lambda x: x[1]["long"]) if v_longs else None
+                            v_nears = {k: v for k, v in entered_mod_scores.items() if v["near"] > 0}
+                            nearest = min(v_nears.items(), key=lambda x: x[1]["near"]) if v_nears else None
+                            
+                            medalist_nick = member_db.get(medalist[0], {}).get("nickname", medalist[0])
+                            longist_nick = member_db.get(longist[0], {}).get("nickname", longist[0]) if longist else ""
+                            nearest_nick = member_db.get(nearest[0], {}).get("nickname", nearest[0]) if nearest else ""
+                            
+                            r['awards'] = {
+                                "medalist": f"{medalist_nick} ({medalist[1]['score']}타)",
+                                "longist": f"{longist_nick} ({longist[1]['long']}m)" if longist else "기록 없음",
+                                "nearest": f"{nearest_nick} ({nearest[1]['near']}m)" if nearest else "기록 없음",
+                                "raw_medalist": medalist[0],
+                                "raw_longist": longist[0] if longist else None,
+                                "raw_nearest": nearest[0] if nearest else None,
+                                "raw_medalist_score": medalist[1]['score'],
+                                "raw_longist_dist": longist[1]['long'] if longist else 0,
+                                "raw_nearest_dist": nearest[1]['near'] if nearest else 999
+                            }
                             recalculate_all_stats(db)
                             save_data(db)
-                            st.success("해당 라운드가 삭제되었습니다.")
+                            st.success("🎉 성적이 성공적으로 등록되었습니다!")
                             st.rerun()
 
-    # --- 깔끔하게 정돈된 누적 통계 & TOP 10 랭킹 구역 ---
+            with col_a2:
+                if st.button(f"🗑️ 현재 선택한 라운드 삭제", key=f"del_rnd_{r['id']}"):
+                    rounds_data.pop(selected_r_idx)
+                    recalculate_all_stats(db)
+                    save_data(db)
+                    st.success("해당 라운드가 삭제되었습니다.")
+                    st.rerun()
+
+    # --- 누적 통계 & TOP 10 랭킹 (요청하신 최저타수, 롱기/니어 횟수+거리 표기) ---
     st.divider()
     st.subheader("📊 클럽 누적 통계 & TOP 10 랭킹")
-    st.caption("💡 진행된 모든 라운드 공식 기록을 바탕으로 산출된 통계입니다.")
+    st.caption("💡 진행된 모든 라운드 공식 기록을 바탕으로 산출된 종합 통계입니다.")
     
     completed_r = [r for r in rounds_data if r.get("completed")]
     
     if not completed_r:
         st.warning("아직 완료된 라운드가 없어 통계 집계 데이터가 없습니다.")
     else:
-        # 데이터 수집
-        medalist_data = {} # {member: [count, min_score]}
-        longist_data = {}  # {member: [count, max_long]}
-        nearest_data = {}  # {member: [count, min_near]}
+        medalist_data = {} 
+        longist_data = {}  
+        nearest_data = {}  
         attendance_counts = {}
 
         for r in completed_r:
@@ -628,8 +667,8 @@ elif menu == "🏆 라운드별 성적 & 시상":
                 med_list = []
                 for m, val in medalist_data.items():
                     nick = member_db.get(m, {}).get("nickname", m)
-                    med_list.append({"회원": nick, "우승 횟수": val[0], "최소 타수": f"{val[1]}타"})
-                df_med = pd.DataFrame(med_list).sort_values(by=["우승 횟수", "최소 타수"], ascending=[False, True]).head(10).reset_index(drop=True)
+                    med_list.append({"회원": nick, "우승 횟수": f"{val[0]}회", "최소 타수": f"{val[1]}타"})
+                df_med = pd.DataFrame(med_list).sort_values(by="우승 횟수", ascending=False).head(10).reset_index(drop=True)
                 df_med.index += 1
                 st.dataframe(df_med, use_container_width=True)
             else:
@@ -640,8 +679,8 @@ elif menu == "🏆 라운드별 성적 & 시상":
                 long_list = []
                 for m, val in longist_data.items():
                     nick = member_db.get(m, {}).get("nickname", m)
-                    long_list.append({"회원": nick, "달성 횟수": val[0], "최고 비거리": f"{val[1]}m"})
-                df_long = pd.DataFrame(long_list).sort_values(by=["달성 횟수", "최고 비거리"], ascending=[False, False]).head(10).reset_index(drop=True)
+                    long_list.append({"회원": nick, "달성 횟수": f"{val[0]}회", "최고 비거리": f"{val[1]}m"})
+                df_long = pd.DataFrame(long_list).sort_values(by="달성 횟수", ascending=False).head(10).reset_index(drop=True)
                 df_long.index += 1
                 st.dataframe(df_long, use_container_width=True)
             else:
@@ -653,8 +692,8 @@ elif menu == "🏆 라운드별 성적 & 시상":
                 near_list = []
                 for m, val in nearest_data.items():
                     nick = member_db.get(m, {}).get("nickname", m)
-                    near_list.append({"회원": nick, "달성 횟수": val[0], "최단 거리": f"{val[1]}m"})
-                df_near = pd.DataFrame(near_list).sort_values(by=["달성 횟수", "최단 거리"], ascending=[False, True]).head(10).reset_index(drop=True)
+                    near_list.append({"회원": nick, "달성 횟수": f"{val[0]}회", "최단 거리": f"{val[1]}m"})
+                df_near = pd.DataFrame(near_list).sort_values(by="달성 횟수", ascending=False).head(10).reset_index(drop=True)
                 df_near.index += 1
                 st.dataframe(df_near, use_container_width=True)
             else:
@@ -662,47 +701,93 @@ elif menu == "🏆 라운드별 성적 & 시상":
 
             st.markdown("##### 📅 총 출석 라운드 횟수 TOP 10")
             if attendance_counts:
-                att_list = [{"회원": member_db.get(k, {}).get("nickname", k), "참석 횟수": v} for k, v in attendance_counts.items()]
+                att_list = [{"회원": member_db.get(k, {}).get("nickname", k), "참석 횟수": f"{v}회"} for k, v in attendance_counts.items()]
                 df_att = pd.DataFrame(att_list).sort_values(by="참석 횟수", ascending=False).head(10).reset_index(drop=True)
                 df_att.index += 1
                 st.dataframe(df_att, use_container_width=True)
             else:
                 st.info("기록 없음")
 
-# 4. 📜 지난 조편성 이력 관리
-elif menu == "📜 지난 조편성 이력 관리":
-    st.subheader("📜 Segok Golf Club 지난 조편성 이력")
+# 4. 📁 역대 조편성 아카이브 (선택형 삭제 기능)
+elif menu == "📁 역대 조편성 아카이브":
+    st.subheader("📁 역대 조편성 아카이브")
     if not match_logs:
-        st.warning("아직 저장된 지난 조편성 이력이 없습니다.")
+        st.warning("아직 저장된 조편성 이력이 없습니다.")
     else:
-        for idx, log in enumerate(match_logs):
-            with st.container():
-                col_head1, col_head2 = st.columns([4, 1])
-                with col_head1:
-                    st.markdown(f"### 🗓️ {log['date']} | {log['event_type']}")
-                with col_head2:
-                    if is_admin:
-                        if st.button(f"🗑️ 이력 삭제", key=f"del_log_{idx}"):
-                            match_logs.pop(idx)
-                            save_data(db)
-                            st.success("해당 조편성 이력이 삭제되었습니다.")
-                            st.rerun()
+        log_options = [f"{log['date']} | {log['event_type']}" for log in match_logs]
+        selected_log_label = st.selectbox("📂 조회할 조편성 이력 선택", log_options)
+        selected_log_idx = log_options.index(selected_log_label)
+        log = match_logs[selected_log_idx]
+        
+        st.markdown(f"### 🗓️ {log['date']} | {log['event_type']}")
+        
+        if is_admin:
+            if st.button("🗑️ 선택한 조편성 이력 삭제하기", type="primary"):
+                match_logs.pop(selected_log_idx)
+                save_data(db)
+                st.success("해당 조편성 이력이 삭제되었습니다.")
+                st.rerun()
                 
-                cols = st.columns(min(len(log['teams']), 4))
-                for t_idx, team in enumerate(log['teams']):
-                    with cols[t_idx % 4]:
-                        team_names = ", ".join([f"{m}({member_db.get(m, {}).get('handicap', '0')})" for m in team])
-                        st.markdown(f"**⛳ {t_idx+1}조:** {team_names}")
-                st.divider()
+        st.markdown("---")
+        cols = st.columns(min(len(log['teams']), 4))
+        for t_idx, team in enumerate(log['teams']):
+            with cols[t_idx % 4]:
+                team_names = ", ".join([f"{m}({member_db.get(m, {}).get('handicap', '0')})" for m in team])
+                st.markdown(f"**⛳ {t_idx+1}조:** {team_names}")
 
-# 5. 📊 회원 명부 & 승인 관리 (운영진 전용)
-elif menu.startswith("📊 회원 명부"):
-    st.subheader("📊 Segok Golf Club 회원 명부")
+# 5. 📢 클럽 공지사항
+elif menu == "📢 클럽 공지사항":
+    st.subheader("📢 클럽 공지사항")
+    st.caption("세곡 골프클럽의 주요 소식과 안내 사항을 확인하세요.")
+    
+    if is_admin:
+        with st.expander("✍️ [운영진] 새 공지사항 등록하기"):
+            n_title = st.text_input("공지 제목")
+            n_content = st.text_area("공지 내용")
+            if st.button("공지 발행", type="primary"):
+                if n_title and n_content:
+                    notices.insert(0, {
+                        "id": int(datetime.now().timestamp()),
+                        "date": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                        "title": n_title,
+                        "content": n_content
+                    })
+                    save_data(db)
+                    st.success("공지가 성공적으로 발행되었습니다.")
+                    st.rerun()
+                else:
+                    st.warning("제목과 내용을 모두 입력해 주세요.")
+                    
+    if not notices:
+        st.info("등록된 공지사항이 없습니다.")
+    else:
+        for n_idx, notice in enumerate(notices):
+            st.markdown(f"""
+            <div class="css-card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <h4 style="color:#1B3B2B; margin:0;">📌 {notice['title']}</h4>
+                    <span style="color:#A88B58; font-size:0.85rem;">{notice['date']}</span>
+                </div>
+                <hr style="margin:10px 0; border-top:1px solid #EBE4D8;">
+                <p style="color:#2C4A3B; font-size:1rem; line-height:1.6; white-space: pre-wrap;">{notice['content']}</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            if is_admin:
+                if st.button("🗑️ 공지 삭제", key=f"del_notice_{notice['id']}"):
+                    notices.pop(n_idx)
+                    save_data(db)
+                    st.success("공지사항이 삭제되었습니다.")
+                    st.rerun()
+
+# 6. 👥 클럽 회원 명부 (운영진 전용)
+elif menu.startswith("👥 클럽 회원 명부"):
+    st.subheader("👥 클럽 회원 명부")
     
     df_data = [{
-        "이름": k, 
+        "성함": k, 
         "닉네임": v.get('nickname', k),
-        "자동 산출 핸디캡": v.get('handicap', 0), 
+        "핸디캡": v.get('handicap', 0), 
         "연간 참석률": f"{v.get('attendance', 0)}%", 
         "총 라운드 참석": f"{v.get('rounds_played', 0)}회"
     } for k, v in member_db.items() if v.get("status", "approved") == "approved"]
@@ -715,32 +800,32 @@ elif menu.startswith("📊 회원 명부"):
         pending_members = [k for k, v in member_db.items() if v.get("status") == "pending"]
         
         if not pending_members:
-            st.info("현재 가입 승인 대기 중인 신입 회원이 없습니다.")
+            st.info("현재 가입 승인 대기 중인 회원이 없습니다.")
         else:
             for p_name in pending_members:
                 col_p1, col_p2 = st.columns([3, 1])
                 with col_p1:
-                    st.write(f"👤 **신입 신청 회원:** `{p_name}`")
+                    st.write(f"👤 **가입 대기 회원:** `{p_name}`")
                 with col_p2:
-                    if st.button(f"✅ {p_name} 가입 승인", key=f"app_{p_name}"):
+                    if st.button(f"✅ {p_name} 승인", key=f"app_{p_name}"):
                         member_db[p_name]["status"] = "approved"
                         save_data(db)
-                        st.success(f"🎉 {p_name} 회원의 가입 승인이 완료되었습니다!")
+                        st.success(f"🎉 {p_name} 회원의 가입이 최종 승인되었습니다!")
                         st.rerun()
 
-# 6. ⚙️ 내 정보 / 프로필 수정
-elif menu == "⚙️ 내 정보 / 프로필 수정":
-    st.subheader("⚙️ 개인정보 및 프로필 수정")
-    st.info("💡 이름, 닉네임, 비밀번호, 프로필 사진을 직접 변경할 수 있습니다.")
+# 7. 👤 마이페이지
+elif menu == "👤 마이페이지":
+    st.subheader("👤 마이페이지 & 프로필 설정")
+    st.info("💡 회원 성함, 닉네임, 비밀번호 및 프로필 사진을 직접 관리할 수 있습니다.")
     
     with st.form("edit_profile_form"):
         col_f1, col_f2 = st.columns(2)
         with col_f1:
             edit_name = st.text_input("회원 성함", value=current_user)
-            edit_nickname = st.text_input("닉네임", value=user_info.get("nickname", current_user))
+            edit_nickname = st.text_input("클럽 닉네임", value=user_info.get("nickname", current_user))
             edit_pw = st.text_input("비밀번호 변경", value=user_info.get("password", "1234"), type="password")
         with col_f2:
-            p_img_file = st.file_uploader("프로필 사진 등록 (선택)", type=["jpg", "png", "jpeg"])
+            p_img_file = st.file_uploader("프로필 아바타 등록 (선택)", type=["jpg", "png", "jpeg"])
             if user_info.get("profile_img"):
                 st.image(base64.b64decode(user_info["profile_img"]), width=100, caption="현재 등록된 프로필 사진")
             
@@ -749,7 +834,7 @@ elif menu == "⚙️ 내 정보 / 프로필 수정":
         if submit_btn:
             if edit_name != current_user:
                 if edit_name in member_db:
-                    st.error("이미 존재하는 회원 이름입니다.")
+                    st.error("이미 존재하는 회원 성함입니다.")
                 else:
                     member_db[edit_name] = member_db.pop(current_user)
                     st.session_state.logged_in_user = edit_name
@@ -763,5 +848,5 @@ elif menu == "⚙️ 내 정보 / 프로필 수정":
                 user_info['profile_img'] = base64.b64encode(img_bytes).decode()
                 
             save_data(db)
-            st.success("🎉 개인정보 및 프로필 사진이 성공적으로 수정되었습니다!")
+            st.success("🎉 마이페이지 정보가 성공적으로 업데이트되었습니다!")
             st.rerun()
