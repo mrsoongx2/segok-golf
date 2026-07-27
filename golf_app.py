@@ -268,7 +268,7 @@ is_admin = user_info.get('is_admin', False)
 display_nickname = user_info.get('nickname', current_user)
 admin_badge = '<span class="badge-admin">👑 운영진</span>' if is_admin else '<span class="badge-user">👤 정회원</span>'
 
-# --- 상단 고정 헤더 (중복 없이 단독 렌더링) ---
+# --- 상단 고정 헤더 ---
 col_h1, col_h2 = st.columns([3, 2])
 with col_h1:
     if st.button("⛳ Segok Golf Club", key="logo_home_btn"):
@@ -477,11 +477,18 @@ else:
                 """, unsafe_allow_html=True)
                 
                 if is_admin:
-                    if st.button("🗑️ 공지 삭제", key=f"del_notice_{notice['id']}"):
-                        notices.pop(n_idx)
-                        save_data(db)
-                        st.success("공지사항이 삭제되었습니다.")
-                        st.rerun()
+                    # 삭제 확인 안전 장치 적용
+                    del_key = f"del_notice_{notice['id']}"
+                    confirm_key = f"conf_notice_{notice['id']}"
+                    
+                    with st.expander("🗑️ 공지 삭제 관리"):
+                        confirm_del = st.checkbox("정말로 이 공지사항을 삭제하시겠습니까?", key=confirm_key)
+                        if confirm_del:
+                            if st.button("⚠️ 최종 삭제 실행", key=del_key, type="primary"):
+                                notices.pop(n_idx)
+                                save_data(db)
+                                st.success("공지사항이 삭제되었습니다.")
+                                st.rerun()
 
     # 2. 💬 클럽 라운지
     elif menu == "클럽 라운지":
@@ -589,11 +596,14 @@ else:
 
                 if post['author'] == current_user or is_admin:
                     with c_del:
-                        if st.button("🗑️ 삭제", key=f"del_post_{post['id']}"):
-                            feed_posts.pop(idx)
-                            save_data(db)
-                            st.success("게시글이 삭제되었습니다.")
-                            st.rerun()
+                        with st.expander("🗑️ 피드 삭제"):
+                            conf_post = st.checkbox("정말로 이 피드를 삭제하시겠습니까?", key=f"conf_post_{post['id']}")
+                            if conf_post:
+                                if st.button("⚠️ 최종 삭제 실행", key=f"btn_del_post_{post['id']}", type="primary"):
+                                    feed_posts.pop(idx)
+                                    save_data(db)
+                                    st.success("게시글이 삭제되었습니다.")
+                                    st.rerun()
 
                 with st.expander(f"💬 댓글 ({len(post.get('comments', []))})"):
                     for c in post.get('comments', []):
@@ -729,14 +739,14 @@ else:
                     
                     save_data(db)
 
-    # 4. 🏆 경기 결과 및 랭킹
+    # 4. 🏆 경기 결과 및 랭킹 (삭제 확인 안전 장치 적용)
     elif menu == "경기 결과 및 랭킹":
         st.subheader("🏆 경기 결과 및 클럽 랭킹 통계")
         
         field_rounds = [r for r in rounds_data if "필드" in r.get("type", "")]
         
         if not field_rounds:
-            st.info("등록된 필드 경기 결과가 없습니다. 운영진이 필드 조편성을 확정하면 입력 카드가 생성됩니다.")
+            st.info("등록된 필id 경기 결과가 없습니다. 운영진이 필드 조편성을 확정하면 입력 카드가 생성됩니다.")
         else:
             st.markdown("##### 📋 역대 필드 라운드 선택 및 상세 조회")
             
@@ -847,12 +857,15 @@ else:
                                 st.rerun()
 
                 with col_a2:
-                    if st.button(f"🗑️ 현재 선택한 라운드 삭제", key=f"del_rnd_{r['id']}"):
-                        rounds_data.remove(r)
-                        recalculate_all_stats(db)
-                        save_data(db)
-                        st.success("해당 라운드가 삭제되었습니다.")
-                        st.rerun()
+                    with st.expander("🗑️ 라운드 삭제 관리"):
+                        conf_rnd = st.checkbox("정말로 이 라운드 기록을 삭제하시겠습니까?", key=f"conf_rnd_{r['id']}")
+                        if conf_rnd:
+                            if st.button(f"⚠️ 최종 라운드 삭제 실행", key=f"btn_del_rnd_{r['id']}", type="primary"):
+                                rounds_data.remove(r)
+                                recalculate_all_stats(db)
+                                save_data(db)
+                                st.success("해당 라운드가 삭제되었습니다.")
+                                st.rerun()
 
         # --- 누적 통계 & 랭킹 ---
         st.divider()
@@ -1022,7 +1035,7 @@ else:
                 df_m_rounds = pd.DataFrame(member_rounds_data)
                 st.table(df_m_rounds)
 
-    # 6. 📁 역대 조편성 아카이브
+    # 6. 📁 역대 조편성 아카이브 (삭제 확인 안전 장치 적용)
     elif menu == "역대 조편성 아카이브":
         st.subheader("📁 역대 조편성 아카이브")
         if not match_logs:
@@ -1036,11 +1049,14 @@ else:
             st.markdown(f"### 🗓️ {log['date']} | {log['event_type']}")
             
             if is_admin:
-                if st.button("🗑️ 선택한 조편성 이력 삭제하기", type="primary"):
-                    match_logs.pop(selected_log_idx)
-                    save_data(db)
-                    st.success("해당 조편성 이력이 삭제되었습니다.")
-                    st.rerun()
+                with st.expander("🗑️ 조편성 이력 삭제 관리"):
+                    conf_log = st.checkbox("정말로 이 조편성 이력을 삭제하시겠습니까?", key=f"conf_log_{selected_log_idx}")
+                    if conf_log:
+                        if st.button("⚠️ 최종 이력 삭제 실행", key=f"btn_del_log_{selected_log_idx}", type="primary"):
+                            match_logs.pop(selected_log_idx)
+                            save_data(db)
+                            st.success("해당 조편성 이력이 삭제되었습니다.")
+                            st.rerun()
                     
             st.markdown("---")
             cols = st.columns(min(len(log['teams']), 4))
