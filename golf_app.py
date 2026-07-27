@@ -129,7 +129,6 @@ rounds_data = db.setdefault("rounds_data", [])
 match_logs = db.setdefault("match_logs", [])
 notices = db.setdefault("notices", [])
 
-# 브라우저 뒤로가기 및 새로고침 시 세션 유지 (Query Params 활용)
 query_user = None
 query_menu = None
 try:
@@ -266,7 +265,7 @@ is_admin = user_info.get('is_admin', False)
 display_nickname = user_info.get('nickname', current_user)
 admin_badge = '<span class="badge-admin">👑 운영진</span>' if is_admin else '<span class="badge-user">👤 정회원</span>'
 
-# --- 상단 고정 헤더 ---
+# --- 공통 상단 고정 헤더 (모든 화면에서 중복 없이 단독 렌더링) ---
 col_h1, col_h2 = st.columns([3, 2])
 with col_h1:
     if st.button("⛳ Segok Golf Club", key="logo_home_btn"):
@@ -293,9 +292,6 @@ if st.session_state.current_menu == "HOME":
         <p>PREMIUM GOLF SOCIETY & COMMUNITY</p>
     </div>
     """, unsafe_allow_html=True)
-    
-    st.markdown("### 📌 클럽 메인 메뉴 바로가기")
-    st.caption("원하시는 서비스를 선택하여 입장하세요.")
     
     c1, c2, c3 = st.columns(3)
     
@@ -383,26 +379,7 @@ if st.session_state.current_menu == "HOME":
             st.rerun()
 
 else:
-    # --- 각 메뉴 내부 화면: 상단 네비게이션 및 드롭다운으로 메인 홈 안 거치고 다른 메뉴 이동 가능 ---
-    col_h1, col_h2 = st.columns([3, 2])
-    with col_h1:
-        if st.button("⛳ Segok Golf Club", key="logo_home_btn2"):
-            set_menu("HOME")
-            st.rerun()
-    with col_h2:
-        hc_val = user_info.get('handicap', 0)
-        att_val = user_info.get('attendance', 0)
-        st.markdown(f"""
-        <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; padding-top: 5px;">
-            <span style="font-size:0.9rem;"><b>{display_nickname}</b>님 {admin_badge}</span>
-            <span class="badge-hc">HC {hc_val}</span>
-            <span class="badge-user">참석 {att_val}%</span>
-        </div>
-        """, unsafe_allow_html=True)
-
-    st.markdown("<hr style='margin: 10px 0 15px 0; border-top: 1px solid #DBDBDB;'>", unsafe_allow_html=True)
-
-    # 드롭다운으로 메인 홈 안 거치고 각 메뉴 바로 이동 + 메인 홈 가기 + 로그아웃 버튼 배치
+    # --- 각 메뉴 내부 화면: 빠른 메뉴 이동 드롭다운 + 로그아웃 버튼 ---
     menu_list = ["메인 홈", "💬 클럽 라운지", "🏆 경기 결과 및 랭킹", "📁 역대 조편성 아카이브", "📢 클럽 공지사항", "👤 마이페이지"]
     if is_admin:
         menu_list.insert(1, "⛳ 티타임 조편성")
@@ -1028,7 +1005,7 @@ else:
             with col_f2:
                 p_img_file = st.file_uploader("프로필 아바타 등록 (선택)", type=["jpg", "png", "jpeg"])
                 if user_info.get("profile_img"):
-                    st.image(base64.b64decode(user_info["profile_img"], width=100, caption="현재 등록된 프로필 사진"))
+                    st.image(base64.b64decode(user_info["profile_img"]), width=100, caption="현재 등록된 프로필 사진")
                 
             submit_btn = st.form_submit_button("💾 정보 저장하기", type="primary", use_container_width=True)
             
