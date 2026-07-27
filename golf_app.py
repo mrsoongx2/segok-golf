@@ -129,14 +129,13 @@ rounds_data = db.setdefault("rounds_data", [])
 match_logs = db.setdefault("match_logs", [])
 notices = db.setdefault("notices", [])
 
-# --- 컴팩트하고 세련된 상단 디자인 CSS ---
+# --- 콤팩트 상단 및 가로 탭 디자인 CSS ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,600&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
     
     .stApp { background-color: #FAFAFA !important; font-family: 'Noto Sans KR', sans-serif; color: #262626; }
     
-    /* 콤팩트 상단 헤더 */
     .compact-header { background-color: #FFFFFF; padding: 12px 24px; border-bottom: 1px solid #DBDBDB; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
     .header-title { font-family: 'Playfair Display', serif; color: #1B3B2B; font-size: 1.5rem; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 8px; }
     
@@ -231,7 +230,7 @@ is_admin = user_info.get('is_admin', False)
 display_nickname = user_info.get('nickname', current_user)
 admin_badge = '<span class="badge-admin">👑 운영진</span>' if is_admin else '<span class="badge-user">👤 정회원</span>'
 
-# --- 콤팩트 상단 헤더 (클럽 로고 + 사용자 정보) ---
+# --- 콤팩트 상단 헤더 ---
 st.markdown(f"""
 <div class="compact-header">
     <div class="header-title">⛳ Segok Golf Club</div>
@@ -243,7 +242,7 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# --- 상단 가로형 네비게이션 메뉴 탭 ---
+# --- 상단 가로형 탭 메뉴 바 (모든 메뉴가 한눈에 보이게 펼쳐짐) ---
 menu_options = [
     "💬 소통 광장",
     "🏆 경기 결과 및 랭킹",
@@ -258,8 +257,8 @@ if is_admin:
     m_label = f"👥 회원 명부 ({pending_count})" if pending_count > 0 else "👥 회원 명부"
     menu_options.append(m_label)
 
-menu = st.selectbox("📌 클럽 메뉴 선택", menu_options, label_visibility="collapsed")
-st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
+menu = st.radio("클럽 메뉴", menu_options, horizontal=True, label_visibility="collapsed")
+st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
 
 # 1. 💬 소통 광장
 if menu == "💬 소통 광장":
