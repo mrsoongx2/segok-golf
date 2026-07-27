@@ -5,6 +5,7 @@ import random
 import json
 import os
 from datetime import datetime
+from PIL import Image
 
 st.set_page_config(
     page_title="Segok Golf Club", 
@@ -32,12 +33,10 @@ def load_data():
             with open(DB_FILE, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 if isinstance(data, dict) and "member_db" in data:
-                    # 기본 회원은 무조건 승인 상태 유지
                     for m in DEFAULT_MEMBERS:
                         if m in data["member_db"]:
                             data["member_db"][m]["status"] = "approved"
                             data["member_db"][m]["is_admin"] = True if m in ADMIN_MEMBERS else False
-                    # 라운드가 없으면 초기화
                     if data.get("total_events", 0) == 0:
                         for m in data["member_db"]:
                             data["member_db"][m]["handicap"] = 0
@@ -49,11 +48,11 @@ def load_data():
         except Exception:
             pass
     
-    # 데이터 새로 생성시 완전히 0으로 초기화
     member_db = {}
     for name in DEFAULT_MEMBERS:
         member_db[name] = {
             "password": "1234",
+            "nickname": name,
             "handicap": 0,
             "attendance": 0,
             "rounds_played": 0,
@@ -152,6 +151,7 @@ if not st.session_state.logged_in_user:
         with tab2:
             st.caption("외부 신규 회원은 가입 신청 후 운영진 승인을 거쳐 접속할 수 있습니다.")
             new_name = st.text_input("신입 회원 이름")
+            new_nick = st.text_input("닉네임 설정 (선택)")
             new_pw = st.text_input("비밀번호 설정", type="password")
             
             if st.button("신규 회원 가입 신청하기", use_container_width=True):
@@ -161,6 +161,7 @@ if not st.session_state.logged_in_user:
                     else:
                         member_db[new_name] = {
                             "password": new_pw,
+                            "nickname": new_nick if new_nick else new_name,
                             "handicap": 0,
                             "attendance": 0,
                             "rounds_played": 0,
@@ -180,16 +181,18 @@ if not st.session_state.logged_in_user:
 
 current_user = st.session_state.logged_in_user
 user_info = member_db.get(current_user, {
-    "handicap": 0, "attendance": 0, "is_admin": False
+    "nickname": current_user, "handicap": 0, "attendance": 0, "is_admin": False
 })
 
 with st.sidebar:
     st.title("⛳ Segok Golf Club")
     
     admin_badge = '<span class="badge-admin">👑 운영진</span>' if user_info.get('is_admin') else '<span class="badge-user">👤 일반회원</span>'
+    display_nickname = user_info.get('nickname', current_user)
+    
     st.markdown(f"""
     <div style="background-color:#FFFFFF; padding:15px; border-radius:12px; border:1px solid #D6CBBF; margin-top:10px; margin-bottom:15px;">
-        <h4 style="margin:0; color:#1B3B2B;">{current_user} 님 {admin_badge}</h4>
+        <h4 style="margin:0; color:#1B3B2B;">{current_user} ({display_nickname}) 님 {admin_badge}</h4>
         <hr style="margin:10px 0; border-top:1px solid #EAE3D9;">
         <span class="badge-hc">핸디캡 {user_info.get('handicap', 0)}</span>
         <span class="badge-user">참석률 {user_info.get('attendance', 0)}%</span>
@@ -210,7 +213,8 @@ with st.sidebar:
         "🎲 조편성기 (운영진)", 
         "🏆 라운드별 성적 & 시상", 
         "📜 지난 조편성 이력 관리",
-        menu_title_member
+        menu_title_member,
+        "⚙️ 내 정보 / 프로필 수정"
     ])
 
 # 1. 📸 피드
@@ -492,6 +496,7 @@ elif menu.startswith("📊 회원 명부"):
     
     df_data = [{
         "이름": k, 
+        "닉네임": v.get('nickname', k),
         "자동 산출 핸디캡": v.get('handicap', 0), 
         "연간 참석률": f"{v.get('attendance', 0)}%", 
         "총 라운드 참석": f"{v.get('rounds_played', 0)}회"
@@ -517,11 +522,35 @@ elif menu.startswith("📊 회원 명부"):
                         save_data(db)
                         st.success(f"🎉 {p_name} 회원의 가입 승인이 완료되었습니다!")
                         st.rerun()
-                        
-    st.divider()
-    st.subheader("✏️ 내 비밀번호 설정")
-    new_pw_val = st.text_input("새 비밀번호 변경", value=user_info.get('password', '1234'), type="password")
-    if st.button("비밀번호 변경 저장"):
-        user_info['password'] = new_pw_val
-        save_data(db)
-        st.success("비밀번호가 업데이트되었습니다.")
+
+# 6. ⚙️ 내 정보 / 프로필 수정 (신설)
+elif menu == "⚙️ 내 정보 / 프로필 수정":
+    st.subheader("⚙️ 개인정보 및 프로필 수정")
+    st.info("💡 이름, 닉네임, 비밀번호 및 프로필 사진을 직접 변경할 수 있습니다.")
+    
+    with st.form("edit_profile_form"):
+        col_f1, col_f2 = st.columns(2)
+        with col_f1:
+            edit_name = st.text_input("회원 성함", value=current_user)
+            edit_nickname = st.text_input("닉네임", value=user_info.get("nickname", current_user))
+        with col_f2:
+            edit_pw = st.text_input("비밀번호 변경", value=user_info.get("password", "1234"), type="password")
+            profile_img = st.file_uploader("프로필 사진 업로드 (선택)", type=["jpg", "png", "jpeg"])
+            
+        submit_btn = st.form_submit_button("💾 정보 저장하기", type="primary", use_container_width=True)
+        
+        if submit_btn:
+            # 이름 변경 시 DB 키 업데이트 처리
+            if edit_name != current_user:
+                if edit_name in member_db:
+                    st.error("이미 존재하는 회원 이름입니다.")
+                else:
+                    member_db[edit_name] = member_db.pop(current_user)
+                    st.session_state.logged_in_user = edit_name
+                    current_user = edit_name
+            
+            user_info['nickname'] = edit_nickname
+            user_info['password'] = edit_pw
+            save_data(db)
+            st.success("🎉 개인정보가 성공적으로 수정되었습니다!")
+            st.rerun()
