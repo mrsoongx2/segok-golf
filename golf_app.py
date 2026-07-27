@@ -1,9 +1,4 @@
-# Streamlit 실행 시 발생할 수 있는 주요 예외 사항을 방지한 완전한 golf_app.py 생성
-# 1. session_state 키 오류 사전 처리
-# 2. JSON 파일 로딩 실패 시 파일 초기화 자동 복구
-# 3. Streamlit 구버전/신버전 호환성 보장 (use_container_width 등)
-
-robust_app_code = '''import streamlit as st
+import streamlit as st
 import pandas as pd
 import numpy as np
 import random
@@ -530,9 +525,3 @@ elif menu.startswith("📊 회원 명부"):
         user_info['password'] = new_pw_val
         save_data(db)
         st.success("비밀번호가 업데이트되었습니다.")
-'''
-
-with open("golf_app.py", "w", encoding="utf-8") as f:
-    f.write(robust_app_code)
-
-print("Robust golf_app.py regenerated.")
