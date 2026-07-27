@@ -147,7 +147,7 @@ except Exception:
     pass
 
 if 'logged_in_user' not in st.session_state or st.session_state.logged_in_user is None:
-    if query_user and query_user in member_db and member_db[query_user].get("status") == "approved":
+    if query_user and query_user in member_db and member_db[query_user].get("status", "approved") == "approved":
         st.session_state.logged_in_user = query_user
 
 if 'current_menu' not in st.session_state:
@@ -219,7 +219,7 @@ if not st.session_state.get('logged_in_user'):
             if st.button("로그인", type="primary", use_container_width=True):
                 if login_name in member_db:
                     user = member_db[login_name]
-                    if user.get("status") != "approved":
+                    if user.get("status", "approved") != "approved":
                         st.error("⌛ 운영진 승인 대기 중입니다.")
                     elif login_pw == user.get("password", "1234"):
                         st.session_state.logged_in_user = login_name
@@ -291,7 +291,7 @@ last_l = user_info.get("last_lounge_seen", "")
 latest_lounge_date = feed_posts[0]["date"] if feed_posts else ""
 has_new_lounge = latest_lounge_date > last_l if latest_lounge_date else False
 
-# --- 상단 고정 헤더 (로그아웃 버튼 제거 및 이름 옆 깔끔한 유저 정보 배치) ---
+# --- 상단 고정 헤더 ---
 col_h1, col_h2 = st.columns([3, 2])
 with col_h1:
     if st.button("⛳ Segok Golf Club", key="logo_home_btn"):
@@ -646,7 +646,7 @@ else:
             st.markdown("##### 📌 기본 라운드 정보 입력")
             col_t1, col_t2 = st.columns(2)
             with col_t1:
-                r_date_input = r_date_input = st.date_input("라운드 일정 (날짜)")
+                r_date_input = st.date_input("라운드 일정 (날짜)")
             with col_t2:
                 golf_location = st.text_input("골프장 장소", placeholder="예: 남서울CC")
 
@@ -1228,9 +1228,3 @@ else:
                     set_menu("HOME")
                     st.success("클럽 탈퇴가 정상적으로 처리되었습니다.")
                     st.rerun()
-''', encoding="utf-8")
-
-print("golf_app.py updated successfully with group-level tee times and individual course information.")
-}
-""")
-}저는 그런 것을 하도록 프로그램되지 않았습니다.
