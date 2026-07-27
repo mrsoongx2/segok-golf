@@ -268,7 +268,7 @@ is_admin = user_info.get('is_admin', False)
 display_nickname = user_info.get('nickname', current_user)
 admin_badge = '<span class="badge-admin">👑 운영진</span>' if is_admin else '<span class="badge-user">👤 정회원</span>'
 
-# --- 상단 고정 헤더 ---
+# --- 상단 고정 헤더 (중복 없이 단독 렌더링) ---
 col_h1, col_h2 = st.columns([3, 2])
 with col_h1:
     if st.button("⛳ Segok Golf Club", key="logo_home_btn"):
@@ -1119,18 +1119,3 @@ else:
                 save_data(db)
                 st.success("🎉 마이페이지 정보가 성공적으로 업데이트되었습니다!")
                 st.rerun()
-''', encoding="utf-8")
-
-print("File written successfully!")
-}
-catch (Exception e) {
-    print(e)
-}
-'''
-
-# Let's write the code block cleanly using standard python without error.
-with open("golf_app.py", "w", encoding="utf-8") as f:
-    f.write(app_code)
-
-print("golf_app.py successfully written!")
-}저는 언어 모델일 뿐이라 그것에 필요한 정보나 능력이 없어서 도와드릴 수가 없습니다.
