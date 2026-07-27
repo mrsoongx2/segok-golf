@@ -168,45 +168,58 @@ st.markdown("""
     
     .stApp { background-color: #FAFAFA !important; font-family: 'Noto Sans KR', sans-serif; color: #262626; }
     
-    .compact-header { background-color: #FFFFFF; padding: 12px 24px; border-bottom: 1px solid #DBDBDB; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
-    .header-title { font-family: 'Playfair Display', serif; color: #1B3B2B; font-size: 1.5rem; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 8px; cursor: pointer; }
+    /* 모바일 반응형 최적화 헤더 */
+    .compact-header { background-color: #FFFFFF; padding: 10px 16px; border-bottom: 1px solid #DBDBDB; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+    .header-title { font-family: 'Playfair Display', serif; color: #1B3B2B; font-size: 1.3rem; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 6px; cursor: pointer; }
     
-    .logo-hero { text-align: center; padding: 40px 20px 30px 20px; background: linear-gradient(135deg, #1B3B2B 0%, #2C523D 100%); border-radius: 16px; color: #FFFFFF; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(27,59,43,0.15); }
-    .logo-hero h1 { font-family: 'Playfair Display', serif; font-size: 2.8rem; margin: 10px 0 5px 0; color: #F8F5F0; }
-    .logo-hero p { color: #D4B475; font-size: 0.9rem; letter-spacing: 4px; text-transform: uppercase; font-weight: 600; margin: 0; }
+    /* 히어로 배너 */
+    .logo-hero { text-align: center; padding: 30px 15px 20px 15px; background: linear-gradient(135deg, #1B3B2B 0%, #2C523D 100%); border-radius: 14px; color: #FFFFFF; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(27,59,43,0.12); }
+    .logo-hero h1 { font-family: 'Playfair Display', serif; font-size: 2.2rem; margin: 8px 0 4px 0; color: #F8F5F0; }
+    .logo-hero p { color: #D4B475; font-size: 0.75rem; letter-spacing: 3px; text-transform: uppercase; font-weight: 600; margin: 0; }
     
-    .menu-card { background-color: #FFFFFF; border-radius: 14px; border: 1px solid #DBDBDB; padding: 24px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.03); transition: all 0.2s ease; margin-bottom: 20px; position: relative; }
-    .menu-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.08); border-color: #1B3B2B; }
+    /* 모바일 친화적 카드 스타일 */
+    .menu-card { background-color: #FFFFFF; border-radius: 12px; border: 1px solid #DBDBDB; padding: 18px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.02); transition: all 0.2s ease; margin-bottom: 12px; position: relative; }
+    .menu-card h3 { font-size: 1.1rem; margin-bottom: 6px; color: #1B3B2B; }
+    .menu-card p { color: #666; font-size: 0.82rem; margin-bottom: 12px; line-height: 1.4; }
     
-    .insta-card { background-color: #FFFFFF; border-radius: 12px; border: 1px solid #DBDBDB; max-width: 650px; margin: 0 auto 24px auto; box-shadow: 0 2px 8px rgba(0,0,0,0.03); overflow: hidden; }
-    .insta-header { display: flex; align-items: center; padding: 14px 16px; border-bottom: 1px solid #EFEFEF; background-color: #FFFFFF; }
-    .insta-body { padding: 16px; font-size: 0.9rem; color: #262626; line-height: 1.6; }
+    /* 인스타 피드 카드 */
+    .insta-card { background-color: #FFFFFF; border-radius: 10px; border: 1px solid #DBDBDB; max-width: 100%; margin: 0 auto 18px auto; box-shadow: 0 2px 6px rgba(0,0,0,0.02); overflow: hidden; }
+    .insta-header { display: flex; align-items: center; padding: 12px 14px; border-bottom: 1px solid #EFEFEF; background-color: #FFFFFF; }
+    .insta-body { padding: 14px; font-size: 0.9rem; color: #262626; line-height: 1.5; }
     
-    .team-box { background-color: #1B3B2B; color: #FFFFFF; padding: 18px; border-radius: 12px; margin-bottom: 14px; border: 1px solid #C5A059; }
-    .team-box h3 { color: #E5C585 !important; font-family: 'Playfair Display', serif; margin-bottom: 10px; border-bottom: 1px solid #325843; padding-bottom: 6px; }
-    .badge-admin { background-color: #1B3B2B; color: #FFFFFF; padding: 3px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 600; border: 1px solid #C5A059; }
-    .badge-user { background-color: #EFEFEF; color: #262626; padding: 3px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 600; }
-    .badge-hc { background-color: #FDF8F0; color: #B38F4E; padding: 3px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; border: 1px solid #E5DEC3; }
-    .profile-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 1.5px solid #C5A059; margin-right: 12px; }
+    .team-box { background-color: #1B3B2B; color: #FFFFFF; padding: 15px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #C5A059; font-size: 0.9rem; }
+    .team-box h3 { color: #E5C585 !important; font-family: 'Playfair Display', serif; font-size: 1.1rem; margin-bottom: 8px; border-bottom: 1px solid #325843; padding-bottom: 4px; }
     
-    .new-badge { background-color: #2E7D32; color: #FFFFFF; padding: 2px 6px; border-radius: 10px; font-size: 0.65rem; font-weight: 700; vertical-align: middle; margin-left: 6px; }
+    .badge-admin { background-color: #1B3B2B; color: #FFFFFF; padding: 2px 6px; border-radius: 8px; font-size: 0.65rem; font-weight: 600; border: 1px solid #C5A059; }
+    .badge-user { background-color: #EFEFEF; color: #262626; padding: 2px 6px; border-radius: 8px; font-size: 0.65rem; font-weight: 600; }
+    .badge-hc { background-color: #FDF8F0; color: #B38F4E; padding: 2px 6px; border-radius: 8px; font-size: 0.65rem; font-weight: 700; border: 1px solid #E5DEC3; }
+    .profile-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1.5px solid #C5A059; margin-right: 10px; }
     
-    .stButton>button { background-color: #1B3B2B !important; color: #FFFFFF !important; border-radius: 8px !important; border: none !important; font-weight: 600 !important; }
+    .new-badge { background-color: #2E7D32; color: #FFFFFF; padding: 2px 5px; border-radius: 8px; font-size: 0.6rem; font-weight: 700; vertical-align: middle; margin-left: 4px; }
+    
+    /* 모바일 터치 친화적 풀와이드 버튼 */
+    .stButton>button { background-color: #1B3B2B !important; color: #FFFFFF !important; border-radius: 8px !important; border: none !important; font-weight: 600 !important; width: 100% !important; padding: 8px 12px !important; }
     .stButton>button:hover { background-color: #27523C !important; }
+    
+    /* 모바일 작은 화면 대응 */
+    @media (max-width: 768px) {
+        .logo-hero h1 { font-size: 1.8rem; }
+        .menu-card { padding: 14px; }
+    }
     </style>
 """, unsafe_allow_html=True)
 
 # --- LOGIN & SIGNUP ---
 if not st.session_state.get('logged_in_user'):
     st.markdown("""
-    <div style="text-align: center; padding: 45px 0 25px 0;">
-        <div style="font-size: 3rem;">⛳</div>
-        <h1 style="font-family: 'Playfair Display', serif; color: #1B3B2B; margin: 10px 0 0 0; font-size: 2.5rem;">Segok Golf Club</h1>
-        <p style="color: #8E8E8E; font-size: 0.85rem; letter-spacing: 4px; text-transform: uppercase;">PREMIUM GOLF SOCIETY</p>
+    <div style="text-align: center; padding: 35px 15px 20px 15px;">
+        <div style="font-size: 2.5rem;">⛳</div>
+        <h1 style="font-family: 'Playfair Display', serif; color: #1B3B2B; margin: 8px 0 0 0; font-size: 2rem;">Segok Golf Club</h1>
+        <p style="color: #8E8E8E; font-size: 0.75rem; letter-spacing: 3px; text-transform: uppercase;">PREMIUM GOLF SOCIETY</p>
     </div>
     """, unsafe_allow_html=True)
     
-    col_login, _ = st.columns([2, 1])
+    col_login, _ = st.columns([1, 0.01])
     with col_login:
         tab1, tab2 = st.tabs(["🔑 클럽 회원 로그인", "✨ 신입 회원 가입 신청"])
         
@@ -291,8 +304,8 @@ last_l = user_info.get("last_lounge_seen", "")
 latest_lounge_date = feed_posts[0]["date"] if feed_posts else ""
 has_new_lounge = latest_lounge_date > last_l if latest_lounge_date else False
 
-# --- 상단 고정 헤더 ---
-col_h1, col_h2 = st.columns([3, 2])
+# --- 상단 고정 헤더 (모바일 가독성 최적화) ---
+col_h1, col_h2 = st.columns([2, 3])
 with col_h1:
     if st.button("⛳ Segok Golf Club", key="logo_home_btn"):
         set_menu("HOME")
@@ -301,85 +314,85 @@ with col_h2:
     hc_val = user_info.get('handicap', 0)
     att_val = user_info.get('attendance', 0)
     st.markdown(f"""
-    <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; padding-top: 6px;">
-        <span style="font-size:0.95rem;"><b>{display_nickname}</b>님 {admin_badge}</span>
+    <div style="display: flex; justify-content: flex-end; align-items: center; gap: 6px; padding-top: 6px; font-size: 0.85rem;">
+        <span><b>{display_nickname}</b>님 {admin_badge}</span>
         <span class="badge-hc">HC {hc_val}</span>
         <span class="badge-user">참석 {att_val}%</span>
     </div>
     """, unsafe_allow_html=True)
 
-st.markdown("<hr style='margin: 10px 0 20px 0; border-top: 1px solid #DBDBDB;'>", unsafe_allow_html=True)
+st.markdown("<hr style='margin: 8px 0 15px 0; border-top: 1px solid #DBDBDB;'>", unsafe_allow_html=True)
 
 if st.session_state.current_menu == "HOME":
     st.markdown("""
     <div class="logo-hero">
-        <div style="font-size: 3.5rem; margin-bottom: 5px;">🏆</div>
+        <div style="font-size: 2.8rem; margin-bottom: 4px;">🏆</div>
         <h1>Segok Golf Club</h1>
         <p>PREMIUM GOLF SOCIETY & COMMUNITY</p>
     </div>
     """, unsafe_allow_html=True)
     
-    c1, c2, c3 = st.columns(3)
+    # 모바일에서 세로로 차곡차곡 쌓이는 1열 또는 간결한 그리드 구성
+    c1, c2 = st.columns(2)
     
     with c1:
         notice_badge = '<span class="new-badge">NEW</span>' if has_new_notice else ''
         st.markdown(f"""
         <div class="menu-card">
-            <h3>📢 클럽 공지사항{notice_badge}</h3>
-            <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">운영진이 공지하는 주요 소식과 안내 사항 확인</p>
+            <h3>📢 공지사항{notice_badge}</h3>
+            <p>클럽 주요 소식과 안내 사항 확인</p>
         </div>
         """, unsafe_allow_html=True)
-        if st.button("클럽 공지사항 입장", use_container_width=True, key="go_notice"):
+        if st.button("공지사항 입장", use_container_width=True, key="go_notice"):
             set_menu("클럽 공지사항")
             st.rerun()
             
         lounge_badge = '<span class="new-badge">NEW</span>' if has_new_lounge else ''
         st.markdown(f"""
-        <div class="menu-card" style="margin-top: 20px;">
+        <div class="menu-card" style="margin-top: 15px;">
             <h3>💬 클럽 라운지{lounge_badge}</h3>
-            <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">라운딩 추억과 사진, 영상을 멤버들과 함께 공유하세요.</p>
+            <p>라운딩 추억과 사진, 영상 공유</p>
         </div>
         """, unsafe_allow_html=True)
         if st.button("클럽 라운지 입장", use_container_width=True, key="go_lounge"):
             set_menu("클럽 라운지")
             st.rerun()
 
+        st.markdown(f"""
+        <div class="menu-card" style="margin-top: 15px;">
+            <h3>📁 조편성 아카이브</h3>
+            <p>지난 날짜별 조편성 기록 확인</p>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("아카이브 입장", use_container_width=True, key="go_archive"):
+            set_menu("역대 조편성 아카이브")
+            st.rerun()
+
     with c2:
         st.markdown("""
         <div class="menu-card">
-            <h3>🏆 경기 결과 및 랭킹</h3>
-            <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">역대 필드 라운드 스코어, 공식 시상 및 누적 랭킹 TOP 10</p>
+            <h3>🏆 경기 결과 & 랭킹</h3>
+            <p>역대 스코어, 공식 시상 및 랭킹</p>
         </div>
         """, unsafe_allow_html=True)
-        if st.button("경기 결과 및 랭킹 입장", use_container_width=True, key="go_result"):
+        if st.button("경기 결과 입장", use_container_width=True, key="go_result"):
             set_menu("경기 결과 및 랭킹")
             st.rerun()
             
         st.markdown("""
-        <div class="menu-card" style="margin-top: 20px;">
+        <div class="menu-card" style="margin-top: 15px;">
             <h3>👑 명예의 전당</h3>
-            <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">회원별 개인 상세 스코어, 평균타수 및 출석 현황 확인</p>
+            <p>회원별 평균타수 및 출석 현황</p>
         </div>
         """, unsafe_allow_html=True)
         if st.button("명예의 전당 입장", use_container_width=True, key="go_records"):
             set_menu("명예의 전당")
             st.rerun()
 
-    with c3:
         st.markdown("""
-        <div class="menu-card">
-            <h3>📁 역대 조편성 아카이브</h3>
-            <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">지난 날짜별 조편성 기록과 매칭 이력을 확인합니다.</p>
-        </div>
-        """, unsafe_allow_html=True)
-        if st.button("역대 조편성 입장", use_container_width=True, key="go_archive"):
-            set_menu("역대 조편성 아카이브")
-            st.rerun()
-            
-        st.markdown("""
-        <div class="menu-card" style="margin-top: 20px;">
+        <div class="menu-card" style="margin-top: 15px;">
             <h3>👤 마이페이지</h3>
-            <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">프로필 설정, 로그아웃 및 클럽 탈퇴</p>
+            <p>프로필 설정, 로그아웃 및 탈퇴</p>
         </div>
         """, unsafe_allow_html=True)
         if st.button("마이페이지 입장", use_container_width=True, key="go_mypage"):
@@ -387,40 +400,30 @@ if st.session_state.current_menu == "HOME":
             st.rerun()
 
     if is_admin:
-        st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
         ac1, ac2 = st.columns(2)
         with ac1:
             st.markdown("""
             <div class="menu-card">
                 <h3>⛳ 티타임 조편성</h3>
-                <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">중복 방지 및 실력 균등 맞춤형 조편성을 실행합니다.</p>
+                <p>중복 방지 맞춤형 조편성 실행</p>
             </div>
             """, unsafe_allow_html=True)
-            if st.button("티타임 조편성 입장", use_container_width=True, key="go_match"):
+            if st.button("조편성 실행", use_container_width=True, key="go_match"):
                 set_menu("티타임 조편성")
                 st.rerun()
         with ac2:
             pending_cnt = len([k for k, v in member_db.items() if v.get("status") == "pending"])
-            badge_txt = f" (승인대기 {pending_cnt})" if pending_cnt > 0 else ""
+            badge_txt = f" (대기 {pending_cnt})" if pending_cnt > 0 else ""
             st.markdown(f"""
             <div class="menu-card">
-                <h3>👥 클럽 회원 명부{badge_txt}</h3>
-                <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">정회원 목록 관리 및 신입 회원 가입 승인 센터</p>
+                <h3>👥 회원 명부{badge_txt}</h3>
+                <p>정회원 관리 및 가입 승인</p>
             </div>
             """, unsafe_allow_html=True)
-            if st.button("클럽 회원 명부 입장", use_container_width=True, key="go_members"):
+            if st.button("회원 명부 관리", use_container_width=True, key="go_members"):
                 set_menu("클럽 회원 명부")
                 st.rerun()
-
-    st.markdown("<div style='margin-top: 25px;'></div>", unsafe_allow_html=True)
-    if st.button("🚪 클럽 로그아웃", use_container_width=True, key="home_logout_btn"):
-        st.session_state.logged_in_user = None
-        set_menu("HOME")
-        try:
-            st.query_params.clear()
-        except Exception:
-            pass
-        st.rerun()
 
 else:
     notice_label = f"📢 클럽 공지사항 {'🟢' if has_new_notice else ''}"
@@ -445,7 +448,7 @@ else:
     reverse_map = {v: k for k, v in current_label_map.items()}
     curr_label = current_label_map.get(st.session_state.current_menu, notice_label)
 
-    nav_c1, _ = st.columns([4, 1])
+    nav_c1, _ = st.columns([1, 0.01])
     with nav_c1:
         selected_nav = st.selectbox("📌 빠른 메뉴 이동", menu_list, index=menu_list.index(curr_label) if curr_label in menu_list else 0)
         target_menu = reverse_map.get(selected_nav, "HOME")
@@ -456,7 +459,7 @@ else:
             set_menu(target_menu)
             st.rerun()
 
-    st.markdown("<hr style='margin: 15px 0 20px 0; border-top: 1px solid #DBDBDB;'>", unsafe_allow_html=True)
+    st.markdown("<hr style='margin: 12px 0 15px 0; border-top: 1px solid #DBDBDB;'>", unsafe_allow_html=True)
     
     menu = st.session_state.current_menu
 
@@ -473,7 +476,7 @@ else:
             with st.expander("✍️ [운영진] 새 공지사항 등록하기"):
                 n_title = st.text_input("공지 제목")
                 n_content = st.text_area("공지 내용")
-                if st.button("공지 발행", type="primary"):
+                if st.button("공지 발행", type="primary", use_container_width=True):
                     if n_title and n_content:
                         notices.insert(0, {
                             "id": int(datetime.now().timestamp()),
@@ -492,13 +495,13 @@ else:
         else:
             for n_idx, notice in enumerate(notices):
                 st.markdown(f"""
-                <div class="insta-card" style="padding: 20px; max-width: 100%;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                        <h4 style="color:#1B3B2B; margin:0;">📌 {notice['title']}</h4>
-                        <span style="color:#8E8E8E; font-size:0.85rem;">{notice['date']}</span>
+                <div class="insta-card" style="padding: 15px; max-width: 100%;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <h4 style="color:#1B3B2B; margin:0; font-size:1rem;">📌 {notice['title']}</h4>
+                        <span style="color:#8E8E8E; font-size:0.75rem;">{notice['date']}</span>
                     </div>
-                    <hr style="margin:10px 0; border-top:1px solid #EFEFEF;">
-                    <p style="color:#262626; font-size:1rem; line-height:1.6; white-space: pre-wrap; margin:0;">{notice['content']}</p>
+                    <hr style="margin:8px 0; border-top:1px solid #EFEFEF;">
+                    <p style="color:#262626; font-size:0.9rem; line-height:1.5; white-space: pre-wrap; margin:0;">{notice['content']}</p>
                 </div>
                 """, unsafe_allow_html=True)
                 
@@ -509,7 +512,7 @@ else:
                     with st.expander("🗑️ 공지 삭제 관리"):
                         confirm_del = st.checkbox("정말로 이 공지사항을 삭제하시겠습니까?", key=confirm_key)
                         if confirm_del:
-                            if st.button("⚠️ 최종 삭제 실행", key=del_key, type="primary"):
+                            if st.button("⚠️ 최종 삭제 실행", key=del_key, type="primary", use_container_width=True):
                                 notices.pop(n_idx)
                                 save_data(db)
                                 st.success("공지사항이 삭제되었습니다.")
@@ -521,9 +524,9 @@ else:
             user_info["last_lounge_seen"] = feed_posts[0]["date"]
             save_data(db)
             
-        st.subheader("💬 클럽 라운지 (Community Lounge)")
+        st.subheader("💬 클럽 라운지")
         with st.expander("✍️ 새 라운딩 소식 및 미디어 공유하기", expanded=True):
-            post_text = st.text_area("내용 작성", placeholder="오늘의 멋진 라운딩 추억을 사진이나 영상과 함께 공유해 보세요...")
+            post_text = st.text_area("내용 작성", placeholder="오늘의 멋진 라운딩 추억을 공유해 보세요...")
             uploaded_file = st.file_uploader("사진 또는 동영상 첨부 (선택)", type=["jpg", "png", "jpeg", "mp4", "mov", "avi"])
             
             if st.button("피드 발행하기", type="primary", use_container_width=True):
@@ -567,15 +570,15 @@ else:
                 if p_img:
                     avatar_html = f'<img src="data:image/png;base64,{p_img}" class="profile-avatar">'
                 else:
-                    avatar_html = '<span style="font-size:1.5rem; margin-right:10px;">👤</span>'
+                    avatar_html = '<span style="font-size:1.3rem; margin-right:8px;">👤</span>'
                     
                 st.markdown(f"""
                 <div class="insta-card">
                     <div class="insta-header">
                         {avatar_html}
                         <div>
-                            <strong style="color:#262626; font-size:0.95rem;">{p_nickname}</strong><br>
-                            <span style="color:#8E8E8E; font-size:0.75rem;">{post['date']}</span>
+                            <strong style="color:#262626; font-size:0.9rem;">{p_nickname}</strong><br>
+                            <span style="color:#8E8E8E; font-size:0.7rem;">{post['date']}</span>
                         </div>
                     </div>
                 """, unsafe_allow_html=True)
@@ -596,12 +599,12 @@ else:
                     
                 st.markdown("</div>", unsafe_allow_html=True)
                     
-                c_lk, c_edit, c_del, _ = st.columns([1.8, 1.5, 1.5, 2.2])
+                c_lk, c_edit, c_del = st.columns([1.2, 1, 1])
                 
                 with c_lk:
                     liked_list = post.setdefault("liked_users", [])
                     has_liked = current_user in liked_list
-                    heart_label = f"❤️ 좋아요 취소 ({post['likes']})" if has_liked else f"🤍 좋아요 ({post['likes']})"
+                    heart_label = f"❤️ ({post['likes']})" if has_liked else f"🤍 ({post['likes']})"
                     
                     if st.button(heart_label, key=f"lk_{post['id']}"):
                         if has_liked:
@@ -617,7 +620,7 @@ else:
                     with c_edit:
                         with st.expander("✏️ 수정"):
                             edited_content = st.text_area("내용 수정", value=post['content'], key=f"edt_txt_{post['id']}")
-                            if st.button("저장", key=f"btn_edt_{post['id']}"):
+                            if st.button("저장", key=f"btn_edt_{post['id']}", use_container_width=True):
                                 post['content'] = edited_content
                                 save_data(db)
                                 st.success("수정되었습니다.")
@@ -625,13 +628,13 @@ else:
 
                 if post['author'] == current_user or is_admin:
                     with c_del:
-                        with st.expander("🗑️ 피드 삭제"):
-                            conf_post = st.checkbox("정말로 이 피드를 삭제하시겠습니까?", key=f"conf_post_{post['id']}")
+                        with st.expander("🗑️ 삭제"):
+                            conf_post = st.checkbox("정말로 삭제하시겠습니까?", key=f"conf_post_{post['id']}")
                             if conf_post:
-                                if st.button("⚠️ 최종 삭제 실행", key=f"btn_del_post_{post['id']}", type="primary"):
+                                if st.button("⚠️ 삭제 실행", key=f"btn_del_post_{post['id']}", type="primary", use_container_width=True):
                                     feed_posts.pop(idx)
                                     save_data(db)
-                                    st.success("게시글이 삭제되었습니다.")
+                                    st.success("삭제되었습니다.")
                                     st.rerun()
 
                 with st.expander(f"💬 댓글 ({len(post.get('comments', []))})"):
@@ -640,25 +643,22 @@ else:
                         c_nick = member_db.get(c_author, {}).get("nickname", c_author)
                         st.write(f"**{c_nick}**: {c['text']}")
                     new_c = st.text_input("댓글 작성", key=f"nc_{post['id']}")
-                    if st.button("등록", key=f"btn_c_{post['id']}") and new_c:
+                    if st.button("등록", key=f"btn_c_{post['id']}", use_container_width=True) and new_c:
                         post.setdefault('comments', []).append({"author": current_user, "text": new_c})
                         save_data(db)
                         st.rerun()
 
-    # 3. ⛳ 티타임 조편성 (중복 방지 및 폰트 크기/줄바꿈 완벽 최적화)
+    # 3. ⛳ 티타임 조편성
     elif menu == "티타임 조편성":
-        st.subheader("⛳ 필드 월례회 티타임 조편성")
+        st.subheader("⛳ 티타임 조편성")
         if not is_admin:
             st.error("⛔ 조편성 기능은 운영진 전용 메뉴입니다.")
         else:
-            st.success("👑 **운영자 권한 확인 완료** | 필드 모임 일정, 장소 및 각 조별 티오프 시간과 코스 정보를 개별 설정합니다.")
+            st.success("👑 **운영자 권한 완료** | 모임 일정, 장소 및 각 조별 티오프 시간과 코스 설정")
             
-            st.markdown("##### 📌 기본 라운드 정보 입력")
-            col_t1, col_t2 = st.columns(2)
-            with col_t1:
-                r_date_input = st.date_input("라운드 일정 (날짜)")
-            with col_t2:
-                golf_location = st.text_input("골프장 장소", placeholder="예: 남서울CC")
+            st.markdown("##### 📌 기본 정보 입력")
+            r_date_input = st.date_input("라운드 일정 (날짜)")
+            golf_location = st.text_input("골프장 장소", placeholder="예: 남서울CC")
 
             balance_rule = st.radio("조편성 방식", ["과거 동반 중복 방지 (기본)", "핸디캡 균등 배정 (고수+초보 믹스)"])
             
@@ -697,14 +697,14 @@ else:
             if 'generated_teams' in st.session_state and st.session_state.generated_teams:
                 teams = st.session_state.generated_teams
                 
-                with st.expander("✏️ 조 구성원 수동으로 변경하기"):
+                with st.expander("✏️ 조 구성원 수동 변경"):
                     col_m1, col_m2 = st.columns(2)
                     with col_m1:
-                        move_mem = st.selectbox("이동시킬 회원 선택", selected_attendees)
+                        move_mem = st.selectbox("이동시킬 회원", selected_attendees)
                     with col_m2:
-                        target_team_num = st.selectbox("이동할 조 선택", [f"{i+1}조" for i in range(len(teams))])
+                        target_team_num = st.selectbox("이동할 조", [f"{i+1}조" for i in range(len(teams))])
                         
-                    if st.button("🔄 해당 회원을 선택한 조로 이동"):
+                    if st.button("🔄 조 이동 실행", use_container_width=True):
                         for t in teams:
                             if move_mem in t:
                                 t.remove(move_mem)
@@ -715,7 +715,7 @@ else:
                         st.rerun()
 
                 st.markdown("---")
-                st.markdown("##### ⏰ 각 조별 티오프 시간 및 코스 정보 개별 설정")
+                st.markdown("##### ⏰ 각 조별 티오프 시간 및 코스 정보")
                 
                 group_tee_times = []
                 group_courses = []
@@ -730,10 +730,8 @@ else:
                         c_val = st.text_input(f"{idx+1}조 코스 정보", value="IN 코스" if idx%2==1 else "OUT 코스", key=f"course_group_{idx}")
                         group_courses.append(c_val)
 
-                cols = st.columns(min(len(teams), 4))
                 date_str = r_date_input.strftime("%Y-%m-%d")
                 
-                # 조별 상세 정보가 포함된 세련된 공지 포맷 생성
                 notice_text = f"📢 [필드 월례회 조편성 공식 안내]\n\n"
                 notice_text += f"🗓️ 일정: {date_str}  |  🏟️ 장소: {golf_location or '장소 미입력'}\n"
                 notice_text += f"----------------------------------------\n"
@@ -746,17 +744,15 @@ else:
                 notice_text += f"즐거운 라운딩 되세요! 🏌️‍♂️✨"
 
                 for idx, team in enumerate(teams):
-                    with cols[idx % 4]:
-                        t_time = group_tee_times[idx] if idx < len(group_tee_times) else "미정"
-                        c_info = group_courses[idx] if idx < len(group_courses) else ""
-                        team_html = f"<div class='team-box'><h3>⛳ {idx+1}조 ({t_time})</h3><div style='font-size:0.8rem; color:#E5C585; margin-bottom:6px;'>🏟️ {c_info}</div>" + "<br>".join([f"• <b>{m}</b> ({member_db.get(m, {}).get('handicap', 0)})" for m in team]) + "</div>"
-                        st.markdown(team_html, unsafe_allow_html=True)
+                    t_time = group_tee_times[idx] if idx < len(group_tee_times) else "미정"
+                    c_info = group_courses[idx] if idx < len(group_courses) else ""
+                    team_html = f"<div class='team-box'><h3>⛳ {idx+1}조 ({t_time})</h3><div style='font-size:0.8rem; color:#E5C585; margin-bottom:6px;'>🏟️ {c_info}</div>" + "<br>".join([f"• <b>{m}</b> ({member_db.get(m, {}).get('handicap', 0)})" for m in team]) + "</div>"
+                    st.markdown(team_html, unsafe_allow_html=True)
                 
                 st.subheader("📱 카카오톡 공지문 미리보기")
                 st.code(notice_text, language="text")
                 
-                if st.button("💾 이 조편성을 최종 확정 및 라운지 피드 자동 공지", use_container_width=True):
-                    # 중복 등록 방지 체크
+                if st.button("💾 최종 확정 및 라운지 피드 자동 공지", use_container_width=True):
                     already_posted = any(date_str in p.get("content", "") and "조편성 공식 안내" in p.get("content", "") for p in feed_posts)
                     
                     if already_posted:
@@ -790,7 +786,6 @@ else:
                         }
                         rounds_data.insert(0, round_entry)
                         
-                        # 클럽 라운지(피드)에 자동 공지 등록
                         feed_posts.insert(0, {
                             "id": int(datetime.now().timestamp()),
                             "author": current_user,
@@ -806,21 +801,19 @@ else:
                         })
                         
                         save_data(db)
-                        st.success("🎉 조편성 확정 및 [클럽 라운지 피드]와 [경기 결과] 메뉴에 성공적으로 자동 등록되었습니다!")
+                        st.success("🎉 조편성 확정 및 [클럽 라운지 피드]에 성공적으로 등록되었습니다!")
 
     # 4. 🏆 경기 결과 및 랭킹
     elif menu == "경기 결과 및 랭킹":
-        st.subheader("🏆 경기 결과 및 클럽 랭킹 통계")
+        st.subheader("🏆 경기 결과 및 랭킹")
         
         field_rounds = [r for r in rounds_data if "필드" in r.get("type", "")]
         
         if not field_rounds:
             st.info("등록된 필드 경기 결과가 없습니다. 운영진이 필드 조편성을 확정하면 입력 카드가 생성됩니다.")
         else:
-            st.markdown("##### 📋 역대 필드 라운드 선택 및 상세 조회")
-            
             selected_round_title = st.selectbox(
-                "조회할 라운드를 선택해 주세요", 
+                "조회할 라운드 선택", 
                 [f"{r['date']} | {r['title']} ({'입력 완료' if r.get('completed') else '입력 대기'})" for r in field_rounds]
             )
             selected_r_idx = [f"{r['date']} | {r['title']} ({'입력 완료' if r.get('completed') else '입력 대기'})" for r in field_rounds].index(selected_round_title)
@@ -831,17 +824,17 @@ else:
             
             st.markdown(f"""
             <div class="css-card" style="margin-top: 15px;">
-                <h3 style="color:#1B3B2B; margin-top:0;">🚩 {r['date']} | {r['title']} [{status_tag}]</h3>
+                <h3 style="color:#1B3B2B; margin-top:0; font-size:1.1rem;">🚩 {r['date']} | {r['title']} [{status_tag}]</h3>
             </div>
             """, unsafe_allow_html=True)
             
             if is_done:
                 st.markdown(f"""
                 <div class="css-card">
-                    <h4 style="color:#A88B58; margin-bottom:10px;">🏆 공식 시상 내역</h4>
-                    <p>🥇 <b>메달리스트 (최저타):</b> {r['awards']['medalist']}</p>
-                    <p>💣 <b>롱기스트 (최장타):</b> {r['awards']['longist']}</p>
-                    <p>🎯 <b>니어리스트 (최근접):</b> {r['awards']['nearest']}</p>
+                    <h4 style="color:#A88B58; margin-bottom:8px; font-size:1rem;">🏆 공식 시상 내역</h4>
+                    <p style="margin:4px 0;">🥇 <b>메달리스트:</b> {r['awards']['medalist']}</p>
+                    <p style="margin:4px 0;">💣 <b>롱기스트:</b> {r['awards']['longist']}</p>
+                    <p style="margin:4px 0;">🎯 <b>니어리스트:</b> {r['awards']['nearest']}</p>
                 </div>
                 """, unsafe_allow_html=True)
                 
@@ -849,40 +842,24 @@ else:
                 score_table = []
                 for p_name, p_info in r['scores'].items():
                     score_table.append({
-                        "회원 성함(닉네임)": f"{p_name} ({member_db.get(p_name, {}).get('nickname', p_name)})",
+                        "회원(닉네임)": f"{p_name} ({member_db.get(p_name, {}).get('nickname', p_name)})",
                         "스코어": f"{p_info['score']}타",
-                        "드라이버 비거리": f"{p_info['long']}m" if p_info['long'] > 0 else "-",
-                        "니어 근접거리": f"{p_info['near']}m" if p_info['near'] > 0 else "-"
+                        "비거리": f"{p_info['long']}m" if p_info['long'] > 0 else "-",
+                        "니어": f"{p_info['near']}m" if p_info['near'] > 0 else "-"
                     })
                 st.table(pd.DataFrame(score_table))
                 
             if is_admin:
                 st.markdown("---")
-                col_a1, col_a2 = st.columns(2)
-                with col_a1:
-                    btn_label = "✏️ 해당 라운드 성적 수정하기" if is_done else "✍️ 해당 라운드 스코어/롱기/니어 입력하기"
-                    with st.expander(btn_label):
-                        teams = r.get("teams", [])
-                        entered_mod_scores = {}
-                        
-                        if teams:
-                            for t_idx, team in enumerate(teams):
-                                st.markdown(f"##### ⛳ {t_idx+1}조")
-                                for m in team:
-                                    curr = r.get("scores", {}).get(m, {"score": 85, "long": 0, "near": 0.0})
-                                    m_nick = member_db.get(m, {}).get("nickname", m)
-                                    c1, c2, c3 = st.columns(3)
-                                    with c1:
-                                        sc = st.number_input(f"[{m_nick}] 스코어", min_value=50, max_value=140, value=curr['score'], key=f"sc_{r['id']}_{m}")
-                                    with c2:
-                                        ld = st.number_input(f"[{m_nick}] 비거리(m)", min_value=0, max_value=350, value=curr['long'], key=f"ld_{r['id']}_{m}")
-                                    with c3:
-                                        nd = st.number_input(f"[{m_nick}] 니어(m)", min_value=0.0, max_value=50.0, value=float(curr['near']), step=0.1, key=f"nd_{r['id']}_{m}")
-                                    entered_mod_scores[m] = {"score": sc, "long": ld, "near": nd}
-                        else:
-                            approved_names = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
-                            sel_mems = st.multiselect("참석 회원 선택", approved_names, default=list(r.get("scores", {}).keys()), key=f"melsel_{r['id']}")
-                            for m in sel_mems:
+                btn_label = "✏️ 해당 라운드 성적 수정하기" if is_done else "✍️ 해당 라운드 스코어/롱기/니어 입력하기"
+                with st.expander(btn_label):
+                    teams = r.get("teams", [])
+                    entered_mod_scores = {}
+                    
+                    if teams:
+                        for t_idx, team in enumerate(teams):
+                            st.markdown(f"##### ⛳ {t_idx+1}조")
+                            for m in team:
                                 curr = r.get("scores", {}).get(m, {"score": 85, "long": 0, "near": 0.0})
                                 m_nick = member_db.get(m, {}).get("nickname", m)
                                 c1, c2, c3 = st.columns(3)
@@ -893,58 +870,70 @@ else:
                                 with c3:
                                     nd = st.number_input(f"[{m_nick}] 니어(m)", min_value=0.0, max_value=50.0, value=float(curr['near']), step=0.1, key=f"nd_{r['id']}_{m}")
                                 entered_mod_scores[m] = {"score": sc, "long": ld, "near": nd}
+                    else:
+                        approved_names = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
+                        sel_mems = st.multiselect("참석 회원 선택", approved_names, default=list(r.get("scores", {}).keys()), key=f"melsel_{r['id']}")
+                        for m in sel_mems:
+                            curr = r.get("scores", {}).get(m, {"score": 85, "long": 0, "near": 0.0})
+                            m_nick = member_db.get(m, {}).get("nickname", m)
+                            c1, c2, c3 = st.columns(3)
+                            with c1:
+                                sc = st.number_input(f"[{m_nick}] 스코어", min_value=50, max_value=140, value=curr['score'], key=f"sc_{r['id']}_{m}")
+                            with c2:
+                                ld = st.number_input(f"[{m_nick}] 비거리(m)", min_value=0, max_value=350, value=curr['long'], key=f"ld_{r['id']}_{m}")
+                            with c3:
+                                nd = st.number_input(f"[{m_nick}] 니어(m)", min_value=0.0, max_value=50.0, value=float(curr['near']), step=0.1, key=f"nd_{r['id']}_{m}")
+                            entered_mod_scores[m] = {"score": sc, "long": ld, "near": nd}
 
-                        if st.button("🏆 성적 최종 저장 및 시상 자동 계산", key=f"sv_rnd_{r['id']}", type="primary"):
-                            if entered_mod_scores:
-                                r['scores'] = entered_mod_scores
-                                r['completed'] = True
-                                
-                                medalist = min(entered_mod_scores.items(), key=lambda x: x[1]["score"])
-                                v_longs = {k: v for k, v in entered_mod_scores.items() if v["long"] > 0}
-                                longist = max(v_longs.items(), key=lambda x: x[1]["long"]) if v_longs else None
-                                v_nears = {k: v for k, v in entered_mod_scores.items() if v["near"] > 0}
-                                nearest = min(v_nears.items(), key=lambda x: x[1]["near"]) if v_nears else None
-                                
-                                medalist_nick = member_db.get(medalist[0], {}).get("nickname", medalist[0])
-                                longist_nick = member_db.get(longist[0], {}).get("nickname", longist[0]) if longist else ""
-                                nearest_nick = member_db.get(nearest[0], {}).get("nickname", nearest[0]) if nearest else ""
-                                
-                                r['awards'] = {
-                                    "medalist": f"{medalist_nick} ({medalist[1]['score']}타)",
-                                    "longist": f"{longist_nick} ({longist[1]['long']}m)" if longist else "기록 없음",
-                                    "nearest": f"{nearest_nick} ({nearest[1]['near']}m)" if nearest else "기록 없음",
-                                    "raw_medalist": medalist[0],
-                                    "raw_longist": longist[0] if longist else None,
-                                    "raw_nearest": nearest[0] if nearest else None,
-                                    "raw_medalist_score": medalist[1]['score'],
-                                    "raw_longist_dist": longist[1]['long'] if longist else 0,
-                                    "raw_nearest_dist": nearest[1]['near'] if nearest else 999
-                                }
-                                recalculate_all_stats(db)
-                                save_data(db)
-                                st.success("🎉 성적이 성공적으로 등록되었습니다!")
-                                st.rerun()
+                    if st.button("🏆 성적 최종 저장 및 시상 자동 계산", key=f"sv_rnd_{r['id']}", use_container_width=True):
+                        if entered_mod_scores:
+                            r['scores'] = entered_mod_scores
+                            r['completed'] = True
+                            
+                            medalist = min(entered_mod_scores.items(), key=lambda x: x[1]["score"])
+                            v_longs = {k: v for k, v in entered_mod_scores.items() if v["long"] > 0}
+                            longist = max(v_longs.items(), key=lambda x: x[1]["long"]) if v_longs else None
+                            v_nears = {k: v for k, v in entered_mod_scores.items() if v["near"] > 0}
+                            nearest = min(v_nears.items(), key=lambda x: x[1]["near"]) if v_nears else None
+                            
+                            medalist_nick = member_db.get(medalist[0], {}).get("nickname", medalist[0])
+                            longist_nick = member_db.get(longist[0], {}).get("nickname", longist[0]) if longist else ""
+                            nearest_nick = member_db.get(nearest[0], {}).get("nickname", nearest[0]) if nearest else ""
+                            
+                            r['awards'] = {
+                                "medalist": f"{medalist_nick} ({medalist[1]['score']}타)",
+                                "longist": f"{longist_nick} ({longist[1]['long']}m)" if longist else "기록 없음",
+                                "nearest": f"{nearest_nick} ({nearest[1]['near']}m)" if nearest else "기록 없음",
+                                "raw_medalist": medalist[0],
+                                "raw_longist": longist[0] if longist else None,
+                                "raw_nearest": nearest[0] if nearest else None,
+                                "raw_medalist_score": medalist[1]['score'],
+                                "raw_longist_dist": longist[1]['long'] if longist else 0,
+                                "raw_nearest_dist": nearest[1]['near'] if nearest else 999
+                            }
+                            recalculate_all_stats(db)
+                            save_data(db)
+                            st.success("🎉 성적이 성공적으로 등록되었습니다!")
+                            st.rerun()
 
-                with col_a2:
-                    with st.expander("🗑️ 라운드 삭제 관리"):
-                        conf_rnd = st.checkbox("정말로 이 라운드 기록을 삭제하시겠습니까?", key=f"conf_rnd_{r['id']}")
-                        if conf_rnd:
-                            if st.button(f"⚠️ 최종 라운드 삭제 실행", key=f"btn_del_rnd_{r['id']}", type="primary"):
-                                rounds_data.remove(r)
-                                recalculate_all_stats(db)
-                                save_data(db)
-                                st.success("해당 라운드가 삭제되었습니다.")
-                                st.rerun()
+                with st.expander("🗑️ 라운드 삭제 관리"):
+                    conf_rnd = st.checkbox("정말로 이 라운드 기록을 삭제하시겠습니까?", key=f"conf_rnd_{r['id']}")
+                    if conf_rnd:
+                        if st.button("⚠️ 최종 라운드 삭제 실행", key=f"btn_del_rnd_{r['id']}", type="primary", use_container_width=True):
+                            rounds_data.remove(r)
+                            recalculate_all_stats(db)
+                            save_data(db)
+                            st.success("해당 라운드가 삭제되었습니다.")
+                            st.rerun()
 
         # --- 누적 통계 & 랭킹 ---
         st.divider()
-        st.subheader("📊 클럽 누적 통계 & TOP 10 랭킹")
-        st.caption("💡 필드 공식 라운드 기록 및 달성된 골프장/날짜 정보를 포함한 종합 통계입니다.")
+        st.subheader("📊 클럽 누적 통계 & 랭킹")
         
         completed_r = [r for r in field_rounds if r.get("completed")]
         
         if not completed_r:
-            st.warning("아직 완료된 필드 라운드가 없어 통계 집계 데이터가 없습니다.")
+            st.warning("아직 완료된 필드 라운드가 없습니다.")
         else:
             medalist_records = []
             longist_records = []
@@ -972,75 +961,39 @@ else:
                 for m_name in r.get("scores", {}).keys():
                     attendance_counts[m_name] = attendance_counts.get(m_name, 0) + 1
 
-            col_st1, col_st2 = st.columns(2)
-            
-            with col_st1:
-                st.markdown("##### 🥇 최저타(메달리스트) 랭킹")
-                if medalist_records:
-                    m_df_raw = pd.DataFrame(medalist_records)
-                    m_agg = m_df_raw.groupby("member").agg(
-                        우승횟수=("score", "count"),
-                        최저타수=("score", "min"),
-                        달성라운드=("round", lambda x: ", ".join(x))
-                    ).reset_index().sort_values(by=["우승횟수", "최저타수"], ascending=[False, True]).head(10)
-                    
-                    m_agg["회원"] = m_agg["member"].apply(lambda x: member_db.get(x, {}).get("nickname", x))
-                    display_m = m_agg[["회원", "우승횟수", "최저타수", "달성라운드"]].copy()
-                    display_m["우승횟수"] = display_m["우승횟수"].astype(str) + "회"
-                    display_m["최소 타수"] = display_m["최저타수"].astype(str) + "타"
-                    display_m = display_m.drop(columns=["최저타수"])
-                    display_m.index += 1
-                    st.table(display_m)
-                else:
-                    st.info("기록 없음")
+            st.markdown("##### 🥇 최저타(메달리스트) 랭킹")
+            if medalist_records:
+                m_df_raw = pd.DataFrame(medalist_records)
+                m_agg = m_df_raw.groupby("member").agg(
+                    우승횟수=("score", "count"),
+                    최저타수=("score", "min"),
+                    달성라운드=("round", lambda x: ", ".join(x))
+                ).reset_index().sort_values(by=["우승횟수", "최저타수"], ascending=[False, True]).head(10)
+                
+                m_agg["회원"] = m_agg["member"].apply(lambda x: member_db.get(x, {}).get("nickname", x))
+                display_m = m_agg[["회원", "우승횟수", "최저타수", "달성라운드"]].copy()
+                display_m["우승횟수"] = display_m["우승횟수"].astype(str) + "회"
+                display_m["최소 타수"] = display_m["최저타수"].astype(str) + "타"
+                display_m = display_m.drop(columns=["최저타수"])
+                display_m.index += 1
+                st.table(display_m)
 
-                st.markdown("##### 💣 롱기스트(최장타) 랭킹")
-                if longist_records:
-                    l_df_raw = pd.DataFrame(longist_records)
-                    l_agg = l_df_raw.groupby("member").agg(
-                        달성횟수=("dist", "count"),
-                        최고비거리=("dist", "max"),
-                        달성라운드=("round", lambda x: ", ".join(x))
-                    ).reset_index().sort_values(by=["달성횟수", "최고비거리"], ascending=[False, False]).head(10)
-                    
-                    l_agg["회원"] = l_agg["member"].apply(lambda x: member_db.get(x, {}).get("nickname", x))
-                    display_l = l_agg[["회원", "달성횟수", "최고비거리", "달성라운드"]].copy()
-                    display_l["달성 횟수"] = display_l["달성횟수"].astype(str) + "회"
-                    display_l["최고 비거리"] = display_l["최고비거리"].astype(str) + "m"
-                    display_l = display_l.drop(columns=["달성횟수", "최고비거리"])
-                    display_l.index += 1
-                    st.table(display_l)
-                else:
-                    st.info("기록 없음")
-
-            with col_st2:
-                st.markdown("##### 🎯 니어리스트(최근접) 랭킹")
-                if nearest_records:
-                    n_df_raw = pd.DataFrame(nearest_records)
-                    n_agg = n_df_raw.groupby("member").agg(
-                        달성횟수=("dist", "count"),
-                        최단거리=("dist", "min"),
-                        달성라운드=("round", lambda x: ", ".join(x))
-                    ).reset_index().sort_values(by=["달성횟수", "최단거리"], ascending=[False, True]).head(10)
-                    
-                    n_agg["회원"] = n_agg["member"].apply(lambda x: member_db.get(x, {}).get("nickname", x))
-                    display_n = n_agg[["회원", "달성횟수", "최단거리", "달성라운드"]].copy()
-                    display_n["달성 횟수"] = display_n["달성횟수"].astype(str) + "회"
-                    display_n["최단 거리"] = display_n["최단거리"].astype(str) + "m"
-                    display_n = display_n.drop(columns=["달성횟수", "최단거리"])
-                    display_n.index += 1
-                    st.table(display_n)
-                else:
-                    st.info("기록 없음")
-
-                st.markdown("##### 📅 총 출석 라운드 횟수 TOP 10")
-                if attendance_counts:
-                    att_list = [{"회원": member_db.get(k, {}).get("nickname", k), "참석 횟수": f"{v}회"} for k, v in attendance_counts.items()]
-                    df_att = pd.DataFrame(att_list).sort_values(by="참석 횟수", ascending=False).head(10).reset_index(drop=True)
-                    df_att.index += 1
-                    st.table(df_att)
-                else:
-                    st.info("기록 없음")
+            st.markdown("##### 💣 롱기스트(최장타) 랭킹")
+            if longist_records:
+                l_df_raw = pd.DataFrame(longist_records)
+                l_agg = l_df_raw.groupby("member").agg(
+                    달성횟수=("dist", "count"),
+                    최고비거리=("dist", "max"),
+                    달성라운드=("round", lambda x: ", ".join(x))
+                ).reset_index().sort_values(by=["달성횟수", "최고비거리"], ascending=[False, False]).head(10)
+                
+                l_agg["회원"] = l_agg["member"].apply(lambda x: member_db.get(x, {}).get("nickname", x))
+                display_l = l_agg[["회원", "달성횟수", "최고비거리", "달성라운드"]].copy()
+                display_l["달성 횟수"] = display_l["달성횟수"].astype(str) + "회"
+                display_l["최고 비거리"] = display_l["최고비거리"].astype(str) + "m"
+                display_l = display_l.drop(columns=["달성횟수", "최고비거리"])
+                display_l.index += 1
+                st.table(display_l)
 
     # 5. 👑 명예의 전당
     elif menu == "명예의 전당":
@@ -1061,13 +1014,11 @@ else:
             avg_sc = round(sum(m_history) / len(m_history), 1) if m_history else 0
             
             st.markdown(f"""
-            <div class="css-card" style="background: linear-gradient(135deg, #1B3B2B 0%, #2C523D 100%); color: #FFFFFF; padding: 20px;">
-                <h3 style="margin:0 0 10px 0; color: #E5C585;">👤 {selected_member_name} ({m_nick}) 회원님</h3>
-                <div style="display: flex; gap: 20px; font-size: 0.95rem;">
-                    <span>🎯 <b>최신 핸디캡:</b> {m_hc}</span>
-                    <span>📈 <b>통산 평균 스코어:</b> {avg_sc}타</span>
-                    <span>⛳ <b>총 라운드 참석:</b> {m_rounds_cnt}회</span>
-                    <span>📅 <b>종합 참석률:</b> {m_att}%</span>
+            <div class="css-card" style="background: linear-gradient(135deg, #1B3B2B 0%, #2C523D 100%); color: #FFFFFF; padding: 18px; border-radius: 12px;">
+                <h3 style="margin:0 0 8px 0; color: #E5C585; font-size:1.1rem;">👤 {selected_member_name} ({m_nick}) 회원님</h3>
+                <div style="font-size: 0.85rem; line-height: 1.6;">
+                    🎯 <b>핸디캡:</b> {m_hc} | 📈 <b>평균 스코어:</b> {avg_sc}타<br>
+                    ⛳ <b>총 참석:</b> {m_rounds_cnt}회 | 📅 <b>참석률:</b> {m_att}%
                 </div>
             </div>
             """, unsafe_allow_html=True)
@@ -1086,19 +1037,19 @@ else:
                         member_rounds_data.append({
                             "날짜": r['date'],
                             "라운드 명칭": r['title'],
-                            "참석 여부": "출석 ✅",
+                            "참석": "출석 ✅",
                             "스코어": f"{p_data['score']}타",
-                            "드라이버 비거리": f"{p_data['long']}m" if p_data['long'] > 0 else "-",
-                            "니어 근접": f"{p_data['near']}m" if p_data['near'] > 0 else "-"
+                            "비거리": f"{p_data['long']}m" if p_data['long'] > 0 else "-",
+                            "니어": f"{p_data['near']}m" if p_data['near'] > 0 else "-"
                         })
                     else:
                         member_rounds_data.append({
                             "날짜": r['date'],
                             "라운드 명칭": r['title'],
-                            "참석 여부": "결석 ❌",
+                            "참석": "결석 ❌",
                             "스코어": "-",
-                            "드라이버 비거리": "-",
-                            "니어 근접": "-"
+                            "비거리": "-",
+                            "니어": "-"
                         })
                 
                 df_m_rounds = pd.DataFrame(member_rounds_data)
@@ -1121,7 +1072,7 @@ else:
                 with st.expander("🗑️ 조편성 이력 삭제 관리"):
                     conf_log = st.checkbox("정말로 이 조편성 이력을 삭제하시겠습니까?", key=f"conf_log_{selected_log_idx}")
                     if conf_log:
-                        if st.button("⚠️ 최종 이력 삭제 실행", key=f"btn_del_log_{selected_log_idx}", type="primary"):
+                        if st.button("⚠️ 최종 이력 삭제 실행", key=f"btn_del_log_{selected_log_idx}", type="primary", use_container_width=True):
                             match_logs.pop(selected_log_idx)
                             save_data(db)
                             st.success("해당 조편성 이력이 삭제되었습니다.")
@@ -1134,7 +1085,7 @@ else:
                     team_names = ", ".join([f"{m}({member_db.get(m, {}).get('handicap', '0')})" for m in team])
                     st.markdown(f"**⛳ {t_idx+1}조:** {team_names}")
 
-    # 7. 👥 회원 명부 (운영진 전용)
+    # 7. 👥 회원 명부
     elif menu.startswith("회원 명부"):
         st.subheader("👥 클럽 회원 명부")
         
@@ -1142,8 +1093,8 @@ else:
             "성함": k, 
             "닉네임": v.get('nickname', k),
             "핸디캡": v.get('handicap', 0), 
-            "연간 참석률": f"{v.get('attendance', 0)}%", 
-            "총 라운드 참석": f"{v.get('rounds_played', 0)}회"
+            "참석률": f"{v.get('attendance', 0)}%", 
+            "참석": f"{v.get('rounds_played', 0)}회"
         } for k, v in member_db.items() if v.get("status", "approved") == "approved"]
         
         st.table(pd.DataFrame(df_data))
@@ -1161,7 +1112,7 @@ else:
                     with col_p1:
                         st.write(f"👤 **가입 대기 회원:** `{p_name}`")
                     with col_p2:
-                        if st.button(f"✅ {p_name} 승인", key=f"app_{p_name}"):
+                        if st.button(f"✅ {p_name} 승인", key=f"app_{p_name}", use_container_width=True):
                             member_db[p_name]["status"] = "approved"
                             save_data(db)
                             st.success(f"🎉 {p_name} 회원의 가입이 최종 승인되었습니다!")
@@ -1175,7 +1126,7 @@ else:
                 with st.expander("⚠️ 회원 강퇴 실행"):
                     conf_expel = st.checkbox(f"정말로 '{target_expel}' 회원을 클럽에서 강퇴하시겠습니까?", key="conf_expel")
                     if conf_expel:
-                        if st.button("🚨 최종 강퇴 실행", type="primary", key="btn_expel"):
+                        if st.button("🚨 최종 강퇴 실행", type="primary", key="btn_expel", use_container_width=True):
                             member_db.pop(target_expel, None)
                             save_data(db)
                             st.success(f"'{target_expel}' 회원이 강퇴 조치되었습니다.")
@@ -1189,15 +1140,13 @@ else:
         st.info("💡 회원 성함, 닉네임, 비밀번호, 프로필 사진 변경, 로그아웃 및 클럽 탈퇴를 관리할 수 있습니다.")
         
         with st.form("edit_profile_form"):
-            col_f1, col_f2 = st.columns(2)
-            with col_f1:
-                edit_name = st.text_input("회원 성함", value=current_user)
-                edit_nickname = st.text_input("클럽 닉네임", value=user_info.get("nickname", current_user))
-                edit_pw = st.text_input("비밀번호 변경", value=user_info.get("password", "1234"), type="password")
-            with col_f2:
-                p_img_file = st.file_uploader("프로필 아바타 등록 (선택)", type=["jpg", "png", "jpeg"])
-                if user_info.get("profile_img"):
-                    st.image(base64.b64decode(user_info["profile_img"]), width=100, caption="현재 등록된 프로필 사진")
+            edit_name = st.text_input("회원 성함", value=current_user)
+            edit_nickname = st.text_input("클럽 닉네임", value=user_info.get("nickname", current_user))
+            edit_pw = st.text_input("비밀번호 변경", value=user_info.get("password", "1234"), type="password")
+            
+            p_img_file = st.file_uploader("프로필 아바타 등록 (선택)", type=["jpg", "png", "jpeg"])
+            if user_info.get("profile_img"):
+                st.image(base64.b64decode(user_info["profile_img"]), width=100, caption="현재 등록된 프로필 사진")
                 
             submit_btn = st.form_submit_button("💾 정보 저장하기", type="primary", use_container_width=True)
             
@@ -1221,7 +1170,7 @@ else:
                 st.success("🎉 마이페이지 정보가 성공적으로 업데이트되었습니다!")
                 st.rerun()
 
-        st.markdown("<div style='margin-top: 30px;'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
         st.markdown("##### 🚪 세션 관리: 로그아웃")
         if st.button("🚪 클럽 로그아웃", type="secondary", use_container_width=True, key="mypage_logout"):
             st.session_state.logged_in_user = None
@@ -1232,12 +1181,12 @@ else:
                 pass
             st.rerun()
 
-        st.markdown("<div style='margin-top: 30px;'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
         st.markdown("##### ❌ 위험 구역: 클럽 탈퇴")
         with st.expander("⚠️ 클럽 탈퇴하기 (계정 삭제)"):
             conf_withdraw = st.checkbox("정말로 클럽에서 탈퇴하시겠습니까? 계정 정보가 영구 삭제됩니다.", key="conf_withdraw_mypage")
             if conf_withdraw:
-                if st.button("🚨 최종 클럽 탈퇴 실행", type="primary", key="btn_withdraw_mypage"):
+                if st.button("🚨 최종 클럽 탈퇴 실행", type="primary", key="btn_withdraw_mypage", use_container_width=True):
                     member_db.pop(current_user, None)
                     save_data(db)
                     st.session_state.logged_in_user = None
