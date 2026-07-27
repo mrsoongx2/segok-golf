@@ -1,7 +1,4 @@
-# Streamlit의 버전에 따라 st.popover 함수가 지원되지 않거나, 
-# 'u' query_params 설정 시 예외가 발생하는 문제를 해결한 최종 완전판 생성
-
-final_perfect_code = '''import streamlit as st
+import streamlit as st
 import pandas as pd
 import numpy as np
 import random
@@ -93,17 +90,6 @@ feed_posts = db.setdefault("feed_posts", [])
 rounds_data = db.setdefault("rounds_data", [])
 match_logs = db.setdefault("match_logs", [])
 
-# F5 새로고침 쿠키/쿼리 호환성 예외 처리
-query_user = None
-try:
-    query_user = st.query_params.get("u", None)
-except Exception:
-    pass
-
-if 'logged_in_user' not in st.session_state or st.session_state.logged_in_user is None:
-    if query_user and query_user in member_db and member_db[query_user].get("status") == "approved":
-        st.session_state.logged_in_user = query_user
-
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,600&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
@@ -133,7 +119,10 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- LOGIN & SIGNUP ---
-if not st.session_state.get('logged_in_user'):
+if 'logged_in_user' not in st.session_state:
+    st.session_state.logged_in_user = None
+
+if not st.session_state.logged_in_user:
     col_login, _ = st.columns([2, 1])
     with col_login:
         tab1, tab2 = st.tabs(["🔑 회원 로그인", "✨ 초간단 신입회원 가입"])
@@ -151,10 +140,6 @@ if not st.session_state.get('logged_in_user'):
                         st.error("⌛ 아직 운영진 가입 승인 대기 중입니다. 승인 후 로그인할 수 있습니다.")
                     elif login_pw == user.get("password", "1234"):
                         st.session_state.logged_in_user = login_name
-                        try:
-                            st.query_params["u"] = login_name
-                        except Exception:
-                            pass
                         st.success(f"{login_name}님 환영합니다!")
                         st.rerun()
                     else:
@@ -215,10 +200,6 @@ with st.sidebar:
     
     if st.button("🚪 로그아웃", use_container_width=True):
         st.session_state.logged_in_user = None
-        try:
-            st.query_params.clear()
-        except Exception:
-            pass
         st.rerun()
         
     st.divider()
@@ -420,7 +401,7 @@ elif menu == "🎲 조편성기 (운영진)":
                 save_data(db)
                 st.success("🎉 최종 조편성 기록이 성공적으로 저장되었습니다!")
 
-# 3. 🏆 라운드별 성적 & 시상 (안전 호환 수정)
+# 3. 🏆 라운드별 성적 & 시상
 elif menu == "🏆 라운드별 성적 & 시상":
     st.subheader("🏆 라운드별 성적 입력 및 자동 시상 내역")
     
@@ -653,10 +634,6 @@ elif menu == "⚙️ 내 정보 / 프로필 수정":
                 else:
                     member_db[edit_name] = member_db.pop(current_user)
                     st.session_state.logged_in_user = edit_name
-                    try:
-                        st.query_params["u"] = edit_name
-                    except Exception:
-                        pass
                     current_user = edit_name
             
             user_info['nickname'] = edit_nickname
@@ -664,9 +641,3 @@ elif menu == "⚙️ 내 정보 / 프로필 수정":
             save_data(db)
             st.success("🎉 개인정보가 성공적으로 수정되었습니다!")
             st.rerun()
-'''
-
-with open("golf_app.py", "w", encoding="utf-8") as f:
-    f.write(final_perfect_code)
-
-print("final_perfect_code updated successfully!")
