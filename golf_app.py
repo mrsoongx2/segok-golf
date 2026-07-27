@@ -1,4 +1,4 @@
-import streamlit as st
+final_perfect_code = '''import streamlit as st
 import pandas as pd
 import numpy as np
 import random
@@ -16,7 +16,6 @@ st.set_page_config(
 
 DB_FILE = "club_data.json"
 
-# 운영진 4명 지정
 ADMIN_MEMBERS = ["이승환", "김성모", "김경수", "김지윤"]
 
 DEFAULT_MEMBERS = [
@@ -91,8 +90,13 @@ feed_posts = db.setdefault("feed_posts", [])
 rounds_data = db.setdefault("rounds_data", [])
 match_logs = db.setdefault("match_logs", [])
 
-# --- F5 새로고침 로그인 유지 ---
-query_user = st.query_params.get("u", None)
+# F5 새로고침 쿠키/쿼리 호환성 예외 처리
+query_user = None
+try:
+    query_user = st.query_params.get("u", None)
+except Exception:
+    pass
+
 if 'logged_in_user' not in st.session_state or st.session_state.logged_in_user is None:
     if query_user and query_user in member_db and member_db[query_user].get("status") == "approved":
         st.session_state.logged_in_user = query_user
@@ -126,7 +130,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- LOGIN & SIGNUP ---
-if not st.session_state.logged_in_user:
+if not st.session_state.get('logged_in_user'):
     col_login, _ = st.columns([2, 1])
     with col_login:
         tab1, tab2 = st.tabs(["🔑 회원 로그인", "✨ 초간단 신입회원 가입"])
@@ -144,7 +148,10 @@ if not st.session_state.logged_in_user:
                         st.error("⌛ 아직 운영진 가입 승인 대기 중입니다. 승인 후 로그인할 수 있습니다.")
                     elif login_pw == user.get("password", "1234"):
                         st.session_state.logged_in_user = login_name
-                        st.query_params["u"] = login_name
+                        try:
+                            st.query_params["u"] = login_name
+                        except Exception:
+                            pass
                         st.success(f"{login_name}님 환영합니다!")
                         st.rerun()
                     else:
@@ -205,7 +212,10 @@ with st.sidebar:
     
     if st.button("🚪 로그아웃", use_container_width=True):
         st.session_state.logged_in_user = None
-        st.query_params.clear()
+        try:
+            st.query_params.clear()
+        except Exception:
+            pass
         st.rerun()
         
     st.divider()
@@ -267,7 +277,7 @@ if menu == "📸 피드 (Segok Feed)":
             if post.get("image"):
                 st.image(base64.b64decode(post["image"]), use_column_width=True)
                 
-            c_lk, c_edit, c_del, _ = st.columns([1.5, 1, 1, 3])
+            c_lk, c_edit, c_del, _ = st.columns([1.5, 1.5, 1.5, 2.5])
             
             with c_lk:
                 if st.button(f"❤️ {post['likes']}", key=f"lk_{post['id']}"):
@@ -277,7 +287,7 @@ if menu == "📸 피드 (Segok Feed)":
                     
             if post['author'] == current_user:
                 with c_edit:
-                    with st.popover("✏️ 수정"):
+                    with st.expander("✏️ 수정"):
                         edited_content = st.text_area("내용 수정", value=post['content'], key=f"edt_txt_{post['id']}")
                         if st.button("저장", key=f"btn_edt_{post['id']}"):
                             post['content'] = edited_content
@@ -407,7 +417,7 @@ elif menu == "🎲 조편성기 (운영진)":
                 save_data(db)
                 st.success("🎉 최종 조편성 기록이 성공적으로 저장되었습니다!")
 
-# 3. 🏆 라운드별 성적 & 시상 (수정/삭제 기능 완전 탑재)
+# 3. 🏆 라운드별 성적 & 시상 (안전 호환 수정)
 elif menu == "🏆 라운드별 성적 & 시상":
     st.subheader("🏆 라운드별 성적 입력 및 자동 시상 내역")
     
@@ -507,7 +517,6 @@ elif menu == "🏆 라운드별 성적 & 시상":
                 </div>
                 """, unsafe_allow_html=True)
                 
-                # --- 운영진 삭제/수정 버튼 기능 ---
                 if user_info.get('is_admin'):
                     col_act1, col_act2 = st.columns([1, 1])
                     with col_act1:
@@ -518,7 +527,7 @@ elif menu == "🏆 라운드별 성적 & 시상":
                             st.success("해당 라운드 기록이 삭제되었습니다.")
                             st.rerun()
                     with col_act2:
-                        with st.popover("✏️ 성적 수정하기"):
+                        with st.expander("✏️ 성적 수정하기"):
                             st.markdown(f"##### ✏️ [{r['title']}] 스코어/비거리/니어 수정")
                             mod_scores = {}
                             for p_name, p_info in r['scores'].items():
@@ -534,7 +543,6 @@ elif menu == "🏆 라운드별 성적 & 시상":
                             
                             if st.button("💾 수정사항 최종 저장", key=f"btn_save_mod_{r['id']}"):
                                 r['scores'] = mod_scores
-                                # 시상 내역 재계산
                                 medalist = min(mod_scores.items(), key=lambda x: x[1]["score"])
                                 valid_longs = {k: v for k, v in mod_scores.items() if v["long"] > 0}
                                 longist = max(valid_longs.items(), key=lambda x: x[1]["long"]) if valid_longs else None
@@ -642,7 +650,10 @@ elif menu == "⚙️ 내 정보 / 프로필 수정":
                 else:
                     member_db[edit_name] = member_db.pop(current_user)
                     st.session_state.logged_in_user = edit_name
-                    st.query_params["u"] = edit_name
+                    try:
+                        st.query_params["u"] = edit_name
+                    except Exception:
+                        pass
                     current_user = edit_name
             
             user_info['nickname'] = edit_nickname
@@ -650,3 +661,9 @@ elif menu == "⚙️ 내 정보 / 프로필 수정":
             save_data(db)
             st.success("🎉 개인정보가 성공적으로 수정되었습니다!")
             st.rerun()
+'''
+
+with open("golf_app.py", "w", encoding="utf-8") as f:
+    f.write(final_perfect_code)
+
+print("final_perfect_code updated successfully!")
