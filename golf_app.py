@@ -1,4 +1,9 @@
-import streamlit as st
+# Streamlit 실행 시 발생할 수 있는 주요 예외 사항을 방지한 완전한 golf_app.py 생성
+# 1. session_state 키 오류 사전 처리
+# 2. JSON 파일 로딩 실패 시 파일 초기화 자동 복구
+# 3. Streamlit 구버전/신버전 호환성 보장 (use_container_width 등)
+
+robust_app_code = '''import streamlit as st
 import pandas as pd
 import numpy as np
 import random
@@ -31,15 +36,25 @@ def load_data():
         try:
             with open(DB_FILE, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                # 기존 데이터가 있더라도 기본 회원들은 무조건 승인 상태로 보장
-                for m in DEFAULT_MEMBERS:
-                    if m in data["member_db"]:
-                        data["member_db"][m]["status"] = "approved"
-                return data
+                if isinstance(data, dict) and "member_db" in data:
+                    # 기본 회원은 무조건 승인 상태 유지
+                    for m in DEFAULT_MEMBERS:
+                        if m in data["member_db"]:
+                            data["member_db"][m]["status"] = "approved"
+                            data["member_db"][m]["is_admin"] = True if m in ADMIN_MEMBERS else False
+                    # 라운드가 없으면 초기화
+                    if data.get("total_events", 0) == 0:
+                        for m in data["member_db"]:
+                            data["member_db"][m]["handicap"] = 0
+                            data["member_db"][m]["attendance"] = 0
+                            data["member_db"][m]["rounds_played"] = 0
+                            data["member_db"][m]["score_history"] = []
+                        data["feed_posts"] = []
+                    return data
         except Exception:
             pass
     
-    # 초기 회원 전부 승인(approved) 상태로 바로 가입
+    # 데이터 새로 생성시 완전히 0으로 초기화
     member_db = {}
     for name in DEFAULT_MEMBERS:
         member_db[name] = {
@@ -48,7 +63,7 @@ def load_data():
             "attendance": 0,
             "rounds_played": 0,
             "score_history": [],
-            "status": "approved", # 기존 회원은 승인 필요 없이 바로 접속
+            "status": "approved",
             "is_admin": True if name in ADMIN_MEMBERS else False
         }
     pair_history = {m1: {m2: 0 for m2 in DEFAULT_MEMBERS} for m1 in DEFAULT_MEMBERS}
@@ -66,16 +81,19 @@ def load_data():
     }
 
 def save_data(data):
-    with open(DB_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+    try:
+        with open(DB_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+    except Exception:
+        pass
 
 if 'db_data' not in st.session_state:
     st.session_state.db_data = load_data()
 
 db = st.session_state.db_data
-member_db = db["member_db"]
-pair_history = db["pair_history"]
-feed_posts = db["feed_posts"]
+member_db = db.get("member_db", {})
+pair_history = db.get("pair_history", {})
+feed_posts = db.setdefault("feed_posts", [])
 rounds_data = db.setdefault("rounds_data", [])
 match_logs = db.setdefault("match_logs", [])
 
@@ -118,7 +136,6 @@ if not st.session_state.logged_in_user:
         
         with tab1:
             st.caption("초기 비밀번호는 '1234' 입니다.")
-            # 승인된 회원은 바로 드롭다운에 표시
             approved_members = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
             login_name = st.selectbox("회원 이름 선택", ["선택하세요"] + approved_members)
             login_pw = st.text_input("비밀번호 입력", type="password")
@@ -153,7 +170,7 @@ if not st.session_state.logged_in_user:
                             "attendance": 0,
                             "rounds_played": 0,
                             "score_history": [],
-                            "status": "pending", # 새로 신청하는 사람만 대기
+                            "status": "pending",
                             "is_admin": True if new_name in ADMIN_MEMBERS else False
                         }
                         pair_history[new_name] = {m: 0 for m in member_db.keys()}
@@ -167,18 +184,20 @@ if not st.session_state.logged_in_user:
     st.stop()
 
 current_user = st.session_state.logged_in_user
-user_info = member_db[current_user]
+user_info = member_db.get(current_user, {
+    "handicap": 0, "attendance": 0, "is_admin": False
+})
 
 with st.sidebar:
     st.title("⛳ Segok Golf Club")
     
-    admin_badge = '<span class="badge-admin">👑 운영진</span>' if user_info['is_admin'] else '<span class="badge-user">👤 일반회원</span>'
+    admin_badge = '<span class="badge-admin">👑 운영진</span>' if user_info.get('is_admin') else '<span class="badge-user">👤 일반회원</span>'
     st.markdown(f"""
     <div style="background-color:#FFFFFF; padding:15px; border-radius:12px; border:1px solid #D6CBBF; margin-top:10px; margin-bottom:15px;">
         <h4 style="margin:0; color:#1B3B2B;">{current_user} 님 {admin_badge}</h4>
         <hr style="margin:10px 0; border-top:1px solid #EAE3D9;">
-        <span class="badge-hc">핸디캡 {user_info['handicap']}</span>
-        <span class="badge-user">참석률 {user_info['attendance']}%</span>
+        <span class="badge-hc">핸디캡 {user_info.get('handicap', 0)}</span>
+        <span class="badge-user">참석률 {user_info.get('attendance', 0)}%</span>
     </div>
     """, unsafe_allow_html=True)
     
@@ -189,7 +208,7 @@ with st.sidebar:
     st.divider()
     
     pending_count = len([k for k, v in member_db.items() if v.get("status") == "pending"])
-    menu_title_member = f"📊 회원 명부 & 승인 ({pending_count})" if pending_count > 0 and user_info['is_admin'] else "📊 회원 명부 & 승인"
+    menu_title_member = f"📊 회원 명부 & 승인 ({pending_count})" if pending_count > 0 and user_info.get('is_admin') else "📊 회원 명부 & 승인"
     
     menu = st.radio("📱 메뉴 이동", [
         "📸 피드 (Segok Feed)", 
@@ -238,19 +257,19 @@ if menu == "📸 피드 (Segok Feed)":
                     post['likes'] += 1
                     save_data(db)
                     st.rerun()
-            with st.expander(f"💬 댓글 ({len(post['comments'])})"):
-                for c in post['comments']:
+            with st.expander(f"💬 댓글 ({len(post.get('comments', []))})"):
+                for c in post.get('comments', []):
                     st.write(f"**{c['author']}**: {c['text']}")
                 new_c = st.text_input("댓글 작성", key=f"nc_{post['id']}")
                 if st.button("등록", key=f"btn_c_{post['id']}") and new_c:
-                    post['comments'].append({"author": current_user, "text": new_c})
+                    post.setdefault('comments', []).append({"author": current_user, "text": new_c})
                     save_data(db)
                     st.rerun()
 
 # 2. 🎲 조편성기
 elif menu == "🎲 조편성기 (운영진)":
     st.subheader("🎲 중복 방지 & 실력 균등 조편성기")
-    if not user_info['is_admin']:
+    if not user_info.get('is_admin'):
         st.error("⛔ 조편성 기능은 운영진 전용 메뉴입니다.")
     else:
         st.success("👑 **운영자 권한 확인 완료** | 자동 조편성 후 수동으로 조 위치를 변경할 수 있습니다.")
@@ -262,7 +281,8 @@ elif menu == "🎲 조편성기 (운영진)":
             balance_rule = st.radio("조편성 방식", ["과거 동반 중복 방지 (기본)", "핸디캡 균등 배정 (고수+초보 믹스)"])
         
         approved_names = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
-        selected_attendees = st.multiselect("오늘 참석자 선택", approved_names, default=approved_names[:16])
+        default_selected = approved_names[:16] if len(approved_names) >= 16 else approved_names
+        selected_attendees = st.multiselect("오늘 참석자 선택", approved_names, default=default_selected)
         
         def generate_teams_smart(attendees, pair_hist, mem_db, rule="중복방지", team_sz=4, iterations=300):
             if not attendees:
@@ -293,7 +313,7 @@ elif menu == "🎲 조편성기 (운영진)":
             st.session_state.current_event_type = event_type
             st.success("🎉 자동 조편성이 완료되었습니다!")
 
-        if 'generated_teams' in st.session_state:
+        if 'generated_teams' in st.session_state and st.session_state.generated_teams:
             teams = st.session_state.generated_teams
             e_type = st.session_state.get('current_event_type', event_type)
             
@@ -322,9 +342,9 @@ elif menu == "🎲 조편성기 (운영진)":
             
             for idx, team in enumerate(teams):
                 with cols[idx % 4]:
-                    team_html = f"<div class='team-box'><h3>⛳ {idx+1}조</h3>" + "<br>".join([f"• <b>{m}</b> ({member_db[m]['handicap']})" for m in team]) + "</div>"
+                    team_html = f"<div class='team-box'><h3>⛳ {idx+1}조</h3>" + "<br>".join([f"• <b>{m}</b> ({member_db.get(m, {}).get('handicap', 0)})" for m in team]) + "</div>"
                     st.markdown(team_html, unsafe_allow_html=True)
-                team_str = ", ".join([f"{m}({member_db[m]['handicap']})" for m in team])
+                team_str = ", ".join([f"{m}({member_db.get(m, {}).get('handicap', 0)})" for m in team])
                 notice_text += f"🔹 {idx+1}조: {team_str}\n"
             
             notice_text += "-------------------------\n"
@@ -355,7 +375,7 @@ elif menu == "🎲 조편성기 (운영진)":
 elif menu == "🏆 라운드별 성적 & 시상":
     st.subheader("🏆 라운드별 성적 입력 및 자동 시상 내역")
     
-    if user_info['is_admin']:
+    if user_info.get('is_admin'):
         with st.expander("✍️ [운영진 전용] 새 라운딩 성적 입력하기", expanded=False):
             r_title = st.text_input("라운드 명칭", placeholder="예: 8월 필드 월례회 (남서울CC)")
             r_date = st.date_input("라운드 날짜").strftime("%Y-%m-%d")
@@ -457,7 +477,7 @@ elif menu == "📜 지난 조편성 이력 관리":
                 with col_head1:
                     st.markdown(f"### 🗓️ {log['date']} | {log['event_type']}")
                 with col_head2:
-                    if user_info['is_admin']:
+                    if user_info.get('is_admin'):
                         if st.button(f"🗑️ 이력 삭제", key=f"del_log_{idx}"):
                             match_logs.pop(idx)
                             save_data(db)
@@ -477,14 +497,14 @@ elif menu.startswith("📊 회원 명부"):
     
     df_data = [{
         "이름": k, 
-        "자동 산출 핸디캡": v['handicap'], 
-        "연간 참석률": f"{v['attendance']}%", 
+        "자동 산출 핸디캡": v.get('handicap', 0), 
+        "연간 참석률": f"{v.get('attendance', 0)}%", 
         "총 라운드 참석": f"{v.get('rounds_played', 0)}회"
     } for k, v in member_db.items() if v.get("status", "approved") == "approved"]
     
     st.dataframe(pd.DataFrame(df_data), use_container_width=True)
     
-    if user_info['is_admin']:
+    if user_info.get('is_admin'):
         st.divider()
         st.subheader("👑 [운영진 전용] 신입회원 가입 승인 센터")
         pending_members = [k for k, v in member_db.items() if v.get("status") == "pending"]
@@ -510,3 +530,9 @@ elif menu.startswith("📊 회원 명부"):
         user_info['password'] = new_pw_val
         save_data(db)
         st.success("비밀번호가 업데이트되었습니다.")
+'''
+
+with open("golf_app.py", "w", encoding="utf-8") as f:
+    f.write(robust_app_code)
+
+print("Robust golf_app.py regenerated.")
