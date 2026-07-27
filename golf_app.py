@@ -183,7 +183,7 @@ st.markdown("""
     .insta-body { padding: 16px; font-size: 0.95rem; color: #262626; line-height: 1.5; }
     
     .team-box { background-color: #1B3B2B; color: #FFFFFF; padding: 18px; border-radius: 12px; margin-bottom: 14px; border: 1px solid #C5A059; }
-    .team-box h3 { color: #E5C585 !important; font-family: 'Playfair Display', serif; margin-bottom: 10px; border-bottom: 1px solid #2C523D; padding-bottom: 6px; }
+    .team-box h3 { color: #E5C585 !important; font-family: 'Playfair Display', serif; margin-bottom: 10px; border-bottom: 1px solid #325843; padding-bottom: 6px; }
     .badge-admin { background-color: #1B3B2B; color: #FFFFFF; padding: 3px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 600; border: 1px solid #C5A059; }
     .badge-user { background-color: #EFEFEF; color: #262626; padding: 3px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 600; }
     .badge-hc { background-color: #FDF8F0; color: #B38F4E; padding: 3px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; border: 1px solid #E5DEC3; }
@@ -391,7 +391,7 @@ if st.session_state.current_menu == "HOME":
         st.markdown("""
         <div class="menu-card" style="margin-top: 20px;">
             <h3>👤 마이페이지</h3>
-            <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">회원 성함, 닉네임, 비밀번호 및 프로필 사진 설정</p>
+            <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">회원 성함, 닉네임, 비밀번호, 프로필 사진 및 클럽 탈퇴</p>
         </div>
         """, unsafe_allow_html=True)
         if st.button("마이페이지 입장", use_container_width=True, key="go_mypage"):
@@ -656,22 +656,21 @@ else:
                         save_data(db)
                         st.rerun()
 
-    # 3. ⛳ 티타임 조편성 (필드 월례회 전용 + 일정/장소/코스/티오프 입력 + 깔끔한 1줄 조별 공지)
+    # 3. ⛳ 티타임 조편성 (필드 월례회 전용 + 개별 코스 및 조별 개별 티오프 시간 입력 + 깔끔한 1줄 포맷 연동)
     elif menu == "티타임 조편성":
         st.subheader("⛳ 필드 월례회 티타임 조편성")
         if not is_admin:
             st.error("⛔ 조편성 기능은 운영진 전용 메뉴입니다.")
         else:
-            st.success("👑 **운영자 권한 확인 완료** | 필드 모임 일정, 장소, 코스, 티오프 시간을 입력하고 균등 조편성을 실행합니다.")
+            st.success("👑 **운영자 권한 확인 완료** | 필드 모임 일정, 장소, 코스 정보 및 조별 티오프 시간을 설정합니다.")
             
-            st.markdown("##### 📌 라운드 상세 정보 입력")
+            st.markdown("##### 📌 기본 라운드 정보 입력")
             col_t1, col_t2 = st.columns(2)
             with col_t1:
                 r_date_input = st.date_input("라운드 일정 (날짜)")
                 golf_location = st.text_input("골프장 장소", placeholder="예: 남서울CC")
             with col_t2:
-                tee_off_time = st.text_input("티오프 시간", placeholder="예: 08:12")
-                course_name = st.text_input("코스 정보", placeholder="예: OUT / IN 코스")
+                course_name = st.text_input("코스 정보", placeholder="예: 레이크 / 밸류 코스")
 
             balance_rule = st.radio("조편성 방식", ["과거 동반 중복 방지 (기본)", "핸디캡 균등 배정 (고수+초보 믹스)"])
             
@@ -727,23 +726,35 @@ else:
                         st.success(f"{move_mem} 회원이 {target_team_num}로 이동되었습니다.")
                         st.rerun()
 
+                st.markdown("---")
+                st.markdown("##### ⏰ 각 조별 티오프 시간 개별 설정")
+                
+                group_tee_times = []
+                t_cols = st.columns(min(len(teams), 4))
+                for idx in range(len(teams)):
+                    with t_cols[idx % 4]:
+                        t_val = st.text_input(f"{idx+1}조 티오프 시간", value=f"08:{(idx*8):02d}", key=f"tee_group_{idx}")
+                        group_tee_times.append(t_val)
+
                 cols = st.columns(min(len(teams), 4))
                 date_str = r_date_input.strftime("%Y-%m-%d")
                 
-                # 깔끔하게 정돈된 1줄 형태 조별 공지 텍스트
+                # 요청하신 깔끔한 1줄 형태 조별 공지 포맷 생성
                 notice_text = f"📢 [필드 월례회 조편성 공식 안내]\n\n"
-                notice_text += f"🗓️ 일정: {date_str}  |  ⏰ 티오프: {tee_off_time or '미정'}\n"
+                notice_text += f"🗓️ 일정: {date_str}\n"
                 notice_text += f"🏟️ 장소: {golf_location or '장소 미입력'} ({course_name or '코스 미입력'})\n"
                 notice_text += f"----------------------------------------\n"
                 for idx, team in enumerate(teams):
+                    t_time = group_tee_times[idx] if idx < len(group_tee_times) else "미정"
                     team_str = ", ".join(team)
-                    notice_text += f"• {idx+1}조: {team_str}\n"
+                    notice_text += f"• {idx+1}조 ({t_time}): {team_str}\n"
                 notice_text += f"----------------------------------------\n"
                 notice_text += f"즐거운 라운딩 되세요! 🏌️‍♂️✨"
 
                 for idx, team in enumerate(teams):
                     with cols[idx % 4]:
-                        team_html = f"<div class='team-box'><h3>⛳ {idx+1}조</h3>" + "<br>".join([f"• <b>{m}</b> ({member_db.get(m, {}).get('handicap', 0)})" for m in team]) + "</div>"
+                        t_time = group_tee_times[idx] if idx < len(group_tee_times) else "미정"
+                        team_html = f"<div class='team-box'><h3>⛳ {idx+1}조 ({t_time})</h3>" + "<br>".join([f"• <b>{m}</b> ({member_db.get(m, {}).get('handicap', 0)})" for m in team]) + "</div>"
                         st.markdown(team_html, unsafe_allow_html=True)
                 
                 st.subheader("📱 카카오톡 공지문 미리보기")
@@ -1157,7 +1168,7 @@ else:
 
             st.divider()
             st.subheader("🚫 [운영진 전용] 회원 강퇴 관리")
-            expel_candidates = [k for k in member_db.keys() if k != current_user and member_db[k].get("status") == "approved"]
+            expel_candidates = [k for k in member_db.keys() if k != current_user and member_db[k].get("status", "approved") == "approved"]
             if expel_candidates:
                 target_expel = st.selectbox("강퇴할 회원 선택", expel_candidates, key="target_expel")
                 with st.expander("⚠️ 회원 강퇴 실행"):
@@ -1171,7 +1182,7 @@ else:
             else:
                 st.info("강퇴할 수 있는 회원이 없습니다.")
 
-    # 8. 👤 마이페이지 (클럽 탈퇴 기능 포함)
+    # 8. 👤 마이페이지
     elif menu == "마이페이지":
         st.subheader("👤 마이페이지 & 프로필 설정")
         st.info("💡 회원 성함, 닉네임, 비밀번호, 프로필 사진 변경 및 클럽 탈퇴를 관리할 수 있습니다.")
