@@ -60,12 +60,24 @@ def load_data():
     awards = [
         {"month": "2026년 7월", "medalist": "이승환 (75타)", "winner": "김동숙 (Net 71타)", "longist": "나승환 (260m)", "nearest": "김현태 (1.2m)"}
     ]
+    match_logs = [
+        {
+            "id": 1,
+            "date": "2026-07-20 09:00",
+            "event_type": "필드 월례회 ⛳",
+            "teams": [
+                ["이승환", "김성모", "김동숙", "나승환"],
+                ["김경수", "김지윤", "김현태", "최승락"]
+            ]
+        }
+    ]
     return {
         "member_db": member_db,
         "pair_history": pair_history,
         "feed_posts": feed_posts,
         "finances": finances,
-        "awards": awards
+        "awards": awards,
+        "match_logs": match_logs
     }
 
 def save_data(data):
@@ -80,6 +92,7 @@ pair_history = st.session_state.db_data["pair_history"]
 feed_posts = st.session_state.db_data["feed_posts"]
 finances = st.session_state.db_data["finances"]
 awards = st.session_state.db_data["awards"]
+match_logs = st.session_state.db_data.setdefault("match_logs", [])
 
 st.markdown("""
     <style>
@@ -185,7 +198,8 @@ with st.sidebar:
     menu = st.radio("📱 메뉴 이동", [
         "📸 피드 (Segok Feed)", 
         "🎲 조편성기 (운영진)", 
-        "📊 회원 명부 & 핸디", 
+        "📜 지난 조편성 이력 관리",
+        "📊 회원 명부 & 핸디/참석률", 
         "💸 회비/정산 내역", 
         "🏆 월간 시상 & 명예의 전당",
         "⛳ 매너 & 규칙 안내"
@@ -282,13 +296,15 @@ elif menu == "🎲 조편성기 (운영진)":
         if st.button("🎲 최적 조편성 실행하기", type="primary", use_container_width=True):
             teams = generate_teams_smart(selected_attendees, pair_history, member_db, balance_rule)
             st.session_state.generated_teams = teams
+            st.session_state.current_event_type = event_type
             st.success("🎉 최적의 조편성이 완료되었습니다!")
             
         if 'generated_teams' in st.session_state:
             teams = st.session_state.generated_teams
+            e_type = st.session_state.get('current_event_type', event_type)
             cols = st.columns(min(len(teams), 4))
             
-            notice_text = f"📢 Segok Golf Club [{event_type}] 조편성 안내\n"
+            notice_text = f"📢 Segok Golf Club [{e_type}] 조편성 안내\n"
             notice_text += f"🗓️ 참석 인원: 총 {len(selected_attendees)}명 ({len(teams)}개 조)\n"
             notice_text += "-------------------------\n"
             
@@ -314,11 +330,47 @@ elif menu == "🎲 조편성기 (운영진)":
                             if m1 in pair_history and m2 in pair_history[m1]:
                                 pair_history[m1][m2] += 1
                                 pair_history[m2][m1] += 1
+                                
+                new_log_id = len(match_logs) + 1
+                match_logs.insert(0, {
+                    "id": new_log_id,
+                    "date": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                    "event_type": e_type,
+                    "teams": teams
+                })
                 save_data(st.session_state.db_data)
-                st.success("🎉 데이터가 `club_data.json` 파일에 영구 반영되었습니다!")
+                st.success("🎉 이번 조편성 기록 및 과거 이력이 `club_data.json` 파일에 성공적으로 영구 저장되었습니다!")
 
-# 3. 회원 명부
-elif menu == "📊 회원 명부 & 핸디":
+# 3. 지난 조편성 이력 관리
+elif menu == "📜 지난 조편성 이력 관리":
+    st.subheader("📜 Segok Golf Club 지난 라운딩/스크린 조편성 이력")
+    st.info("💡 과거 진행했던 조편성 이력을 조회하고, 불필요한 이력은 삭제/관리할 수 있습니다.")
+    
+    if not match_logs:
+        st.warning("아직 저장된 지난 조편성 이력이 없습니다.")
+    else:
+        for idx, log in enumerate(match_logs):
+            with st.container():
+                col_head1, col_head2 = st.columns([4, 1])
+                with col_head1:
+                    st.markdown(f"### 🗓️ {log['date']} | {log['event_type']}")
+                with col_head2:
+                    if user_info['is_admin']:
+                        if st.button(f"🗑️ 이력 삭제", key=f"del_log_{idx}"):
+                            match_logs.pop(idx)
+                            save_data(st.session_state.db_data)
+                            st.success("해당 조편성 이력이 삭제되었습니다.")
+                            st.rerun()
+                
+                cols = st.columns(min(len(log['teams']), 4))
+                for t_idx, team in enumerate(log['teams']):
+                    with cols[t_idx % 4]:
+                        team_names = ", ".join([f"{m}({member_db.get(m, {}).get('handicap', '20')}타)" for m in team])
+                        st.markdown(f"**⛳ {t_idx+1}조:** {team_names}")
+                st.divider()
+
+# 4. 회원 명부
+elif menu == "📊 회원 명부 & 핸디/참석률":
     st.subheader("📊 Segok Golf Club 회원 명부")
     df_data = [{"이름": k, "핸디캡": f"{v['handicap']}타", "참석률": f"{v['attendance']}%", "직책": "운영진" if v['is_admin'] else "회원"} for k, v in member_db.items()]
     st.dataframe(pd.DataFrame(df_data), use_container_width=True)
@@ -338,7 +390,28 @@ elif menu == "📊 회원 명부 & 핸디":
         st.success("내 정보가 업데이트되었습니다.")
         st.rerun()
 
-# 4. 회비/정산 내역
+    # --- 운영진 전용 회원 핸디캡 및 참석률 수정 기능 ---
+    if user_info['is_admin']:
+        st.divider()
+        st.subheader("👑 [운영진 전용] 통합 회원 정보 관리 Center")
+        st.info("💡 이승환 님(운영진)은 회원별 핸디캡(타수)과 연간 참석률(%)을 한 곳에서 즉시 수정할 수 있습니다.")
+        
+        admin_c1, admin_c2, admin_c3 = st.columns(3)
+        with admin_c1:
+            target_member = st.selectbox("수정할 회원 선택", list(member_db.keys()))
+        with admin_c2:
+            new_target_hc = st.number_input(f"[{target_member}] 핸디캡(타수)", min_value=0, max_value=40, value=member_db[target_member]['handicap'])
+        with admin_c3:
+            new_target_att = st.number_input(f"[{target_member}] 연간 참석률(%)", min_value=0, max_value=100, value=member_db[target_member].get('attendance', 100))
+            
+        if st.button(f"👑 {target_member} 회원 정보 저장하기", type="primary", use_container_width=True):
+            member_db[target_member]['handicap'] = new_target_hc
+            member_db[target_member]['attendance'] = new_target_att
+            save_data(st.session_state.db_data)
+            st.success(f"👑 {target_member}님의 핸디캡({new_target_hc}타) 및 참석률({new_target_att}%) 변경 완료!")
+            st.rerun()
+
+# 5. 회비/정산 내역
 elif menu == "💸 회비/정산 내역":
     st.subheader("💸 투명 회비 및 정산 현황")
     
@@ -368,7 +441,7 @@ elif menu == "💸 회비/정산 내역":
                 st.success("정산 내역이 기록되었습니다!")
                 st.rerun()
 
-# 5. 월간 시상식
+# 6. 월간 시상식
 elif menu == "🏆 월간 시상 & 명예의 전당":
     st.subheader("🏆 Segok Golf Club 명예의 전당")
     for aw in awards:
@@ -384,7 +457,7 @@ elif menu == "🏆 월간 시상 & 명예의 전당":
         </div>
         """, unsafe_allow_html=True)
 
-# 6. 매너 & 규칙
+# 7. 매너 & 규칙
 elif menu == "⛳ 매너 & 규칙 안내":
     st.subheader("⛳ Segok Golf Club 라운딩 에티켓 & 수칙")
     st.markdown("""
