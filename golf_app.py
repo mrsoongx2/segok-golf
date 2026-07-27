@@ -235,7 +235,6 @@ with st.sidebar:
         
     st.divider()
     
-    # 동적 메뉴 구성 (운영진 메뉴 제어)
     menu_options = ["📸 피드 (Segok Feed)"]
     if is_admin:
         menu_options.append("🎲 조편성기 (운영진)")
@@ -252,7 +251,7 @@ with st.sidebar:
     
     menu = st.radio("📱 메뉴 이동", menu_options)
 
-# 1. 📸 피드 (인스타 스타일 동그라미 프로필 & 닉네임 표기)
+# 1. 📸 피드
 if menu == "📸 피드 (Segok Feed)":
     st.subheader("📸 Segok Member Feed")
     with st.expander("✍️ 새 라운딩 사진 및 소식 올리기", expanded=True):
@@ -290,7 +289,6 @@ if menu == "📸 피드 (Segok Feed)":
             p_nickname = author_info.get("nickname", post.get("nickname", p_author))
             p_img = author_info.get("profile_img", post.get("profile_img"))
             
-            # 아바타 태그
             if p_img:
                 avatar_html = f'<img src="data:image/png;base64,{p_img}" class="profile-avatar">'
             else:
@@ -349,7 +347,7 @@ if menu == "📸 피드 (Segok Feed)":
                     save_data(db)
                     st.rerun()
 
-# 2. 🎲 조편성기 (운영진 전용)
+# 2. 🎲 조편성기
 elif menu == "🎲 조편성기 (운영진)":
     st.subheader("🎲 중복 방지 & 실력 균등 조편성기")
     if not is_admin:
@@ -453,15 +451,14 @@ elif menu == "🎲 조편성기 (운영진)":
                     "teams": teams
                 })
                 
-                # 라운드별 성적 입력 카드 자동 연동 생성
                 round_entry = {
                     "id": int(datetime.now().timestamp()),
                     "title": f"{datetime.now().month}월 정기 {e_type}",
                     "date": datetime.now().strftime("%Y-%m-%d"),
                     "type": e_type,
                     "teams": teams,
-                    "scores": {}, # 라운드 후 입력받기 위해 빈 값 대기
-                    "completed": False, # 미완료 상태
+                    "scores": {},
+                    "completed": False,
                     "awards": {"medalist": "-", "longist": "-", "nearest": "-"}
                 }
                 rounds_data.insert(0, round_entry)
@@ -469,7 +466,7 @@ elif menu == "🎲 조편성기 (운영진)":
                 save_data(db)
                 st.success("🎉 조편성이 최종 확정되었으며, [🏆 라운드별 성적 & 시상] 메뉴에 성적 입력 카드가 자동으로 생성되었습니다!")
 
-# 3. 🏆 라운드별 성적 & 시상 (+ 통계 그래프 & TOP 10 랭킹)
+# 3. 🏆 라운드별 성적 & 시상 (개선된 깔끔한 통계 통틀어 표기)
 elif menu == "🏆 라운드별 성적 & 시상":
     st.subheader("🏆 라운드별 성적 및 자동 시상 내역")
     
@@ -495,14 +492,13 @@ elif menu == "🏆 라운드별 성적 & 시상":
                     score_table = []
                     for p_name, p_info in r['scores'].items():
                         score_table.append({
-                            "회원 이름": p_name,
-                            "스코어": f"{p_info['score']}",
+                            "회원 이름": member_db.get(p_name, {}).get("nickname", p_name),
+                            "스코어": f"{p_info['score']}타",
                             "드라이버 비거리": f"{p_info['long']}m" if p_info['long'] > 0 else "-",
                             "니어 거리에 근접": f"{p_info['near']}m" if p_info['near'] > 0 else "-"
                         })
                     st.dataframe(pd.DataFrame(score_table), use_container_width=True)
                     
-                # 운영진 성적 입력/수정/삭제 조동 영역
                 if is_admin:
                     st.markdown("---")
                     col_a1, col_a2 = st.columns(2)
@@ -517,26 +513,28 @@ elif menu == "🏆 라운드별 성적 & 시상":
                                     st.markdown(f"##### ⛳ {t_idx+1}조")
                                     for m in team:
                                         curr = r.get("scores", {}).get(m, {"score": 85, "long": 0, "near": 0.0})
+                                        m_nick = member_db.get(m, {}).get("nickname", m)
                                         c1, c2, c3 = st.columns(3)
                                         with c1:
-                                            sc = st.number_input(f"[{m}] 스코어", min_value=50, max_value=140, value=curr['score'], key=f"sc_{r['id']}_{m}")
+                                            sc = st.number_input(f"[{m_nick}] 스코어", min_value=50, max_value=140, value=curr['score'], key=f"sc_{r['id']}_{m}")
                                         with c2:
-                                            ld = st.number_input(f"[{m}] 비거리(m)", min_value=0, max_value=350, value=curr['long'], key=f"ld_{r['id']}_{m}")
+                                            ld = st.number_input(f"[{m_nick}] 비거리(m)", min_value=0, max_value=350, value=curr['long'], key=f"ld_{r['id']}_{m}")
                                         with c3:
-                                            nd = st.number_input(f"[{m}] 니어(m)", min_value=0.0, max_value=50.0, value=float(curr['near']), step=0.1, key=f"nd_{r['id']}_{m}")
+                                            nd = st.number_input(f"[{m_nick}] 니어(m)", min_value=0.0, max_value=50.0, value=float(curr['near']), step=0.1, key=f"nd_{r['id']}_{m}")
                                         entered_mod_scores[m] = {"score": sc, "long": ld, "near": nd}
                             else:
                                 approved_names = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
                                 sel_mems = st.multiselect("참석 회원 선택", approved_names, default=list(r.get("scores", {}).keys()), key=f"melsel_{r['id']}")
                                 for m in sel_mems:
                                     curr = r.get("scores", {}).get(m, {"score": 85, "long": 0, "near": 0.0})
+                                    m_nick = member_db.get(m, {}).get("nickname", m)
                                     c1, c2, c3 = st.columns(3)
                                     with c1:
-                                        sc = st.number_input(f"[{m}] 스코어", min_value=50, max_value=140, value=curr['score'], key=f"sc_{r['id']}_{m}")
+                                        sc = st.number_input(f"[{m_nick}] 스코어", min_value=50, max_value=140, value=curr['score'], key=f"sc_{r['id']}_{m}")
                                     with c2:
-                                        ld = st.number_input(f"[{m}] 비거리(m)", min_value=0, max_value=350, value=curr['long'], key=f"ld_{r['id']}_{m}")
+                                        ld = st.number_input(f"[{m_nick}] 비거리(m)", min_value=0, max_value=350, value=curr['long'], key=f"ld_{r['id']}_{m}")
                                     with c3:
-                                        nd = st.number_input(f"[{m}] 니어(m)", min_value=0.0, max_value=50.0, value=float(curr['near']), step=0.1, key=f"nd_{r['id']}_{m}")
+                                        nd = st.number_input(f"[{m_nick}] 니어(m)", min_value=0.0, max_value=50.0, value=float(curr['near']), step=0.1, key=f"nd_{r['id']}_{m}")
                                     entered_mod_scores[m] = {"score": sc, "long": ld, "near": nd}
 
                             if st.button("🏆 성적 최종 저장 및 시상 자동 계산", key=f"sv_rnd_{r['id']}", type="primary"):
@@ -551,13 +549,19 @@ elif menu == "🏆 라운드별 성적 & 시상":
                                     nearest = min(v_nears.items(), key=lambda x: x[1]["near"]) if v_nears else None
                                     
                                     medalist_nick = member_db.get(medalist[0], {}).get("nickname", medalist[0])
+                                    longist_nick = member_db.get(longist[0], {}).get("nickname", longist[0]) if longist else ""
+                                    nearest_nick = member_db.get(nearest[0], {}).get("nickname", nearest[0]) if nearest else ""
+                                    
                                     r['awards'] = {
-                                        "medalist": f"{medalist_nick} ({medalist[1]['score']})",
-                                        "longist": f"{member_db.get(longist[0],{}).get('nickname', longist[0])} ({longist[1]['long']}m)" if longist else "기록 없음",
-                                        "nearest": f"{member_db.get(nearest[0],{}).get('nickname', nearest[0])} ({nearest[1]['near']}m)" if nearest else "기록 없음",
+                                        "medalist": f"{medalist_nick} ({medalist[1]['score']}타)",
+                                        "longist": f"{longist_nick} ({longist[1]['long']}m)" if longist else "기록 없음",
+                                        "nearest": f"{nearest_nick} ({nearest[1]['near']}m)" if nearest else "기록 없음",
                                         "raw_medalist": medalist[0],
                                         "raw_longist": longist[0] if longist else None,
-                                        "raw_nearest": nearest[0] if nearest else None
+                                        "raw_nearest": nearest[0] if nearest else None,
+                                        "raw_medalist_score": medalist[1]['score'],
+                                        "raw_longist_dist": longist[1]['long'] if longist else 0,
+                                        "raw_nearest_dist": nearest[1]['near'] if nearest else 999
                                     }
                                     recalculate_all_stats(db)
                                     save_data(db)
@@ -572,59 +576,98 @@ elif menu == "🏆 라운드별 성적 & 시상":
                             st.success("해당 라운드가 삭제되었습니다.")
                             st.rerun()
 
-    # --- 누적 통계 그래프 & TOP 10 랭킹 구역 ---
+    # --- 깔끔하게 정돈된 누적 통계 & TOP 10 랭킹 구역 ---
     st.divider()
-    st.subheader("📊 클럽 누적 통계 & 랭킹 TOP 10")
-    st.caption("💡 지금까지 진행된 모든 라운드를 바탕으로 통계가 산출됩니다.")
+    st.subheader("📊 클럽 누적 통계 & TOP 10 랭킹")
+    st.caption("💡 진행된 모든 라운드 공식 기록을 바탕으로 산출된 통계입니다.")
     
     completed_r = [r for r in rounds_data if r.get("completed")]
     
     if not completed_r:
         st.warning("아직 완료된 라운드가 없어 통계 집계 데이터가 없습니다.")
     else:
-        # 시상자 카운트 집계
-        medalist_counts = {}
-        longist_counts = {}
-        nearest_counts = {}
-        
+        # 데이터 수집
+        medalist_data = {} # {member: [count, min_score]}
+        longist_data = {}  # {member: [count, max_long]}
+        nearest_data = {}  # {member: [count, min_near]}
+        attendance_counts = {}
+
         for r in completed_r:
-            raw_m = r.get("awards", {}).get("raw_medalist")
-            raw_l = r.get("awards", {}).get("raw_longist")
-            raw_n = r.get("awards", {}).get("raw_nearest")
+            awards = r.get("awards", {})
+            raw_m = awards.get("raw_medalist")
+            raw_l = awards.get("raw_longist")
+            raw_n = awards.get("raw_nearest")
             
-            if raw_m: medalist_counts[raw_m] = medalist_counts.get(raw_m, 0) + 1
-            if raw_l: longist_counts[raw_l] = longist_counts.get(raw_l, 0) + 1
-            if raw_n: nearest_counts[raw_n] = nearest_counts.get(raw_n, 0) + 1
+            m_score = awards.get("raw_medalist_score", 0)
+            l_dist = awards.get("raw_longist_dist", 0)
+            n_dist = awards.get("raw_nearest_dist", 999)
+
+            if raw_m:
+                if raw_m not in medalist_data: medalist_data[raw_m] = [0, 999]
+                medalist_data[raw_m][0] += 1
+                if m_score < medalist_data[raw_m][1]: medalist_data[raw_m][1] = m_score
+                
+            if raw_l:
+                if raw_l not in longist_data: longist_data[raw_l] = [0, 0]
+                longist_data[raw_l][0] += 1
+                if l_dist > longist_data[raw_l][1]: longist_data[raw_l][1] = l_dist
+                
+            if raw_n:
+                if raw_n not in nearest_data: nearest_data[raw_n] = [0, 999.0]
+                nearest_data[raw_n][0] += 1
+                if n_dist < nearest_data[raw_n][1]: nearest_data[raw_n][1] = n_dist
+
+            for m_name in r.get("scores", {}).keys():
+                attendance_counts[m_name] = attendance_counts.get(m_name, 0) + 1
 
         col_st1, col_st2 = st.columns(2)
         
         with col_st1:
-            st.markdown("##### 🥇 최저타(메달리스트) 1등 최다 달성 TOP 10")
-            if medalist_counts:
-                df_med = pd.DataFrame([{"회원(닉네임)": member_db.get(k,{}).get("nickname",k), "우승 횟수": v} for k,v in medalist_counts.items()]).sort_values(by="우승 횟수", ascending=False).head(10)
-                st.bar_chart(df_med.set_index("회원(닉네임)"))
+            st.markdown("##### 🥇 최저타(메달리스트) TOP 10")
+            if medalist_data:
+                med_list = []
+                for m, val in medalist_data.items():
+                    nick = member_db.get(m, {}).get("nickname", m)
+                    med_list.append({"회원": nick, "우승 횟수": val[0], "최소 타수": f"{val[1]}타"})
+                df_med = pd.DataFrame(med_list).sort_values(by=["우승 횟수", "최소 타수"], ascending=[False, True]).head(10).reset_index(drop=True)
+                df_med.index += 1
+                st.dataframe(df_med, use_container_width=True)
             else:
-                st.write("기록 없음")
+                st.info("기록 없음")
 
-            st.markdown("##### 💣 롱기스트(최장타) 최다 달성 TOP 10")
-            if longist_counts:
-                df_long = pd.DataFrame([{"회원(닉네임)": member_db.get(k,{}).get("nickname",k), "롱기 횟수": v} for k,v in longist_counts.items()]).sort_values(by="롱기 횟수", ascending=False).head(10)
-                st.bar_chart(df_long.set_index("회원(닉네임)"))
+            st.markdown("##### 💣 롱기스트(최장타) TOP 10")
+            if longist_data:
+                long_list = []
+                for m, val in longist_data.items():
+                    nick = member_db.get(m, {}).get("nickname", m)
+                    long_list.append({"회원": nick, "달성 횟수": val[0], "최고 비거리": f"{val[1]}m"})
+                df_long = pd.DataFrame(long_list).sort_values(by=["달성 횟수", "최고 비거리"], ascending=[False, False]).head(10).reset_index(drop=True)
+                df_long.index += 1
+                st.dataframe(df_long, use_container_width=True)
             else:
-                st.write("기록 없음")
+                st.info("기록 없음")
 
         with col_st2:
-            st.markdown("##### 🎯 니어리스트(최근접) 최다 달성 TOP 10")
-            if nearest_counts:
-                df_near = pd.DataFrame([{"회원(닉네임)": member_db.get(k,{}).get("nickname",k), "니어 횟수": v} for k,v in nearest_counts.items()]).sort_values(by="니어 횟수", ascending=False).head(10)
-                st.bar_chart(df_near.set_index("회원(닉네임)"))
+            st.markdown("##### 🎯 니어리스트(최근접) TOP 10")
+            if nearest_data:
+                near_list = []
+                for m, val in nearest_data.items():
+                    nick = member_db.get(m, {}).get("nickname", m)
+                    near_list.append({"회원": nick, "달성 횟수": val[0], "최단 거리": f"{val[1]}m"})
+                df_near = pd.DataFrame(near_list).sort_values(by=["달성 횟수", "최단 거리"], ascending=[False, True]).head(10).reset_index(drop=True)
+                df_near.index += 1
+                st.dataframe(df_near, use_container_width=True)
             else:
-                st.write("기록 없음")
+                st.info("기록 없음")
 
             st.markdown("##### 📅 총 출석 라운드 횟수 TOP 10")
-            att_data = [{"회원(닉네임)": v.get("nickname", k), "참석 횟수": v.get("rounds_played", 0)} for k, v in member_db.items() if v.get("status") == "approved"]
-            df_att = pd.DataFrame(att_data).sort_values(by="참석 횟수", ascending=False).head(10)
-            st.bar_chart(df_att.set_index("회원(닉네임)"))
+            if attendance_counts:
+                att_list = [{"회원": member_db.get(k, {}).get("nickname", k), "참석 횟수": v} for k, v in attendance_counts.items()]
+                df_att = pd.DataFrame(att_list).sort_values(by="참석 횟수", ascending=False).head(10).reset_index(drop=True)
+                df_att.index += 1
+                st.dataframe(df_att, use_container_width=True)
+            else:
+                st.info("기록 없음")
 
 # 4. 📜 지난 조편성 이력 관리
 elif menu == "📜 지난 조편성 이력 관리":
@@ -685,7 +728,7 @@ elif menu.startswith("📊 회원 명부"):
                         st.success(f"🎉 {p_name} 회원의 가입 승인이 완료되었습니다!")
                         st.rerun()
 
-# 6. ⚙️ 내 정보 / 프로필 수정 (프로필 사진 업로드 지원)
+# 6. ⚙️ 내 정보 / 프로필 수정
 elif menu == "⚙️ 내 정보 / 프로필 수정":
     st.subheader("⚙️ 개인정보 및 프로필 수정")
     st.info("💡 이름, 닉네임, 비밀번호, 프로필 사진을 직접 변경할 수 있습니다.")
