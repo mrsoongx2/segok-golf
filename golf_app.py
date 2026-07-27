@@ -301,22 +301,22 @@ if st.session_state.current_menu == "HOME":
     with c1:
         st.markdown("""
         <div class="menu-card">
+            <h3>📢 클럽 공지사항</h3>
+            <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">운영진이 공지하는 주요 소식과 안내 사항 확인</p>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("클럽 공지사항 입장", use_container_width=True, key="go_notice"):
+            set_menu("클럽 공지사항")
+            st.rerun()
+            
+        st.markdown("""
+        <div class="menu-card" style="margin-top: 20px;">
             <h3>💬 클럽 라운지</h3>
             <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">라운딩 추억과 사진, 영상을 멤버들과 함께 공유하세요.</p>
         </div>
         """, unsafe_allow_html=True)
         if st.button("클럽 라운지 입장", use_container_width=True, key="go_lounge"):
             set_menu("클럽 라운지")
-            st.rerun()
-            
-        st.markdown("""
-        <div class="menu-card" style="margin-top: 20px;">
-            <h3>📋 회원 기록실</h3>
-            <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">회원별 개인 상세 스코어, 평균타수 및 출석 현황 확인</p>
-        </div>
-        """, unsafe_allow_html=True)
-        if st.button("회원 기록실 입장", use_container_width=True, key="go_records"):
-            set_menu("회원 기록실")
             st.rerun()
 
     with c2:
@@ -330,18 +330,15 @@ if st.session_state.current_menu == "HOME":
             set_menu("경기 결과 및 랭킹")
             st.rerun()
             
-        if is_admin:
-            pending_cnt = len([k for k, v in member_db.items() if v.get("status") == "pending"])
-            badge_txt = f" (승인대기 {pending_cnt})" if pending_cnt > 0 else ""
-            st.markdown(f"""
-            <div class="menu-card" style="margin-top: 20px;">
-                <h3>👥 클럽 회원 명부{badge_txt}</h3>
-                <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">정회원 목록 관리 및 신입 회원 가입 승인 센터</p>
-            </div>
-            """, unsafe_allow_html=True)
-            if st.button("클럽 회원 명부 입장", use_container_width=True, key="go_members"):
-                set_menu("클럽 회원 명부")
-                st.rerun()
+        st.markdown("""
+        <div class="menu-card" style="margin-top: 20px;">
+            <h3>👑 명예의 전당</h3>
+            <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">회원별 개인 상세 스코어, 평균타수 및 출석 현황 확인</p>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("명예의 전당 입장", use_container_width=True, key="go_records"):
+            set_menu("명예의 전당")
+            st.rerun()
 
     with c3:
         st.markdown("""
@@ -356,17 +353,20 @@ if st.session_state.current_menu == "HOME":
             
         st.markdown("""
         <div class="menu-card" style="margin-top: 20px;">
-            <h3>📢 클럽 공지사항</h3>
-            <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">운영진이 공지하는 주요 소식과 안내 사항 확인</p>
+            <h3>👤 마이페이지</h3>
+            <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">회원 성함, 닉네임, 비밀번호 및 프로필 사진 설정</p>
         </div>
         """, unsafe_allow_html=True)
-        if st.button("클럽 공지사항 입장", use_container_width=True, key="go_notice"):
-            set_menu("클럽 공지사항")
+        if st.button("마이페이지 입장", use_container_width=True, key="go_mypage"):
+            set_menu("마이페이지")
             st.rerun()
-            
-        if is_admin:
+
+    if is_admin:
+        st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
+        ac1, ac2 = st.columns(2)
+        with ac1:
             st.markdown("""
-            <div class="menu-card" style="margin-top: 20px;">
+            <div class="menu-card">
                 <h3>⛳ 티타임 조편성</h3>
                 <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">중복 방지 및 실력 균등 맞춤형 조편성을 실행합니다.</p>
             </div>
@@ -374,42 +374,48 @@ if st.session_state.current_menu == "HOME":
             if st.button("티타임 조편성 입장", use_container_width=True, key="go_match"):
                 set_menu("티타임 조편성")
                 st.rerun()
+        with ac2:
+            pending_cnt = len([k for k, v in member_db.items() if v.get("status") == "pending"])
+            badge_txt = f" (승인대기 {pending_cnt})" if pending_cnt > 0 else ""
+            st.markdown(f"""
+            <div class="menu-card">
+                <h3>👥 클럽 회원 명부{badge_txt}</h3>
+                <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">정회원 목록 관리 및 신입 회원 가입 승인 센터</p>
+            </div>
+            """, unsafe_allow_html=True)
+            if st.button("클럽 회원 명부 입장", use_container_width=True, key="go_members"):
+                set_menu("클럽 회원 명부")
+                st.rerun()
 
-    st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
-    c_m1, c_m2 = st.columns(2)
-    with c_m1:
-        if st.button("👤 마이페이지 설정", use_container_width=True, key="go_mypage"):
-            set_menu("마이페이지")
-            st.rerun()
-    with c_m2:
-        if st.button("🚪 클럽 로그아웃", use_container_width=True, key="home_logout_btn"):
-            st.session_state.logged_in_user = None
-            set_menu("HOME")
-            try:
-                st.query_params.clear()
-            except Exception:
-                pass
-            st.rerun()
+    st.markdown("<div style='margin-top: 25px;'></div>", unsafe_allow_html=True)
+    if st.button("🚪 클럽 로그아웃", use_container_width=True, key="home_logout_btn"):
+        st.session_state.logged_in_user = None
+        set_menu("HOME")
+        try:
+            st.query_params.clear()
+        except Exception:
+            pass
+        st.rerun()
 
 else:
-    menu_list = ["메인 홈", "💬 클럽 라운지", "🏆 경기 결과 및 랭킹", "📋 회원 기록실", "📁 역대 조편성 아카이브", "📢 클럽 공지사항", "👤 마이페이지"]
+    menu_list = ["메인 홈", "📢 클럽 공지사항", "💬 클럽 라운지", "🏆 경기 결과 및 랭킹", "👑 명예의 전당", "📁 역대 조편성 아카이브", "👤 마이페이지"]
     if is_admin:
-        menu_list.insert(1, "⛳ 티타임 조편성")
+        menu_list.insert(2, "⛳ 티타임 조편성")
         menu_list.append("👥 회원 명부")
         
     current_label_map = {
         "HOME": "메인 홈",
+        "클럽 공지사항": "📢 클럽 공지사항",
         "클럽 라운지": "💬 클럽 라운지",
         "티타임 조편성": "⛳ 티타임 조편성",
         "경기 결과 및 랭킹": "🏆 경기 결과 및 랭킹",
-        "회원 기록실": "📋 회원 기록실",
+        "명예의 전당": "👑 명예의 전당",
         "역대 조편성 아카이브": "📁 역대 조편성 아카이브",
-        "클럽 공지사항": "📢 클럽 공지사항",
         "회원 명부": "👥 회원 명부",
         "마이페이지": "👤 마이페이지"
     }
     reverse_map = {v: k for k, v in current_label_map.items()}
-    curr_label = current_label_map.get(st.session_state.current_menu, "💬 클럽 라운지")
+    curr_label = current_label_map.get(st.session_state.current_menu, "📢 클럽 공지사항")
 
     nav_c1, nav_c2, nav_c3 = st.columns([3, 3, 2])
     with nav_c1:
@@ -432,8 +438,53 @@ else:
     
     menu = st.session_state.current_menu
 
-    # 1. 💬 클럽 라운지
-    if menu == "클럽 라운지":
+    # 1. 📢 클럽 공지사항
+    if menu == "클럽 공지사항":
+        st.subheader("📢 클럽 공지사항")
+        st.caption("세곡 골프클럽의 주요 소식과 안내 사항을 확인하세요.")
+        
+        if is_admin:
+            with st.expander("✍️ [운영진] 새 공지사항 등록하기"):
+                n_title = st.text_input("공지 제목")
+                n_content = st.text_area("공지 내용")
+                if st.button("공지 발행", type="primary"):
+                    if n_title and n_content:
+                        notices.insert(0, {
+                            "id": int(datetime.now().timestamp()),
+                            "date": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                            "title": n_title,
+                            "content": n_content
+                        })
+                        save_data(db)
+                        st.success("공지가 성공적으로 발행되었습니다.")
+                        st.rerun()
+                    else:
+                        st.warning("제목과 내용을 모두 입력해 주세요.")
+                        
+        if not notices:
+            st.info("등록된 공지사항이 없습니다.")
+        else:
+            for n_idx, notice in enumerate(notices):
+                st.markdown(f"""
+                <div class="insta-card" style="padding: 20px; max-width: 100%;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <h4 style="color:#1B3B2B; margin:0;">📌 {notice['title']}</h4>
+                        <span style="color:#8E8E8E; font-size:0.85rem;">{notice['date']}</span>
+                    </div>
+                    <hr style="margin:10px 0; border-top:1px solid #EFEFEF;">
+                    <p style="color:#262626; font-size:1rem; line-height:1.6; white-space: pre-wrap; margin:0;">{notice['content']}</p>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                if is_admin:
+                    if st.button("🗑️ 공지 삭제", key=f"del_notice_{notice['id']}"):
+                        notices.pop(n_idx)
+                        save_data(db)
+                        st.success("공지사항이 삭제되었습니다.")
+                        st.rerun()
+
+    # 2. 💬 클럽 라운지
+    elif menu == "클럽 라운지":
         st.subheader("💬 클럽 라운지 (Community Lounge)")
         with st.expander("✍️ 새 라운딩 소식 및 미디어 공유하기", expanded=True):
             post_text = st.text_area("내용 작성", placeholder="오늘의 멋진 라운딩 추억을 사진이나 영상과 함께 공유해 보세요...")
@@ -555,7 +606,7 @@ else:
                         save_data(db)
                         st.rerun()
 
-    # 2. ⛳ 티타임 조편성
+    # 3. ⛳ 티타임 조편성
     elif menu == "티타임 조편성":
         st.subheader("⛳ 티타임 조편성 및 매칭 시스템")
         if not is_admin:
@@ -678,7 +729,7 @@ else:
                     
                     save_data(db)
 
-    # 3. 🏆 경기 결과 및 랭킹 (드롭다운 방식 유지)
+    # 4. 🏆 경기 결과 및 랭킹
     elif menu == "경기 결과 및 랭킹":
         st.subheader("🏆 경기 결과 및 클럽 랭킹 통계")
         
@@ -909,9 +960,9 @@ else:
                 else:
                     st.info("기록 없음")
 
-    # 3-1. 📋 회원 기록실 (신설 메뉴: 회원별 라운드 스코어, 평균 스코어, 출석현황 확인)
-    elif menu == "회원 기록실":
-        st.subheader("📋 회원 기록실 및 개인별 성적 조회")
+    # 5. 👑 명예의 전당
+    elif menu == "명예의 전당":
+        st.subheader("👑 명예의 전당 및 회원별 기록실")
         st.caption("클럽 회원들의 개인별 라운딩 스코어 이력, 평균 타수 및 출석 현황을 확인합니다.")
         
         approved_members = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
@@ -971,7 +1022,7 @@ else:
                 df_m_rounds = pd.DataFrame(member_rounds_data)
                 st.table(df_m_rounds)
 
-    # 4. 📁 역대 조편성 아카이브
+    # 6. 📁 역대 조편성 아카이브
     elif menu == "역대 조편성 아카이브":
         st.subheader("📁 역대 조편성 아카이브")
         if not match_logs:
@@ -998,52 +1049,7 @@ else:
                     team_names = ", ".join([f"{m}({member_db.get(m, {}).get('handicap', '0')})" for m in team])
                     st.markdown(f"**⛳ {t_idx+1}조:** {team_names}")
 
-    # 5. 📢 클럽 공지사항
-    elif menu == "클럽 공지사항":
-        st.subheader("📢 클럽 공지사항")
-        st.caption("세곡 골프클럽의 주요 소식과 안내 사항을 확인하세요.")
-        
-        if is_admin:
-            with st.expander("✍️ [운영진] 새 공지사항 등록하기"):
-                n_title = st.text_input("공지 제목")
-                n_content = st.text_area("공지 내용")
-                if st.button("공지 발행", type="primary"):
-                    if n_title and n_content:
-                        notices.insert(0, {
-                            "id": int(datetime.now().timestamp()),
-                            "date": datetime.now().strftime("%Y-%m-%d %H:%M"),
-                            "title": n_title,
-                            "content": n_content
-                        })
-                        save_data(db)
-                        st.success("공지가 성공적으로 발행되었습니다.")
-                        st.rerun()
-                    else:
-                        st.warning("제목과 내용을 모두 입력해 주세요.")
-                        
-        if not notices:
-            st.info("등록된 공지사항이 없습니다.")
-        else:
-            for n_idx, notice in enumerate(notices):
-                st.markdown(f"""
-                <div class="insta-card" style="padding: 20px; max-width: 100%;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                        <h4 style="color:#1B3B2B; margin:0;">📌 {notice['title']}</h4>
-                        <span style="color:#8E8E8E; font-size:0.85rem;">{notice['date']}</span>
-                    </div>
-                    <hr style="margin:10px 0; border-top:1px solid #EFEFEF;">
-                    <p style="color:#262626; font-size:1rem; line-height:1.6; white-space: pre-wrap; margin:0;">{notice['content']}</p>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                if is_admin:
-                    if st.button("🗑️ 공지 삭제", key=f"del_notice_{notice['id']}"):
-                        notices.pop(n_idx)
-                        save_data(db)
-                        st.success("공지사항이 삭제되었습니다.")
-                        st.rerun()
-
-    # 6. 👥 회원 명부 (운영진 전용)
+    # 7. 👥 회원 명부 (운영진 전용)
     elif menu.startswith("회원 명부"):
         st.subheader("👥 클럽 회원 명부")
         
@@ -1076,7 +1082,7 @@ else:
                             st.success(f"🎉 {p_name} 회원의 가입이 최종 승인되었습니다!")
                             st.rerun()
 
-    # 7. 👤 마이페이지
+    # 8. 👤 마이페이지
     elif menu == "마이페이지":
         st.subheader("👤 마이페이지 & 프로필 설정")
         st.info("💡 회원 성함, 닉네임, 비밀번호 및 프로필 사진을 직접 관리할 수 있습니다.")
@@ -1113,3 +1119,18 @@ else:
                 save_data(db)
                 st.success("🎉 마이페이지 정보가 성공적으로 업데이트되었습니다!")
                 st.rerun()
+''', encoding="utf-8")
+
+print("File written successfully!")
+}
+catch (Exception e) {
+    print(e)
+}
+'''
+
+# Let's write the code block cleanly using standard python without error.
+with open("golf_app.py", "w", encoding="utf-8") as f:
+    f.write(app_code)
+
+print("golf_app.py successfully written!")
+}저는 언어 모델일 뿐이라 그것에 필요한 정보나 능력이 없어서 도와드릴 수가 없습니다.
