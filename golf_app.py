@@ -283,7 +283,6 @@ is_admin = user_info.get('is_admin', False)
 display_nickname = user_info.get('nickname', current_user)
 admin_badge = '<span class="badge-admin">👑 운영진</span>' if is_admin else '<span class="badge-user">👤 정회원</span>'
 
-# --- 알림 여부 계산 (새 공지 또는 새 피드 확인용) ---
 last_n = user_info.get("last_notice_seen", "")
 latest_notice_date = notices[0]["date"] if notices else ""
 has_new_notice = latest_notice_date > last_n if latest_notice_date else False
@@ -292,7 +291,7 @@ last_l = user_info.get("last_lounge_seen", "")
 latest_lounge_date = feed_posts[0]["date"] if feed_posts else ""
 has_new_lounge = latest_lounge_date > last_l if latest_lounge_date else False
 
-# --- 상단 고정 헤더 ---
+# --- 상단 고정 헤더 (이름 옆에 작은 크기 로그아웃 버튼 배치) ---
 col_h1, col_h2 = st.columns([3, 2])
 with col_h1:
     if st.button("⛳ Segok Golf Club", key="logo_home_btn"):
@@ -301,13 +300,25 @@ with col_h1:
 with col_h2:
     hc_val = user_info.get('handicap', 0)
     att_val = user_info.get('attendance', 0)
-    st.markdown(f"""
-    <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; padding-top: 5px;">
-        <span style="font-size:0.9rem;"><b>{display_nickname}</b>님 {admin_badge}</span>
-        <span class="badge-hc">HC {hc_val}</span>
-        <span class="badge-user">참석 {att_val}%</span>
-    </div>
-    """, unsafe_allow_html=True)
+    
+    sub_c1, sub_c2 = st.columns([4, 1])
+    with sub_c1:
+        st.markdown(f"""
+        <div style="display: flex; justify-content: flex-end; align-items: center; gap: 8px; padding-top: 6px; font-size: 0.9rem;">
+            <span><b>{display_nickname}</b>님 {admin_badge}</span>
+            <span class="badge-hc">HC {hc_val}</span>
+            <span class="badge-user">참석 {att_val}%</span>
+        </div>
+        """, unsafe_allow_html=True)
+    with sub_c2:
+        if st.button("로그아웃", key="header_logout_btn", use_container_width=True):
+            st.session_state.logged_in_user = None
+            set_menu("HOME")
+            try:
+                st.query_params.clear()
+            except Exception:
+                pass
+            st.rerun()
 
 st.markdown("<hr style='margin: 10px 0 20px 0; border-top: 1px solid #DBDBDB;'>", unsafe_allow_html=True)
 
@@ -413,31 +424,6 @@ if st.session_state.current_menu == "HOME":
                 set_menu("클럽 회원 명부")
                 st.rerun()
 
-    st.markdown("<div style='margin-top: 25px;'></div>", unsafe_allow_html=True)
-    
-    # 크기 줄인 로그아웃 버튼과 신규 클럽 탈퇴 버튼 배치
-    col_lo, col_wd = st.columns([1, 1])
-    with col_lo:
-        if st.button("🚪 클럽 로그아웃", use_container_width=True, key="home_logout_btn"):
-            st.session_state.logged_in_user = None
-            set_menu("HOME")
-            try:
-                st.query_params.clear()
-            except Exception:
-                pass
-            st.rerun()
-    with col_wd:
-        with st.expander("❌ 클럽 탈퇴하기"):
-            conf_withdraw = st.checkbox("정말로 클럽에서 탈퇴하시겠습니까? (계정 정보가 삭제됩니다)", key="conf_withdraw")
-            if conf_withdraw:
-                if st.button("⚠️ 최종 회원 탈퇴 실행", type="primary", key="btn_withdraw"):
-                    member_db.pop(current_user, None)
-                    save_data(db)
-                    st.session_state.logged_in_user = None
-                    set_menu("HOME")
-                    st.success("클럽 탈퇴가 정상적으로 처리되었습니다.")
-                    st.rerun()
-
 else:
     notice_label = f"📢 클럽 공지사항 {'🟢' if has_new_notice else ''}"
     lounge_label = f"💬 클럽 라운지 {'🟢' if has_new_lounge else ''}"
@@ -465,7 +451,6 @@ else:
     with nav_c1:
         selected_nav = st.selectbox("📌 빠른 메뉴 이동", menu_list, index=menu_list.index(curr_label) if curr_label in menu_list else 0)
         target_menu = reverse_map.get(selected_nav, "HOME")
-        # 라벨에 있는 이모지 제거 매핑 보정
         if "공지사항" in selected_nav: target_menu = "클럽 공지사항"
         elif "라운지" in selected_nav: target_menu = "클럽 라운지"
         
@@ -488,7 +473,6 @@ else:
 
     # 1. 📢 클럽 공지사항
     if menu == "클럽 공지사항":
-        # 방문 시 알림 최신화
         if notices:
             user_info["last_notice_seen"] = notices[0]["date"]
             save_data(db)
@@ -617,7 +601,7 @@ else:
                 if post.get('content'):
                     st.markdown(f"""
                     <div class="insta-body">
-                        <p style="margin:0; color:#262626; word-break:break-all;">{post['content']}</p>
+                        <p style="margin:0; color:#262626; word-break:break-all; white-space: pre-wrap;">{post['content']}</p>
                     </div>
                     """, unsafe_allow_html=True)
                     
@@ -672,19 +656,24 @@ else:
                         save_data(db)
                         st.rerun()
 
-    # 3. ⛳ 티타임 조편성 (확정 시 클럽 라운지 피드 자동 등록 기능 연동)
+    # 3. ⛳ 티타임 조편성 (필드 월례회 전용 + 일정/장소/코스/티오프 입력 + 깔끔한 1줄 조별 공지)
     elif menu == "티타임 조편성":
-        st.subheader("⛳ 티타임 조편성 및 매칭 시스템")
+        st.subheader("⛳ 필드 월례회 티타임 조편성")
         if not is_admin:
             st.error("⛔ 조편성 기능은 운영진 전용 메뉴입니다.")
         else:
-            st.success("👑 **운영자 권한 확인 완료** | 중복 방지 및 균등 조편성을 실행할 수 있습니다.")
+            st.success("👑 **운영자 권한 확인 완료** | 필드 모임 일정, 장소, 코스, 티오프 시간을 입력하고 균등 조편성을 실행합니다.")
             
-            c_mode1, c_mode2 = st.columns(2)
-            with c_mode1:
-                event_type = st.radio("모임 구분", ["필드 월례회 ⛳", "스크린 월례회 🖥️"])
-            with c_mode2:
-                balance_rule = st.radio("조편성 방식", ["과거 동반 중복 방지 (기본)", "핸디캡 균등 배정 (고수+초보 믹스)"])
+            st.markdown("##### 📌 라운드 상세 정보 입력")
+            col_t1, col_t2 = st.columns(2)
+            with col_t1:
+                r_date_input = st.date_input("라운드 일정 (날짜)")
+                golf_location = st.text_input("골프장 장소", placeholder="예: 남서울CC")
+            with col_t2:
+                tee_off_time = st.text_input("티오프 시간", placeholder="예: 08:12")
+                course_name = st.text_input("코스 정보", placeholder="예: OUT / IN 코스")
+
+            balance_rule = st.radio("조편성 방식", ["과거 동반 중복 방지 (기본)", "핸디캡 균등 배정 (고수+초보 믹스)"])
             
             approved_names = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
             default_selected = approved_names[:16] if len(approved_names) >= 16 else approved_names
@@ -716,15 +705,12 @@ else:
             if st.button("🎲 자동 조편성 실행하기", type="primary", use_container_width=True):
                 teams = generate_teams_smart(selected_attendees, pair_history, member_db, balance_rule)
                 st.session_state.generated_teams = teams
-                st.session_state.current_event_type = event_type
                 st.success("🎉 자동 조편성이 완료되었습니다!")
 
             if 'generated_teams' in st.session_state and st.session_state.generated_teams:
                 teams = st.session_state.generated_teams
-                e_type = st.session_state.get('current_event_type', event_type)
                 
                 with st.expander("✏️ 조 구성원 수동으로 변경하기"):
-                    st.info("특정 회원을 선택하여 원하는 조로 바꿀 수 있습니다.")
                     col_m1, col_m2 = st.columns(2)
                     with col_m1:
                         move_mem = st.selectbox("이동시킬 회원 선택", selected_attendees)
@@ -742,25 +728,28 @@ else:
                         st.rerun()
 
                 cols = st.columns(min(len(teams), 4))
-                notice_text = f"📢 Segok Golf Club [{e_type}] 조편성 안내\n"
-                notice_text += f"🗓️ 참석 인원: 총 {len(selected_attendees)}명 ({len(teams)}개 조)\n"
-                notice_text += "-------------------------\n"
+                date_str = r_date_input.strftime("%Y-%m-%d")
                 
+                # 깔끔하게 정돈된 1줄 형태 조별 공지 텍스트
+                notice_text = f"📢 [필드 월례회 조편성 공식 안내]\n\n"
+                notice_text += f"🗓️ 일정: {date_str}  |  ⏰ 티오프: {tee_off_time or '미정'}\n"
+                notice_text += f"🏟️ 장소: {golf_location or '장소 미입력'} ({course_name or '코스 미입력'})\n"
+                notice_text += f"----------------------------------------\n"
+                for idx, team in enumerate(teams):
+                    team_str = ", ".join(team)
+                    notice_text += f"• {idx+1}조: {team_str}\n"
+                notice_text += f"----------------------------------------\n"
+                notice_text += f"즐거운 라운딩 되세요! 🏌️‍♂️✨"
+
                 for idx, team in enumerate(teams):
                     with cols[idx % 4]:
                         team_html = f"<div class='team-box'><h3>⛳ {idx+1}조</h3>" + "<br>".join([f"• <b>{m}</b> ({member_db.get(m, {}).get('handicap', 0)})" for m in team]) + "</div>"
                         st.markdown(team_html, unsafe_allow_html=True)
-                    team_str = ", ".join([f"{m}({member_db.get(m, {}).get('handicap', 0)})" for m in team])
-                    notice_text += f"🔹 {idx+1}조: {team_str}\n"
                 
-                notice_text += "-------------------------\n"
-                notice_text += "즐거운 라운딩 되세요! 🏌️‍♂️✨"
-                
-                st.subheader("📱 카카오톡 공지문 복사")
+                st.subheader("📱 카카오톡 공지문 미리보기")
                 st.code(notice_text, language="text")
                 
-                btn_msg = "💾 이 조편성을 최종 확정 및 라운지 피드 자동 공지" if "필드" in e_type else "💾 이 조편성 저장 (스크린은 경기결과 미포함)"
-                if st.button(btn_msg, use_container_width=True):
+                if st.button("💾 이 조편성을 최종 확정 및 라운지 피드 자동 공지", use_container_width=True):
                     for team in teams:
                         for i in range(len(team)):
                             for j in range(i + 1, len(team)):
@@ -773,43 +762,39 @@ else:
                     match_logs.insert(0, {
                         "id": len(match_logs) + 1,
                         "date": now_str,
-                        "event_type": e_type,
+                        "event_type": "필드 월례회",
                         "teams": teams
                     })
                     
-                    if "필드" in e_type:
-                        round_entry = {
-                            "id": int(datetime.now().timestamp()),
-                            "title": f"{datetime.now().month}월 정기 {e_type}",
-                            "date": datetime.now().strftime("%Y-%m-%d"),
-                            "type": e_type,
-                            "teams": teams,
-                            "scores": {},
-                            "completed": False,
-                            "awards": {"medalist": "-", "longist": "-", "nearest": "-"}
-                        }
-                        rounds_data.insert(0, round_entry)
-                        
-                        # 클럽 라운지(피드)에 자동 공지 등록
-                        feed_posts.insert(0, {
-                            "id": int(datetime.now().timestamp()),
-                            "author": current_user,
-                            "nickname": user_info.get("nickname", current_user),
-                            "profile_img": user_info.get("profile_img", None),
-                            "date": now_str,
-                            "content": f"[📢 조편성 공식 공지]\n\n{notice_text}",
-                            "media_path": None,
-                            "media_type": None,
-                            "likes": 0,
-                            "liked_users": [],
-                            "comments": []
-                        })
-                        
-                        st.success("🎉 조편성이 최종 확정되었으며, [클럽 라운지] 및 [경기 결과 및 랭킹]에 자동 반영되었습니다!")
-                    else:
-                        st.success("🎉 스크린 조편성 이력이 저장되었습니다. (스크린은 공식 경기결과 대상에서 제외됩니다)")
+                    round_entry = {
+                        "id": int(datetime.now().timestamp()),
+                        "title": f"{r_date_input.month}월 정기 필드 월례회 ({golf_location or '필드'})",
+                        "date": date_str,
+                        "type": "필드 월례회",
+                        "teams": teams,
+                        "scores": {},
+                        "completed": False,
+                        "awards": {"medalist": "-", "longist": "-", "nearest": "-"}
+                    }
+                    rounds_data.insert(0, round_entry)
+                    
+                    # 클럽 라운지(피드)에 자동 공지 등록
+                    feed_posts.insert(0, {
+                        "id": int(datetime.now().timestamp()),
+                        "author": current_user,
+                        "nickname": user_info.get("nickname", current_user),
+                        "profile_img": user_info.get("profile_img", None),
+                        "date": now_str,
+                        "content": notice_text,
+                        "media_path": None,
+                        "media_type": None,
+                        "likes": 0,
+                        "liked_users": [],
+                        "comments": []
+                    })
                     
                     save_data(db)
+                    st.success("🎉 조편성 확정 및 [클럽 라운지 피드]와 [경기 결과] 메뉴에 성공적으로 자동 등록되었습니다!")
 
     # 4. 🏆 경기 결과 및 랭킹
     elif menu == "경기 결과 및 랭킹":
@@ -1137,7 +1122,7 @@ else:
                     team_names = ", ".join([f"{m}({member_db.get(m, {}).get('handicap', '0')})" for m in team])
                     st.markdown(f"**⛳ {t_idx+1}조:** {team_names}")
 
-    # 7. 👥 회원 명부 (운영진 전용 - 강퇴 기능 탑재)
+    # 7. 👥 회원 명부 (운영진 전용)
     elif menu.startswith("회원 명부"):
         st.subheader("👥 클럽 회원 명부")
         
@@ -1186,10 +1171,10 @@ else:
             else:
                 st.info("강퇴할 수 있는 회원이 없습니다.")
 
-    # 8. 👤 마이페이지
+    # 8. 👤 마이페이지 (클럽 탈퇴 기능 포함)
     elif menu == "마이페이지":
         st.subheader("👤 마이페이지 & 프로필 설정")
-        st.info("💡 회원 성함, 닉네임, 비밀번호 및 프로필 사진을 직접 관리할 수 있습니다.")
+        st.info("💡 회원 성함, 닉네임, 비밀번호, 프로필 사진 변경 및 클럽 탈퇴를 관리할 수 있습니다.")
         
         with st.form("edit_profile_form"):
             col_f1, col_f2 = st.columns(2)
@@ -1223,3 +1208,16 @@ else:
                 save_data(db)
                 st.success("🎉 마이페이지 정보가 성공적으로 업데이트되었습니다!")
                 st.rerun()
+
+        st.markdown("<div style='margin-top: 30px;'></div>", unsafe_allow_html=True)
+        st.markdown("##### ❌ 위험 구역: 클럽 탈퇴")
+        with st.expander("⚠️ 클럽 탈퇴하기 (계정 삭제)"):
+            conf_withdraw = st.checkbox("정말로 클럽에서 탈퇴하시겠습니까? 계정 정보가 영구 삭제됩니다.", key="conf_withdraw_mypage")
+            if conf_withdraw:
+                if st.button("🚨 최종 클럽 탈퇴 실행", type="primary", key="btn_withdraw_mypage"):
+                    member_db.pop(current_user, None)
+                    save_data(db)
+                    st.session_state.logged_in_user = None
+                    set_menu("HOME")
+                    st.success("클럽 탈퇴가 정상적으로 처리되었습니다.")
+                    st.rerun()
