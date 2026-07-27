@@ -83,7 +83,8 @@ def save_data(data):
         pass
 
 def recalculate_all_stats(db_obj):
-    r_list = db_obj.get("rounds_data", [])
+    # 스크린은 경기결과 및 핸디캡 집계에서 제외 (필드만 반영)
+    r_list = [r for r in db_obj.get("rounds_data", []) if "필드" in r.get("type", "")]
     m_db = db_obj.get("member_db", {})
     
     completed_rounds = [r for r in r_list if r.get("completed", False)]
@@ -129,7 +130,6 @@ rounds_data = db.setdefault("rounds_data", [])
 match_logs = db.setdefault("match_logs", [])
 notices = db.setdefault("notices", [])
 
-# --- 인스타그램 피드 감성 디자인 및 UI CSS ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,600&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
@@ -139,11 +139,9 @@ st.markdown("""
     .brand-title { font-family: 'Playfair Display', serif; color: #1B3B2B; font-size: 2.3rem; font-weight: 700; margin: 0; }
     .brand-subtitle { color: #8E8E8E; font-size: 0.8rem; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; margin-top: 4px; }
     
-    /* 인스타 피드 카드 스타일 */
     .insta-card { background-color: #FFFFFF; border-radius: 12px; border: 1px solid #DBDBDB; max-width: 650px; margin: 0 auto 24px auto; box-shadow: 0 2px 8px rgba(0,0,0,0.03); overflow: hidden; }
     .insta-header { display: flex; align-items: center; padding: 14px 16px; border-bottom: 1px solid #EFEFEF; background-color: #FFFFFF; }
     .insta-body { padding: 16px; font-size: 0.95rem; color: #262626; line-height: 1.5; }
-    .insta-footer { padding: 12px 16px; border-top: 1px solid #EFEFEF; background-color: #FAFAFA; display: flex; align-items: center; gap: 12px; }
     
     .team-box { background-color: #1B3B2B; color: #FFFFFF; padding: 18px; border-radius: 12px; margin-bottom: 14px; border: 1px solid #C5A059; }
     .team-box h3 { color: #E5C585 !important; font-family: 'Playfair Display', serif; margin-bottom: 10px; border-bottom: 1px solid #2C523D; padding-bottom: 6px; }
@@ -269,7 +267,7 @@ with st.sidebar:
         
     menu = st.radio("📱 클럽 메뉴", menu_options)
 
-# 1. 💬 소통 광장 (인스타그램 스타일 감성 피드)
+# 1. 💬 소통 광장
 if menu == "💬 소통 광장 (Feed)":
     st.subheader("💬 소통 광장")
     with st.expander("✍️ 새 라운딩 소식 및 미디어 공유하기", expanded=True):
@@ -318,7 +316,6 @@ if menu == "💬 소통 광장 (Feed)":
             else:
                 avatar_html = '<span style="font-size:1.5rem; margin-right:10px;">👤</span>'
                 
-            # 인스타 스타일 카드 프레임
             st.markdown(f"""
             <div class="insta-card">
                 <div class="insta-header">
@@ -330,7 +327,6 @@ if menu == "💬 소통 광장 (Feed)":
                 </div>
             """, unsafe_allow_html=True)
             
-            # 미디어 출력 (상단)
             m_path = post.get("media_path")
             if m_path and os.path.exists(m_path):
                 if post.get("media_type") == "video":
@@ -338,7 +334,6 @@ if menu == "💬 소통 광장 (Feed)":
                 else:
                     st.image(m_path, use_column_width=True)
 
-            # 코멘트 텍스트 (하단)
             if post.get('content'):
                 st.markdown(f"""
                 <div class="insta-body">
@@ -385,7 +380,7 @@ if menu == "💬 소통 광장 (Feed)":
                     save_data(db)
                     st.rerun()
 
-# 2. ⛳ 티타임 조편성 (운영진 전용)
+# 2. ⛳ 티타임 조편성 (필드만 결과 카드 생성, 스크린은 제외)
 elif menu == "⛳ 티타임 조편성":
     st.subheader("⛳ 티타임 조편성 및 매칭 시스템")
     if not is_admin:
@@ -472,7 +467,8 @@ elif menu == "⛳ 티타임 조편성":
             st.subheader("📱 카카오톡 공지문 복사")
             st.code(notice_text, language="text")
             
-            if st.button("💾 이 조편성을 최종 확정 및 경기 결과 카드 생성", use_container_width=True):
+            btn_msg = "💾 이 조편성을 최종 확정 및 경기 결과 카드 생성" if "필드" in e_type else "💾 이 조편성 저장 (스크린은 경기결과 미포함)"
+            if st.button(btn_msg, use_container_width=True):
                 for team in teams:
                     for i in range(len(team)):
                         for j in range(i + 1, len(team)):
@@ -489,37 +485,59 @@ elif menu == "⛳ 티타임 조편성":
                     "teams": teams
                 })
                 
-                round_entry = {
-                    "id": int(datetime.now().timestamp()),
-                    "title": f"{datetime.now().month}월 정기 {e_type}",
-                    "date": datetime.now().strftime("%Y-%m-%d"),
-                    "type": e_type,
-                    "teams": teams,
-                    "scores": {},
-                    "completed": False,
-                    "awards": {"medalist": "-", "longist": "-", "nearest": "-"}
-                }
-                rounds_data.insert(0, round_entry)
+                # 스크린은 경기결과 카드에 포함하지 않음
+                if "필드" in e_type:
+                    round_entry = {
+                        "id": int(datetime.now().timestamp()),
+                        "title": f"{datetime.now().month}월 정기 {e_type}",
+                        "date": datetime.now().strftime("%Y-%m-%d"),
+                        "type": e_type,
+                        "teams": teams,
+                        "scores": {},
+                        "completed": False,
+                        "awards": {"medalist": "-", "longist": "-", "nearest": "-"}
+                    }
+                    rounds_data.insert(0, round_entry)
+                    st.success("🎉 조편성이 최종 확정되었으며, [🏆 경기 결과 및 랭킹] 메뉴에 결과 입력 카드가 생성되었습니다!")
+                else:
+                    st.success("🎉 스크린 조편성 이력이 저장되었습니다. (스크린은 공식 경기결과 대상에서 제외됩니다)")
                 
                 save_data(db)
-                st.success("🎉 조편성이 최종 확정되었으며, [🏆 경기 결과 및 랭킹] 메뉴에 결과 입력 카드가 자동으로 생성되었습니다!")
 
-# 3. 🏆 경기 결과 및 랭킹 (에러 수정된 안전한 데이터프레임 출력 반영)
+# 3. 🏆 경기 결과 및 랭킹 (테이블 요약 + 각 라운드 개별 접근)
 elif menu == "🏆 경기 결과 및 랭킹":
     st.subheader("🏆 경기 결과 및 클럽 랭킹 통계")
     
-    if not rounds_data:
-        st.info("등록된 경기 결과가 없습니다. 운영진이 조편성을 확정하면 입력 카드가 생성됩니다.")
+    # 필드 라운드만 필터링 (스크린 제외)
+    field_rounds = [r for r in rounds_data if "필드" in r.get("type", "")]
+    
+    if not field_rounds:
+        st.info("등록된 필드 경기 결과가 없습니다. 운영진이 필드 조편성을 확정하면 입력 카드가 생성됩니다.")
     else:
-        round_titles = [f"{r['date']} | {r['title']} ({'완료' if r.get('completed') else '대기'})" for r in rounds_data]
-        selected_round_label = st.selectbox("🔍 조회 및 관리할 라운드 선택", round_titles)
+        st.markdown("##### 📋 역대 필드 라운드 목록 및 요약")
+        summary_list = []
+        for r in field_rounds:
+            summary_list.append({
+                "날짜": r['date'],
+                "라운드 명칭": r['title'],
+                "상태": "완료" if r.get('completed') else "입력 대기",
+                "메달리스트": r['awards']['medalist'],
+                "롱기스트": r['awards']['longist'],
+                "니어리스트": r['awards']['nearest']
+            })
+        st.table(pd.DataFrame(summary_list))
+        
+        st.markdown("---")
+        st.markdown("##### 🔍 개별 라운드 상세 조회 및 관리")
+        round_titles = [f"{r['date']} | {r['title']} ({'완료' if r.get('completed') else '대기'})" for r in field_rounds]
+        selected_round_label = st.selectbox("조회할 라운드 선택", round_titles)
         selected_r_idx = round_titles.index(selected_round_label)
-        r = rounds_data[selected_r_idx]
+        r = field_rounds[selected_r_idx]
         
         is_done = r.get("completed", False)
-        status_tag = "✅ 성적 입력 완료" if is_done else "⌛ 성적 입력 대기 중"
+        status_tag = "✅ 성적 입력 완료"
         
-        st.markdown(f"### 🚩 {r['date']} | {r['title']} [{status_tag}]")
+        st.markdown(f"**선택된 라운드:** `{r['date']} | {r['title']}`")
         
         if is_done:
             st.markdown(f"""
@@ -540,7 +558,6 @@ elif menu == "🏆 경기 결과 및 랭킹":
                     "드라이버 비거리": f"{p_info['long']}m" if p_info['long'] > 0 else "-",
                     "니어 근접거리": f"{p_info['near']}m" if p_info['near'] > 0 else "-"
                 })
-            # 에러 방지를 위한 파라미터 호환 테이블 렌더링
             st.table(pd.DataFrame(score_table))
             
         if is_admin:
@@ -614,7 +631,7 @@ elif menu == "🏆 경기 결과 및 랭킹":
 
             with col_a2:
                 if st.button(f"🗑️ 현재 선택한 라운드 삭제", key=f"del_rnd_{r['id']}"):
-                    rounds_data.pop(selected_r_idx)
+                    rounds_data.remove(r)
                     recalculate_all_stats(db)
                     save_data(db)
                     st.success("해당 라운드가 삭제되었습니다.")
@@ -623,12 +640,12 @@ elif menu == "🏆 경기 결과 및 랭킹":
     # --- 누적 통계 & 랭킹 ---
     st.divider()
     st.subheader("📊 클럽 누적 통계 & TOP 10 랭킹")
-    st.caption("💡 진행된 모든 라운드 공식 기록을 바탕으로 산출된 종합 통계입니다.")
+    st.caption("💡 필드 공식 라운드 기록을 바탕으로 산출된 종합 통계입니다.")
     
-    completed_r = [r for r in rounds_data if r.get("completed")]
+    completed_r = [r for r in field_rounds if r.get("completed")]
     
     if not completed_r:
-        st.warning("아직 완료된 라운드가 없어 통계 집계 데이터가 없습니다.")
+        st.warning("아직 완료된 필드 라운드가 없어 통계 집계 데이터가 없습니다.")
     else:
         medalist_data = {} 
         longist_data = {}  
@@ -767,13 +784,13 @@ elif menu == "📢 클럽 공지사항":
     else:
         for n_idx, notice in enumerate(notices):
             st.markdown(f"""
-            <div class="css-card">
+            <div class="insta-card" style="padding: 20px; max-width: 100%;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                     <h4 style="color:#1B3B2B; margin:0;">📌 {notice['title']}</h4>
-                    <span style="color:#A88B58; font-size:0.85rem;">{notice['date']}</span>
+                    <span style="color:#8E8E8E; font-size:0.85rem;">{notice['date']}</span>
                 </div>
-                <hr style="margin:10px 0; border-top:1px solid #EBE4D8;">
-                <p style="color:#2C4A3B; font-size:1rem; line-height:1.6; white-space: pre-wrap;">{notice['content']}</p>
+                <hr style="margin:10px 0; border-top:1px solid #EFEFEF;">
+                <p style="color:#262626; font-size:1rem; line-height:1.6; white-space: pre-wrap; margin:0;">{notice['content']}</p>
             </div>
             """, unsafe_allow_html=True)
             
@@ -801,7 +818,7 @@ elif menu.startswith("👥 클럽 회원 명부"):
     if is_admin:
         st.divider()
         st.subheader("👑 [운영진 전용] 신입회원 가입 승인 센터")
-        pending_members = [k for k, v in member_db.items() if v.get("status") == "pending"]
+        pending_members = [k for k, v in member_db.items() if v.get("status"] == "pending"]
         
         if not pending_members:
             st.info("현재 가입 승인 대기 중인 회원이 없습니다.")
