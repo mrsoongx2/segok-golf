@@ -40,6 +40,10 @@ def load_data():
                         if m in data["member_db"]:
                             data["member_db"][m]["status"] = "approved"
                             data["member_db"][m]["is_admin"] = True if m in ADMIN_MEMBERS else False
+                            if "last_notice_seen" not in data["member_db"][m]:
+                                data["member_db"][m]["last_notice_seen"] = ""
+                            if "last_lounge_seen" not in data["member_db"][m]:
+                                data["member_db"][m]["last_lounge_seen"] = ""
                     if "notices" not in data:
                         data["notices"] = []
                     for post in data.get("feed_posts", []):
@@ -60,7 +64,9 @@ def load_data():
             "rounds_played": 0,
             "score_history": [],
             "status": "approved",
-            "is_admin": True if name in ADMIN_MEMBERS else False
+            "is_admin": True if name in ADMIN_MEMBERS else False,
+            "last_notice_seen": "",
+            "last_lounge_seen": ""
         }
     pair_history = {m1: {m2: 0 for m2 in DEFAULT_MEMBERS} for m1 in DEFAULT_MEMBERS}
     feed_posts = [] 
@@ -169,7 +175,7 @@ st.markdown("""
     .logo-hero h1 { font-family: 'Playfair Display', serif; font-size: 2.8rem; margin: 10px 0 5px 0; color: #F8F5F0; }
     .logo-hero p { color: #D4B475; font-size: 0.9rem; letter-spacing: 4px; text-transform: uppercase; font-weight: 600; margin: 0; }
     
-    .menu-card { background-color: #FFFFFF; border-radius: 14px; border: 1px solid #DBDBDB; padding: 24px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.03); transition: all 0.2s ease; margin-bottom: 20px; }
+    .menu-card { background-color: #FFFFFF; border-radius: 14px; border: 1px solid #DBDBDB; padding: 24px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.03); transition: all 0.2s ease; margin-bottom: 20px; position: relative; }
     .menu-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.08); border-color: #1B3B2B; }
     
     .insta-card { background-color: #FFFFFF; border-radius: 12px; border: 1px solid #DBDBDB; max-width: 650px; margin: 0 auto 24px auto; box-shadow: 0 2px 8px rgba(0,0,0,0.03); overflow: hidden; }
@@ -182,6 +188,8 @@ st.markdown("""
     .badge-user { background-color: #EFEFEF; color: #262626; padding: 3px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 600; }
     .badge-hc { background-color: #FDF8F0; color: #B38F4E; padding: 3px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; border: 1px solid #E5DEC3; }
     .profile-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 1.5px solid #C5A059; margin-right: 12px; }
+    
+    .new-badge { background-color: #2E7D32; color: #FFFFFF; padding: 2px 6px; border-radius: 10px; font-size: 0.65rem; font-weight: 700; vertical-align: middle; margin-left: 6px; }
     
     .stButton>button { background-color: #1B3B2B !important; color: #FFFFFF !important; border-radius: 8px !important; border: none !important; font-weight: 600 !important; }
     .stButton>button:hover { background-color: #27523C !important; }
@@ -247,7 +255,9 @@ if not st.session_state.get('logged_in_user'):
                             "rounds_played": 0,
                             "score_history": [],
                             "status": "pending",
-                            "is_admin": True if new_name in ADMIN_MEMBERS else False
+                            "is_admin": True if new_name in ADMIN_MEMBERS else False,
+                            "last_notice_seen": "",
+                            "last_lounge_seen": ""
                         }
                         pair_history[new_name] = {m: 0 for m in member_db.keys()}
                         for m in member_db.keys():
@@ -260,6 +270,11 @@ if not st.session_state.get('logged_in_user'):
     st.stop()
 
 current_user = st.session_state.logged_in_user
+if current_user not in member_db:
+    st.session_state.logged_in_user = None
+    set_menu("HOME")
+    st.rerun()
+
 user_info = member_db.get(current_user, {
     "nickname": current_user, "handicap": 0, "attendance": 0, "is_admin": False
 })
@@ -267,6 +282,15 @@ user_info = member_db.get(current_user, {
 is_admin = user_info.get('is_admin', False)
 display_nickname = user_info.get('nickname', current_user)
 admin_badge = '<span class="badge-admin">👑 운영진</span>' if is_admin else '<span class="badge-user">👤 정회원</span>'
+
+# --- 알림 여부 계산 (새 공지 또는 새 피드 확인용) ---
+last_n = user_info.get("last_notice_seen", "")
+latest_notice_date = notices[0]["date"] if notices else ""
+has_new_notice = latest_notice_date > last_n if latest_notice_date else False
+
+last_l = user_info.get("last_lounge_seen", "")
+latest_lounge_date = feed_posts[0]["date"] if feed_posts else ""
+has_new_lounge = latest_lounge_date > last_l if latest_lounge_date else False
 
 # --- 상단 고정 헤더 ---
 col_h1, col_h2 = st.columns([3, 2])
@@ -299,9 +323,10 @@ if st.session_state.current_menu == "HOME":
     c1, c2, c3 = st.columns(3)
     
     with c1:
-        st.markdown("""
+        notice_badge = '<span class="new-badge">NEW</span>' if has_new_notice else ''
+        st.markdown(f"""
         <div class="menu-card">
-            <h3>📢 클럽 공지사항</h3>
+            <h3>📢 클럽 공지사항{notice_badge}</h3>
             <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">운영진이 공지하는 주요 소식과 안내 사항 확인</p>
         </div>
         """, unsafe_allow_html=True)
@@ -309,9 +334,10 @@ if st.session_state.current_menu == "HOME":
             set_menu("클럽 공지사항")
             st.rerun()
             
-        st.markdown("""
+        lounge_badge = '<span class="new-badge">NEW</span>' if has_new_lounge else ''
+        st.markdown(f"""
         <div class="menu-card" style="margin-top: 20px;">
-            <h3>💬 클럽 라운지</h3>
+            <h3>💬 클럽 라운지{lounge_badge}</h3>
             <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">라운딩 추억과 사진, 영상을 멤버들과 함께 공유하세요.</p>
         </div>
         """, unsafe_allow_html=True)
@@ -388,25 +414,43 @@ if st.session_state.current_menu == "HOME":
                 st.rerun()
 
     st.markdown("<div style='margin-top: 25px;'></div>", unsafe_allow_html=True)
-    if st.button("🚪 클럽 로그아웃", use_container_width=True, key="home_logout_btn"):
-        st.session_state.logged_in_user = None
-        set_menu("HOME")
-        try:
-            st.query_params.clear()
-        except Exception:
-            pass
-        st.rerun()
+    
+    # 크기 줄인 로그아웃 버튼과 신규 클럽 탈퇴 버튼 배치
+    col_lo, col_wd = st.columns([1, 1])
+    with col_lo:
+        if st.button("🚪 클럽 로그아웃", use_container_width=True, key="home_logout_btn"):
+            st.session_state.logged_in_user = None
+            set_menu("HOME")
+            try:
+                st.query_params.clear()
+            except Exception:
+                pass
+            st.rerun()
+    with col_wd:
+        with st.expander("❌ 클럽 탈퇴하기"):
+            conf_withdraw = st.checkbox("정말로 클럽에서 탈퇴하시겠습니까? (계정 정보가 삭제됩니다)", key="conf_withdraw")
+            if conf_withdraw:
+                if st.button("⚠️ 최종 회원 탈퇴 실행", type="primary", key="btn_withdraw"):
+                    member_db.pop(current_user, None)
+                    save_data(db)
+                    st.session_state.logged_in_user = None
+                    set_menu("HOME")
+                    st.success("클럽 탈퇴가 정상적으로 처리되었습니다.")
+                    st.rerun()
 
 else:
-    menu_list = ["메인 홈", "📢 클럽 공지사항", "💬 클럽 라운지", "🏆 경기 결과 및 랭킹", "👑 명예의 전당", "📁 역대 조편성 아카이브", "👤 마이페이지"]
+    notice_label = f"📢 클럽 공지사항 {'🟢' if has_new_notice else ''}"
+    lounge_label = f"💬 클럽 라운지 {'🟢' if has_new_lounge else ''}"
+    
+    menu_list = ["메인 홈", notice_label, lounge_label, "🏆 경기 결과 및 랭킹", "👑 명예의 전당", "📁 역대 조편성 아카이브", "👤 마이페이지"]
     if is_admin:
-        menu_list.insert(2, "⛳ 티타임 조편성")
+        menu_list.insert(3, "⛳ 티타임 조편성")
         menu_list.append("👥 회원 명부")
         
     current_label_map = {
         "HOME": "메인 홈",
-        "클럽 공지사항": "📢 클럽 공지사항",
-        "클럽 라운지": "💬 클럽 라운지",
+        "클럽 공지사항": notice_label,
+        "클럽 라운지": lounge_label,
         "티타임 조편성": "⛳ 티타임 조편성",
         "경기 결과 및 랭킹": "🏆 경기 결과 및 랭킹",
         "명예의 전당": "👑 명예의 전당",
@@ -415,12 +459,16 @@ else:
         "마이페이지": "👤 마이페이지"
     }
     reverse_map = {v: k for k, v in current_label_map.items()}
-    curr_label = current_label_map.get(st.session_state.current_menu, "📢 클럽 공지사항")
+    curr_label = current_label_map.get(st.session_state.current_menu, notice_label)
 
     nav_c1, nav_c2, nav_c3 = st.columns([3, 3, 2])
     with nav_c1:
         selected_nav = st.selectbox("📌 빠른 메뉴 이동", menu_list, index=menu_list.index(curr_label) if curr_label in menu_list else 0)
         target_menu = reverse_map.get(selected_nav, "HOME")
+        # 라벨에 있는 이모지 제거 매핑 보정
+        if "공지사항" in selected_nav: target_menu = "클럽 공지사항"
+        elif "라운지" in selected_nav: target_menu = "클럽 라운지"
+        
         if target_menu != st.session_state.current_menu:
             set_menu(target_menu)
             st.rerun()
@@ -440,6 +488,11 @@ else:
 
     # 1. 📢 클럽 공지사항
     if menu == "클럽 공지사항":
+        # 방문 시 알림 최신화
+        if notices:
+            user_info["last_notice_seen"] = notices[0]["date"]
+            save_data(db)
+            
         st.subheader("📢 클럽 공지사항")
         st.caption("세곡 골프클럽의 주요 소식과 안내 사항을 확인하세요.")
         
@@ -477,7 +530,6 @@ else:
                 """, unsafe_allow_html=True)
                 
                 if is_admin:
-                    # 삭제 확인 안전 장치 적용
                     del_key = f"del_notice_{notice['id']}"
                     confirm_key = f"conf_notice_{notice['id']}"
                     
@@ -492,6 +544,10 @@ else:
 
     # 2. 💬 클럽 라운지
     elif menu == "클럽 라운지":
+        if feed_posts:
+            user_info["last_lounge_seen"] = feed_posts[0]["date"]
+            save_data(db)
+            
         st.subheader("💬 클럽 라운지 (Community Lounge)")
         with st.expander("✍️ 새 라운딩 소식 및 미디어 공유하기", expanded=True):
             post_text = st.text_area("내용 작성", placeholder="오늘의 멋진 라운딩 추억을 사진이나 영상과 함께 공유해 보세요...")
@@ -616,7 +672,7 @@ else:
                         save_data(db)
                         st.rerun()
 
-    # 3. ⛳ 티타임 조편성
+    # 3. ⛳ 티타임 조편성 (확정 시 클럽 라운지 피드 자동 등록 기능 연동)
     elif menu == "티타임 조편성":
         st.subheader("⛳ 티타임 조편성 및 매칭 시스템")
         if not is_admin:
@@ -703,7 +759,7 @@ else:
                 st.subheader("📱 카카오톡 공지문 복사")
                 st.code(notice_text, language="text")
                 
-                btn_msg = "💾 이 조편성을 최종 확정 및 경기 결과 카드 생성" if "필드" in e_type else "💾 이 조편성 저장 (스크린은 경기결과 미포함)"
+                btn_msg = "💾 이 조편성을 최종 확정 및 라운지 피드 자동 공지" if "필드" in e_type else "💾 이 조편성 저장 (스크린은 경기결과 미포함)"
                 if st.button(btn_msg, use_container_width=True):
                     for team in teams:
                         for i in range(len(team)):
@@ -733,20 +789,36 @@ else:
                             "awards": {"medalist": "-", "longist": "-", "nearest": "-"}
                         }
                         rounds_data.insert(0, round_entry)
-                        st.success("🎉 조편성이 최종 확정되었으며, [경기 결과 및 랭킹] 메뉴에 결과 입력 카드가 생성되었습니다!")
+                        
+                        # 클럽 라운지(피드)에 자동 공지 등록
+                        feed_posts.insert(0, {
+                            "id": int(datetime.now().timestamp()),
+                            "author": current_user,
+                            "nickname": user_info.get("nickname", current_user),
+                            "profile_img": user_info.get("profile_img", None),
+                            "date": now_str,
+                            "content": f"[📢 조편성 공식 공지]\n\n{notice_text}",
+                            "media_path": None,
+                            "media_type": None,
+                            "likes": 0,
+                            "liked_users": [],
+                            "comments": []
+                        })
+                        
+                        st.success("🎉 조편성이 최종 확정되었으며, [클럽 라운지] 및 [경기 결과 및 랭킹]에 자동 반영되었습니다!")
                     else:
                         st.success("🎉 스크린 조편성 이력이 저장되었습니다. (스크린은 공식 경기결과 대상에서 제외됩니다)")
                     
                     save_data(db)
 
-    # 4. 🏆 경기 결과 및 랭킹 (삭제 확인 안전 장치 적용)
+    # 4. 🏆 경기 결과 및 랭킹
     elif menu == "경기 결과 및 랭킹":
         st.subheader("🏆 경기 결과 및 클럽 랭킹 통계")
         
         field_rounds = [r for r in rounds_data if "필드" in r.get("type", "")]
         
         if not field_rounds:
-            st.info("등록된 필id 경기 결과가 없습니다. 운영진이 필드 조편성을 확정하면 입력 카드가 생성됩니다.")
+            st.info("등록된 필드 경기 결과가 없습니다. 운영진이 필드 조편성을 확정하면 입력 카드가 생성됩니다.")
         else:
             st.markdown("##### 📋 역대 필드 라운드 선택 및 상세 조회")
             
@@ -1035,7 +1107,7 @@ else:
                 df_m_rounds = pd.DataFrame(member_rounds_data)
                 st.table(df_m_rounds)
 
-    # 6. 📁 역대 조편성 아카이브 (삭제 확인 안전 장치 적용)
+    # 6. 📁 역대 조편성 아카이브
     elif menu == "역대 조편성 아카이브":
         st.subheader("📁 역대 조편성 아카이브")
         if not match_logs:
@@ -1065,7 +1137,7 @@ else:
                     team_names = ", ".join([f"{m}({member_db.get(m, {}).get('handicap', '0')})" for m in team])
                     st.markdown(f"**⛳ {t_idx+1}조:** {team_names}")
 
-    # 7. 👥 회원 명부 (운영진 전용)
+    # 7. 👥 회원 명부 (운영진 전용 - 강퇴 기능 탑재)
     elif menu.startswith("회원 명부"):
         st.subheader("👥 클럽 회원 명부")
         
@@ -1097,6 +1169,22 @@ else:
                             save_data(db)
                             st.success(f"🎉 {p_name} 회원의 가입이 최종 승인되었습니다!")
                             st.rerun()
+
+            st.divider()
+            st.subheader("🚫 [운영진 전용] 회원 강퇴 관리")
+            expel_candidates = [k for k in member_db.keys() if k != current_user and member_db[k].get("status") == "approved"]
+            if expel_candidates:
+                target_expel = st.selectbox("강퇴할 회원 선택", expel_candidates, key="target_expel")
+                with st.expander("⚠️ 회원 강퇴 실행"):
+                    conf_expel = st.checkbox(f"정말로 '{target_expel}' 회원을 클럽에서 강퇴하시겠습니까?", key="conf_expel")
+                    if conf_expel:
+                        if st.button("🚨 최종 강퇴 실행", type="primary", key="btn_expel"):
+                            member_db.pop(target_expel, None)
+                            save_data(db)
+                            st.success(f"'{target_expel}' 회원이 강퇴 조치되었습니다.")
+                            st.rerun()
+            else:
+                st.info("강퇴할 수 있는 회원이 없습니다.")
 
     # 8. 👤 마이페이지
     elif menu == "마이페이지":
