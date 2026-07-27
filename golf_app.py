@@ -42,6 +42,10 @@ def load_data():
                             data["member_db"][m]["is_admin"] = True if m in ADMIN_MEMBERS else False
                     if "notices" not in data:
                         data["notices"] = []
+                    # 피드에 liked_users(좋아요 누른 유저 목록) 마이그레이션 보장
+                    for post in data.get("feed_posts", []):
+                        if "liked_users" not in post:
+                            post["liked_users"] = []
                     return data
         except Exception:
             pass
@@ -265,7 +269,7 @@ is_admin = user_info.get('is_admin', False)
 display_nickname = user_info.get('nickname', current_user)
 admin_badge = '<span class="badge-admin">👑 운영진</span>' if is_admin else '<span class="badge-user">👤 정회원</span>'
 
-# --- 공통 상단 고정 헤더 (모든 화면에서 중복 없이 단독 렌더링) ---
+# --- 상단 고정 헤더 ---
 col_h1, col_h2 = st.columns([3, 2])
 with col_h1:
     if st.button("⛳ Segok Golf Club", key="logo_home_btn"):
@@ -379,7 +383,6 @@ if st.session_state.current_menu == "HOME":
             st.rerun()
 
 else:
-    # --- 각 메뉴 내부 화면: 빠른 메뉴 이동 드롭다운 + 로그아웃 버튼 ---
     menu_list = ["메인 홈", "💬 클럽 라운지", "🏆 경기 결과 및 랭킹", "📁 역대 조편성 아카이브", "📢 클럽 공지사항", "👤 마이페이지"]
     if is_admin:
         menu_list.insert(1, "⛳ 티타임 조편성")
@@ -419,7 +422,7 @@ else:
     
     menu = st.session_state.current_menu
 
-    # 1. 💬 클럽 라운지
+    # 1. 💬 클럽 라운지 (인당 하트 1번 제한 기능 탑재)
     if menu == "클럽 라운지":
         st.subheader("💬 클럽 라운지 (Community Lounge)")
         with st.expander("✍️ 새 라운딩 소식 및 미디어 공유하기", expanded=True):
@@ -448,6 +451,7 @@ else:
                         "media_path": media_path,
                         "media_type": media_type,
                         "likes": 0,
+                        "liked_users": [],
                         "comments": []
                     })
                     save_data(db)
@@ -495,11 +499,20 @@ else:
                     
                 st.markdown("</div>", unsafe_allow_html=True)
                     
-                c_lk, c_edit, c_del, _ = st.columns([1.5, 1.5, 1.5, 2.5])
+                c_lk, c_edit, c_del, _ = st.columns([1.8, 1.5, 1.5, 2.2])
                 
                 with c_lk:
-                    if st.button(f"❤️ {post['likes']}", key=f"lk_{post['id']}"):
-                        post['likes'] += 1
+                    liked_list = post.setdefault("liked_users", [])
+                    has_liked = current_user in liked_list
+                    heart_label = f"❤️ 좋아요 취소 ({post['likes']})" if has_liked else f"🤍 좋아요 ({post['likes']})"
+                    
+                    if st.button(heart_label, key=f"lk_{post['id']}"):
+                        if has_liked:
+                            liked_list.remove(current_user)
+                            post['likes'] = max(0, post['likes'] - 1)
+                        else:
+                            liked_list.append(current_user)
+                            post['likes'] += 1
                         save_data(db)
                         st.rerun()
                         
@@ -655,7 +668,7 @@ else:
                     
                     save_data(db)
 
-    # 3. 🏆 경기 결과 및 랭킹
+    # 3. 🏆 경기 결과 및 랭킹 (요청하신 클릭 가능한 테이블 형식 개편 적용)
     elif menu == "경기 결과 및 랭킹":
         st.subheader("🏆 경기 결과 및 클럽 랭킹 통계")
         
@@ -664,13 +677,25 @@ else:
         if not field_rounds:
             st.info("등록된 필드 경기 결과가 없습니다. 운영진이 필드 조편성을 확정하면 입력 카드가 생성됩니다.")
         else:
-            st.markdown("##### 📋 역대 필드 라운드 목록 (선택하여 상세 조회)")
+            st.markdown("##### 📋 역대 필드 라운드 목록 (표에서 확인하고 조회할 라운드를 선택하세요)")
             
-            selected_round_title = st.selectbox(
-                "조회할 라운드를 선택해 주세요", 
-                [f"{r['date']} | {r['title']} ({'입력 완료' if r.get('completed') else '입력 대기'})" for r in field_rounds]
-            )
-            selected_r_idx = [f"{r['date']} | {r['title']} ({'입력 완료' if r.get('completed') else '입력 대기'})" for r in field_rounds].index(selected_round_title)
+            summary_list = []
+            for idx, r in enumerate(field_rounds):
+                summary_list.append({
+                    "선택 번호": idx + 1,
+                    "날짜": r['date'],
+                    "라운드 명칭": r['title'],
+                    "상태": "✅ 입력 완료" if r.get('completed') else "⌛ 입력 대기",
+                    "메달리스트": r['awards']['medalist'],
+                    "롱기스트": r['awards']['longist'],
+                    "니어리스트": r['awards']['nearest']
+                })
+            df_summary = pd.DataFrame(summary_list)
+            st.table(df_summary)
+            
+            # 라운드 선택 넘버 셀렉터
+            chosen_num = st.selectbox("🔍 위 표에서 확인하실 라운드 번호를 선택하세요", [item["선택 번호"] for item in summary_list])
+            selected_r_idx = chosen_num - 1
             r = field_rounds[selected_r_idx]
             
             is_done = r.get("completed", False)
@@ -678,7 +703,7 @@ else:
             
             st.markdown(f"""
             <div class="css-card" style="margin-top: 15px;">
-                <h3 style="color:#1B3B2B; margin-top:0;">🚩 {r['date']} | {r['title']} [{status_tag}]</h3>
+                <h3 style="color:#1B3B2B; margin-top:0;">🚩 [선택된 라운드] {r['date']} | {r['title']} [{status_tag}]</h3>
             </div>
             """, unsafe_allow_html=True)
             
