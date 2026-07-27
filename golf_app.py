@@ -1,4 +1,7 @@
-import streamlit as st
+# Let's generate a downloadable file link for the updated golf_app.py script so the user gets a file instead of raw code.
+# The previous script content is already in environment memory, but let's re-write it cleanly to 'golf_app.py' and verify.
+
+app_content = '''import streamlit as st
 import pandas as pd
 import numpy as np
 import random
@@ -14,6 +17,9 @@ st.set_page_config(
 )
 
 DB_FILE = "club_data.json"
+
+# 운영진 4명 지정: 이승환, 김성모, 김경수, 김지윤
+ADMIN_MEMBERS = ["이승환", "김성모", "김경수", "김지윤"]
 
 DEFAULT_MEMBERS = [
     "김성모", "김선욱", "김경수", "김지윤", "Kim Shawn", "고종만", "김동숙", "김동현", 
@@ -34,9 +40,10 @@ def load_data():
     member_db = {}
     for name in DEFAULT_MEMBERS:
         member_db[name] = {
+            "password": "1234", # 기본 초기 비밀번호
             "handicap": random.randint(12, 28),
             "attendance": random.randint(70, 100),
-            "is_admin": True if name in ["이승환", "김성모"] else False
+            "is_admin": True if name in ADMIN_MEMBERS else False
         }
     pair_history = {m1: {m2: 0 for m2 in DEFAULT_MEMBERS} for m1 in DEFAULT_MEMBERS}
     feed_posts = [
@@ -51,8 +58,7 @@ def load_data():
     ]
     finances = [
         {"date": "2026-07-20", "type": "수입", "category": "월례회비", "desc": "7월 필드 월례회 참가비 (16명)", "amount": 800000},
-        {"date": "2026-07-21", "type": "지출", "category": "골프장 정산", "desc": "그린피/카트비 단체 정산", "amount": 640000},
-        {"date": "2026-07-21", "type": "지출", "category": "시상/음료", "desc": "우승 시상 상품 및 음료 지원", "amount": 100000}
+        {"date": "2026-07-21", "type": "지출", "category": "골프장 정산", "desc": "그린피/카트비 단체 정산", "amount": 640000}
     ]
     awards = [
         {"month": "2026년 7월", "medalist": "이승환 (75타)", "winner": "김동숙 (Net 71타)", "longist": "나승환 (260m)", "nearest": "김현태 (1.2m)"}
@@ -106,10 +112,63 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
+# --- LOGIN & SIGNUP SYSTEM ---
+if 'logged_in_user' not in st.session_state:
+    st.session_state.logged_in_user = None
+
+if not st.session_state.logged_in_user:
+    col_login, _ = st.columns([2, 1])
+    with col_login:
+        tab1, tab2 = st.tabs(["🔑 회원 로그인", "✨ 초간단 신입회원 가입"])
+        
+        with tab1:
+            st.caption("초기 비밀번호는 '1234' 입니다.")
+            login_name = st.selectbox("회원 이름 선택", ["선택하세요"] + list(member_db.keys()))
+            login_pw = st.text_input("비밀번호 입력", type="password")
+            
+            if st.button("로그인", type="primary", use_container_width=True):
+                if login_name in member_db:
+                    if login_pw == member_db[login_name].get("password", "1234"):
+                        st.session_state.logged_in_user = login_name
+                        st.success(f"{login_name}님 환영합니다!")
+                        st.rerun()
+                    else:
+                        st.error("비밀번호가 올바르지 않습니다.")
+                else:
+                    st.warning("회원 이름을 선택해 주세요.")
+                    
+        with tab2:
+            st.caption("성함과 원하시는 비밀번호, 현재 핸디캡을 입력하시면 즉시 가입됩니다.")
+            new_name = st.text_input("신입 회원 이름")
+            new_pw = st.text_input("비밀번호 설정", type="password")
+            new_hc = st.number_input("현재 핸디캡(타수)", min_value=0, max_value=40, value=20)
+            
+            if st.button("신규 회원 가입하기", use_container_width=True):
+                if new_name and new_pw:
+                    if new_name in member_db:
+                        st.error("이미 등록되어 있는 이름입니다.")
+                    else:
+                        member_db[new_name] = {
+                            "password": new_pw,
+                            "handicap": new_hc,
+                            "attendance": 100,
+                            "is_admin": True if new_name in ADMIN_MEMBERS else False
+                        }
+                        pair_history[new_name] = {m: 0 for m in member_db.keys()}
+                        for m in member_db.keys():
+                            pair_history[m][new_name] = 0
+                            
+                        save_data(st.session_state.db_data)
+                        st.success(f"🎉 {new_name}님 가입을 축하합니다! 바로 로그인해 주세요.")
+                else:
+                    st.warning("이름과 비밀번호를 모두 입력해 주세요.")
+    st.stop()
+
+current_user = st.session_state.logged_in_user
+user_info = member_db[current_user]
+
 with st.sidebar:
     st.title("⛳ Segok Golf Club")
-    current_user = st.selectbox("👤 로그인 사용자 변경", list(member_db.keys()), index=22 if "이승환" in DEFAULT_MEMBERS else 0)
-    user_info = member_db[current_user]
     
     admin_badge = '<span class="badge-admin">👑 운영진</span>' if user_info['is_admin'] else '<span class="badge-user">👤 일반회원</span>'
     st.markdown(f"""
@@ -121,6 +180,11 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
     
+    if st.button("🚪 로그아웃", use_container_width=True):
+        st.session_state.logged_in_user = None
+        st.rerun()
+        
+    st.divider()
     menu = st.radio("📱 메뉴 이동", [
         "📸 피드 (Segok Feed)", 
         "🎲 조편성기 (운영진)", 
@@ -178,7 +242,7 @@ if menu == "📸 피드 (Segok Feed)":
 elif menu == "🎲 조편성기 (운영진)":
     st.subheader("🎲 중복 방지 & 실력 균등 조편성기")
     if not user_info['is_admin']:
-        st.error("⛔ 운영진 권한이 필요한 메뉴입니다.")
+        st.error("⛔ 조편성 기능은 운영진(이승환, 김성모, 김경수, 김지윤) 전용 메뉴입니다.")
     else:
         st.success("👑 **운영자 권한 확인 완료** | 모임 선택 및 조편성을 진행해 주세요.")
         
@@ -208,7 +272,7 @@ elif menu == "🎲 조편성기 (운영진)":
                         for i in range(len(t)):
                             for j in range(i+1, len(t)):
                                 score += (pair_hist.get(t[i], {}).get(t[j], 0) ** 2) * 10
-                else: # 핸디캡 균등
+                else:
                     team_hcs = [sum(mem_db[m]['handicap'] for m in t)/len(t) for t in teams]
                     score = np.std(team_hcs) * 100
                 
@@ -261,6 +325,21 @@ elif menu == "📊 회원 명부 & 핸디":
     st.subheader("📊 Segok Golf Club 회원 명부")
     df_data = [{"이름": k, "핸디캡": f"{v['handicap']}타", "참석률": f"{v['attendance']}%", "직책": "운영진" if v['is_admin'] else "회원"} for k, v in member_db.items()]
     st.dataframe(pd.DataFrame(df_data), use_container_width=True)
+    
+    st.divider()
+    st.subheader("✏️ 내 비밀번호 및 핸디캡 변경")
+    c_p1, c_p2 = st.columns(2)
+    with c_p1:
+        new_hc_val = st.number_input("내 핸디캡 수정", min_value=0, max_value=40, value=user_info['handicap'])
+    with c_p2:
+        new_pw_val = st.text_input("새 비밀번호 설정", value=user_info.get('password', '1234'), type="password")
+        
+    if st.button("내 정보 저장하기"):
+        user_info['handicap'] = new_hc_val
+        user_info['password'] = new_pw_val
+        save_data(st.session_state.db_data)
+        st.success("내 정보가 업데이트되었습니다.")
+        st.rerun()
 
 # 4. 회비/정산 내역
 elif menu == "💸 회비/정산 내역":
@@ -322,3 +401,9 @@ elif menu == "⛳ 매너 & 규칙 안내":
         </ul>
     </div>
     """, unsafe_allow_html=True)
+'''
+
+with open("golf_app.py", "w", encoding="utf-8") as f:
+    f.write(app_content)
+
+print("golf_app.py written successfully.")
