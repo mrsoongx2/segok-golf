@@ -4,8 +4,8 @@ import numpy as np
 import random
 import json
 import os
+import base64
 from datetime import datetime
-from PIL import Image
 
 st.set_page_config(
     page_title="Segok Golf Club", 
@@ -217,45 +217,79 @@ with st.sidebar:
         "⚙️ 내 정보 / 프로필 수정"
     ])
 
-# 1. 📸 피드
+# 1. 📸 피드 (수정 & 삭제 권한 반영)
 if menu == "📸 피드 (Segok Feed)":
     st.subheader("📸 Segok Member Feed")
     with st.expander("✍️ 새 라운딩 사진 및 소식 올리기", expanded=True):
         post_text = st.text_area("내용", placeholder="오늘의 라운딩 일상을 자유롭게 나눠보세요...")
         uploaded_img = st.file_uploader("사진 첨부 (선택)", type=["jpg", "png", "jpeg"])
+        
         if st.button("피드 공유하기", type="primary", use_container_width=True):
             if post_text or uploaded_img:
+                img_b64 = None
+                if uploaded_img is not None:
+                    bytes_data = uploaded_img.getvalue()
+                    img_b64 = base64.b64encode(bytes_data).decode()
+                
                 feed_posts.insert(0, {
-                    "id": len(feed_posts) + 1,
+                    "id": int(datetime.now().timestamp()),
                     "author": current_user,
+                    "nickname": user_info.get("nickname", current_user),
                     "date": datetime.now().strftime("%Y-%m-%d %H:%M"),
                     "content": post_text,
+                    "image": img_b64,
                     "likes": 0,
                     "comments": []
                 })
                 save_data(db)
-                st.success("피드가 작성되었습니다!")
+                st.success("피물이 작성되었습니다!")
                 st.rerun()
 
     if not feed_posts:
         st.info("아직 등록된 피드가 없습니다. 첫 일상을 공유해 보세요!")
     else:
-        for post in feed_posts:
+        for idx, post in enumerate(feed_posts):
             st.markdown(f"""
             <div class="css-card">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                    <strong style="color:#1B3B2B;">👤 {post['author']}</strong>
+                    <strong style="color:#1B3B2B;">👤 {post.get('author')} ({post.get('nickname', post.get('author'))})</strong>
                     <span style="color:#A88B58; font-size:0.8rem;">{post['date']}</span>
                 </div>
                 <p style="font-size:1rem; margin-bottom:10px; color:#1B3B2B;">{post['content']}</p>
             </div>
             """, unsafe_allow_html=True)
-            c1, c2 = st.columns([1, 4])
-            with c1:
+            
+            if post.get("image"):
+                st.image(base64.b64decode(post["image"]), use_column_width=True)
+                
+            c_lk, c_edit, c_del, _ = st.columns([1.5, 1, 1, 3])
+            
+            with c_lk:
                 if st.button(f"❤️ {post['likes']}", key=f"lk_{post['id']}"):
                     post['likes'] += 1
                     save_data(db)
                     st.rerun()
+                    
+            # 본인 작성 글 수정 권한
+            if post['author'] == current_user:
+                with c_edit:
+                    with st.popover("✏️ 수정"):
+                        edited_content = st.text_area("내용 수정", value=post['content'], key=f"edt_txt_{post['id']}")
+                        if st.button("저장", key=f"btn_edt_{post['id']}"):
+                            post['content'] = edited_content
+                            save_data(db)
+                            st.success("수정되었습니다.")
+                            st.rerun()
+
+            # 본인 작성 글 삭제 또는 운영진 강제 삭제 권한
+            if post['author'] == current_user or user_info.get('is_admin'):
+                with c_del:
+                    if st.button("🗑️ 삭제", key=f"del_post_{post['id']}"):
+                        feed_posts.pop(idx)
+                        save_data(db)
+                        st.success("게시글이 삭제되었습니다.")
+                        st.rerun()
+
             with st.expander(f"💬 댓글 ({len(post.get('comments', []))})"):
                 for c in post.get('comments', []):
                     st.write(f"**{c['author']}**: {c['text']}")
@@ -523,10 +557,10 @@ elif menu.startswith("📊 회원 명부"):
                         st.success(f"🎉 {p_name} 회원의 가입 승인이 완료되었습니다!")
                         st.rerun()
 
-# 6. ⚙️ 내 정보 / 프로필 수정 (신설)
+# 6. ⚙️ 내 정보 / 프로필 수정
 elif menu == "⚙️ 내 정보 / 프로필 수정":
     st.subheader("⚙️ 개인정보 및 프로필 수정")
-    st.info("💡 이름, 닉네임, 비밀번호 및 프로필 사진을 직접 변경할 수 있습니다.")
+    st.info("💡 이름, 닉네임, 비밀번호를 직접 변경할 수 있습니다.")
     
     with st.form("edit_profile_form"):
         col_f1, col_f2 = st.columns(2)
@@ -535,12 +569,10 @@ elif menu == "⚙️ 내 정보 / 프로필 수정":
             edit_nickname = st.text_input("닉네임", value=user_info.get("nickname", current_user))
         with col_f2:
             edit_pw = st.text_input("비밀번호 변경", value=user_info.get("password", "1234"), type="password")
-            profile_img = st.file_uploader("프로필 사진 업로드 (선택)", type=["jpg", "png", "jpeg"])
             
         submit_btn = st.form_submit_button("💾 정보 저장하기", type="primary", use_container_width=True)
         
         if submit_btn:
-            # 이름 변경 시 DB 키 업데이트 처리
             if edit_name != current_user:
                 if edit_name in member_db:
                     st.error("이미 존재하는 회원 이름입니다.")
