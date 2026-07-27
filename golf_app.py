@@ -42,7 +42,6 @@ def load_data():
                             data["member_db"][m]["is_admin"] = True if m in ADMIN_MEMBERS else False
                     if "notices" not in data:
                         data["notices"] = []
-                    # 피드에 liked_users(좋아요 누른 유저 목록) 마이그레이션 보장
                     for post in data.get("feed_posts", []):
                         if "liked_users" not in post:
                             post["liked_users"] = []
@@ -310,16 +309,15 @@ if st.session_state.current_menu == "HOME":
             set_menu("클럽 라운지")
             st.rerun()
             
-        if is_admin:
-            st.markdown("""
-            <div class="menu-card" style="margin-top: 20px;">
-                <h3>⛳ 티타임 조편성</h3>
-                <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">중복 방지 및 실력 균등 맞춤형 조편성을 실행합니다.</p>
-            </div>
-            """, unsafe_allow_html=True)
-            if st.button("티타임 조편성 입장", use_container_width=True, key="go_match"):
-                set_menu("티타임 조편성")
-                st.rerun()
+        st.markdown("""
+        <div class="menu-card" style="margin-top: 20px;">
+            <h3>📋 회원 기록실</h3>
+            <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">회원별 개인 상세 스코어, 평균타수 및 출석 현황 확인</p>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("회원 기록실 입장", use_container_width=True, key="go_records"):
+            set_menu("회원 기록실")
+            st.rerun()
 
     with c2:
         st.markdown("""
@@ -365,6 +363,17 @@ if st.session_state.current_menu == "HOME":
         if st.button("클럽 공지사항 입장", use_container_width=True, key="go_notice"):
             set_menu("클럽 공지사항")
             st.rerun()
+            
+        if is_admin:
+            st.markdown("""
+            <div class="menu-card" style="margin-top: 20px;">
+                <h3>⛳ 티타임 조편성</h3>
+                <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">중복 방지 및 실력 균등 맞춤형 조편성을 실행합니다.</p>
+            </div>
+            """, unsafe_allow_html=True)
+            if st.button("티타임 조편성 입장", use_container_width=True, key="go_match"):
+                set_menu("티타임 조편성")
+                st.rerun()
 
     st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
     c_m1, c_m2 = st.columns(2)
@@ -383,7 +392,7 @@ if st.session_state.current_menu == "HOME":
             st.rerun()
 
 else:
-    menu_list = ["메인 홈", "💬 클럽 라운지", "🏆 경기 결과 및 랭킹", "📁 역대 조편성 아카이브", "📢 클럽 공지사항", "👤 마이페이지"]
+    menu_list = ["메인 홈", "💬 클럽 라운지", "🏆 경기 결과 및 랭킹", "📋 회원 기록실", "📁 역대 조편성 아카이브", "📢 클럽 공지사항", "👤 마이페이지"]
     if is_admin:
         menu_list.insert(1, "⛳ 티타임 조편성")
         menu_list.append("👥 회원 명부")
@@ -393,6 +402,7 @@ else:
         "클럽 라운지": "💬 클럽 라운지",
         "티타임 조편성": "⛳ 티타임 조편성",
         "경기 결과 및 랭킹": "🏆 경기 결과 및 랭킹",
+        "회원 기록실": "📋 회원 기록실",
         "역대 조편성 아카이브": "📁 역대 조편성 아카이브",
         "클럽 공지사항": "📢 클럽 공지사항",
         "회원 명부": "👥 회원 명부",
@@ -422,7 +432,7 @@ else:
     
     menu = st.session_state.current_menu
 
-    # 1. 💬 클럽 라운지 (인당 하트 1번 제한 기능 탑재)
+    # 1. 💬 클럽 라운지
     if menu == "클럽 라운지":
         st.subheader("💬 클럽 라운지 (Community Lounge)")
         with st.expander("✍️ 새 라운딩 소식 및 미디어 공유하기", expanded=True):
@@ -668,7 +678,7 @@ else:
                     
                     save_data(db)
 
-    # 3. 🏆 경기 결과 및 랭킹 (요청하신 클릭 가능한 테이블 형식 개편 적용)
+    # 3. 🏆 경기 결과 및 랭킹 (드롭다운 방식 유지)
     elif menu == "경기 결과 및 랭킹":
         st.subheader("🏆 경기 결과 및 클럽 랭킹 통계")
         
@@ -677,25 +687,13 @@ else:
         if not field_rounds:
             st.info("등록된 필드 경기 결과가 없습니다. 운영진이 필드 조편성을 확정하면 입력 카드가 생성됩니다.")
         else:
-            st.markdown("##### 📋 역대 필드 라운드 목록 (표에서 확인하고 조회할 라운드를 선택하세요)")
+            st.markdown("##### 📋 역대 필드 라운드 선택 및 상세 조회")
             
-            summary_list = []
-            for idx, r in enumerate(field_rounds):
-                summary_list.append({
-                    "선택 번호": idx + 1,
-                    "날짜": r['date'],
-                    "라운드 명칭": r['title'],
-                    "상태": "✅ 입력 완료" if r.get('completed') else "⌛ 입력 대기",
-                    "메달리스트": r['awards']['medalist'],
-                    "롱기스트": r['awards']['longist'],
-                    "니어리스트": r['awards']['nearest']
-                })
-            df_summary = pd.DataFrame(summary_list)
-            st.table(df_summary)
-            
-            # 라운드 선택 넘버 셀렉터
-            chosen_num = st.selectbox("🔍 위 표에서 확인하실 라운드 번호를 선택하세요", [item["선택 번호"] for item in summary_list])
-            selected_r_idx = chosen_num - 1
+            selected_round_title = st.selectbox(
+                "조회할 라운드를 선택해 주세요", 
+                [f"{r['date']} | {r['title']} ({'입력 완료' if r.get('completed') else '입력 대기'})" for r in field_rounds]
+            )
+            selected_r_idx = [f"{r['date']} | {r['title']} ({'입력 완료' if r.get('completed') else '입력 대기'})" for r in field_rounds].index(selected_round_title)
             r = field_rounds[selected_r_idx]
             
             is_done = r.get("completed", False)
@@ -703,7 +701,7 @@ else:
             
             st.markdown(f"""
             <div class="css-card" style="margin-top: 15px;">
-                <h3 style="color:#1B3B2B; margin-top:0;">🚩 [선택된 라운드] {r['date']} | {r['title']} [{status_tag}]</h3>
+                <h3 style="color:#1B3B2B; margin-top:0;">🚩 {r['date']} | {r['title']} [{status_tag}]</h3>
             </div>
             """, unsafe_allow_html=True)
             
@@ -910,6 +908,68 @@ else:
                     st.table(df_att)
                 else:
                     st.info("기록 없음")
+
+    # 3-1. 📋 회원 기록실 (신설 메뉴: 회원별 라운드 스코어, 평균 스코어, 출석현황 확인)
+    elif menu == "회원 기록실":
+        st.subheader("📋 회원 기록실 및 개인별 성적 조회")
+        st.caption("클럽 회원들의 개인별 라운딩 스코어 이력, 평균 타수 및 출석 현황을 확인합니다.")
+        
+        approved_members = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
+        selected_member_name = st.selectbox("🔍 조회할 회원 선택", approved_members)
+        
+        if selected_member_name:
+            m_info = member_db.get(selected_member_name, {})
+            m_nick = m_info.get("nickname", selected_member_name)
+            m_hc = m_info.get("handicap", 0)
+            m_att = m_info.get("attendance", 0)
+            m_rounds_cnt = m_info.get("rounds_played", 0)
+            m_history = m_info.get("score_history", [])
+            
+            avg_sc = round(sum(m_history) / len(m_history), 1) if m_history else 0
+            
+            st.markdown(f"""
+            <div class="css-card" style="background: linear-gradient(135deg, #1B3B2B 0%, #2C523D 100%); color: #FFFFFF; padding: 20px;">
+                <h3 style="margin:0 0 10px 0; color: #E5C585;">👤 {selected_member_name} ({m_nick}) 회원님</h3>
+                <div style="display: flex; gap: 20px; font-size: 0.95rem;">
+                    <span>🎯 <b>최신 핸디캡:</b> {m_hc}</span>
+                    <span>📈 <b>통산 평균 스코어:</b> {avg_sc}타</span>
+                    <span>⛳ <b>총 라운드 참석:</b> {m_rounds_cnt}회</span>
+                    <span>📅 <b>종합 참석률:</b> {m_att}%</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            st.markdown("##### 🏌️‍♂️ 라운드별 상세 스코어 및 출석 내역")
+            field_rounds = [r for r in rounds_data if "필드" in r.get("type", "") and r.get("completed")]
+            
+            if not field_rounds:
+                st.info("등록된 완료된 필드 라운드가 없습니다.")
+            else:
+                member_rounds_data = []
+                for r in field_rounds:
+                    scores_dict = r.get("scores", {})
+                    if selected_member_name in scores_dict:
+                        p_data = scores_dict[selected_member_name]
+                        member_rounds_data.append({
+                            "날짜": r['date'],
+                            "라운드 명칭": r['title'],
+                            "참석 여부": "출석 ✅",
+                            "스코어": f"{p_data['score']}타",
+                            "드라이버 비거리": f"{p_data['long']}m" if p_data['long'] > 0 else "-",
+                            "니어 근접": f"{p_data['near']}m" if p_data['near'] > 0 else "-"
+                        })
+                    else:
+                        member_rounds_data.append({
+                            "날짜": r['date'],
+                            "라운드 명칭": r['title'],
+                            "참석 여부": "결석 ❌",
+                            "스코어": "-",
+                            "드라이버 비거리": "-",
+                            "니어 근접": "-"
+                        })
+                
+                df_m_rounds = pd.DataFrame(member_rounds_data)
+                st.table(df_m_rounds)
 
     # 4. 📁 역대 조편성 아카이브
     elif menu == "역대 조편성 아카이브":
