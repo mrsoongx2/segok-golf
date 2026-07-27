@@ -180,7 +180,7 @@ st.markdown("""
     
     .insta-card { background-color: #FFFFFF; border-radius: 12px; border: 1px solid #DBDBDB; max-width: 650px; margin: 0 auto 24px auto; box-shadow: 0 2px 8px rgba(0,0,0,0.03); overflow: hidden; }
     .insta-header { display: flex; align-items: center; padding: 14px 16px; border-bottom: 1px solid #EFEFEF; background-color: #FFFFFF; }
-    .insta-body { padding: 16px; font-size: 0.92rem; color: #262626; line-height: 1.5; }
+    .insta-body { padding: 16px; font-size: 0.9rem; color: #262626; line-height: 1.6; }
     
     .team-box { background-color: #1B3B2B; color: #FFFFFF; padding: 18px; border-radius: 12px; margin-bottom: 14px; border: 1px solid #C5A059; }
     .team-box h3 { color: #E5C585 !important; font-family: 'Playfair Display', serif; margin-bottom: 10px; border-bottom: 1px solid #325843; padding-bottom: 6px; }
@@ -412,6 +412,16 @@ if st.session_state.current_menu == "HOME":
                 set_menu("클럽 회원 명부")
                 st.rerun()
 
+    st.markdown("<div style='margin-top: 25px;'></div>", unsafe_allow_html=True)
+    if st.button("🚪 클럽 로그아웃", use_container_width=True, key="home_logout_btn"):
+        st.session_state.logged_in_user = None
+        set_menu("HOME")
+        try:
+            st.query_params.clear()
+        except Exception:
+            pass
+        st.rerun()
+
 else:
     notice_label = f"📢 클럽 공지사항 {'🟢' if has_new_notice else ''}"
     lounge_label = f"💬 클럽 라운지 {'🟢' if has_new_lounge else ''}"
@@ -635,7 +645,7 @@ else:
                         save_data(db)
                         st.rerun()
 
-    # 3. ⛳ 티타임 조편성 (중복 등록 방지 로직 적용 완료)
+    # 3. ⛳ 티타임 조편성 (중복 방지 및 폰트 크기/줄바꿈 완벽 최적화)
     elif menu == "티타임 조편성":
         st.subheader("⛳ 필드 월례회 티타임 조편성")
         if not is_admin:
@@ -723,7 +733,7 @@ else:
                 cols = st.columns(min(len(teams), 4))
                 date_str = r_date_input.strftime("%Y-%m-%d")
                 
-                # 조별 상세 정보가 포함된 세련된 공지 포맷 생성 (폰트 크기 최적화)
+                # 조별 상세 정보가 포함된 세련된 공지 포맷 생성
                 notice_text = f"📢 [필드 월례회 조편성 공식 안내]\n\n"
                 notice_text += f"🗓️ 일정: {date_str}  |  🏟️ 장소: {golf_location or '장소 미입력'}\n"
                 notice_text += f"----------------------------------------\n"
@@ -746,7 +756,7 @@ else:
                 st.code(notice_text, language="text")
                 
                 if st.button("💾 이 조편성을 최종 확정 및 라운지 피드 자동 공지", use_container_width=True):
-                    # 중복 등록 방지 체크 (이미 동일한 일정의 조편성 공지가 피드에 있는지 확인)
+                    # 중복 등록 방지 체크
                     already_posted = any(date_str in p.get("content", "") and "조편성 공식 안내" in p.get("content", "") for p in feed_posts)
                     
                     if already_posted:
