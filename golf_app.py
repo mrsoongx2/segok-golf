@@ -1,9 +1,4 @@
-# Update golf_app.py code to:
-# 1. Clear out any feed comments completely (feed_posts = [])
-# 2. Ensure all member default values (handicap, attendance, rounds_played, score_history) strictly start at 0
-# 3. Ensure existing saved DB file gets hard-reset or synced if values are non-zero.
-
-final_clean_code = '''import streamlit as st
+import streamlit as st
 import pandas as pd
 import numpy as np
 import random
@@ -36,19 +31,15 @@ def load_data():
         try:
             with open(DB_FILE, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                # 데이터 강제 동기화 (아직 진행된 라운드가 없으므로 핸디캡/참석률 0으로 보장)
-                if data.get("total_events", 0) == 0:
-                    for m in data["member_db"]:
-                        data["member_db"][m]["handicap"] = 0
-                        data["member_db"][m]["attendance"] = 0
-                        data["member_db"][m]["rounds_played"] = 0
-                        data["member_db"][m]["score_history"] = []
-                    data["feed_posts"] = []  # 피드 댓글 및 게시글 완전 삭제
+                # 기존 데이터가 있더라도 기본 회원들은 무조건 승인 상태로 보장
+                for m in DEFAULT_MEMBERS:
+                    if m in data["member_db"]:
+                        data["member_db"][m]["status"] = "approved"
                 return data
         except Exception:
             pass
     
-    # 데이터 새로 생성시 완전히 0으로 초기화
+    # 초기 회원 전부 승인(approved) 상태로 바로 가입
     member_db = {}
     for name in DEFAULT_MEMBERS:
         member_db[name] = {
@@ -57,11 +48,11 @@ def load_data():
             "attendance": 0,
             "rounds_played": 0,
             "score_history": [],
-            "status": "approved", # 기존 회원은 승인 상태
+            "status": "approved", # 기존 회원은 승인 필요 없이 바로 접속
             "is_admin": True if name in ADMIN_MEMBERS else False
         }
     pair_history = {m1: {m2: 0 for m2 in DEFAULT_MEMBERS} for m1 in DEFAULT_MEMBERS}
-    feed_posts = [] # 댓글/피드 예제 완전 삭제
+    feed_posts = [] 
     rounds_data = [] 
     match_logs = []
     
@@ -127,6 +118,7 @@ if not st.session_state.logged_in_user:
         
         with tab1:
             st.caption("초기 비밀번호는 '1234' 입니다.")
+            # 승인된 회원은 바로 드롭다운에 표시
             approved_members = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
             login_name = st.selectbox("회원 이름 선택", ["선택하세요"] + approved_members)
             login_pw = st.text_input("비밀번호 입력", type="password")
@@ -161,7 +153,7 @@ if not st.session_state.logged_in_user:
                             "attendance": 0,
                             "rounds_played": 0,
                             "score_history": [],
-                            "status": "pending",
+                            "status": "pending", # 새로 신청하는 사람만 대기
                             "is_admin": True if new_name in ADMIN_MEMBERS else False
                         }
                         pair_history[new_name] = {m: 0 for m in member_db.keys()}
@@ -518,9 +510,3 @@ elif menu.startswith("📊 회원 명부"):
         user_info['password'] = new_pw_val
         save_data(db)
         st.success("비밀번호가 업데이트되었습니다.")
-'''
-
-with open("golf_app.py", "w", encoding="utf-8") as f:
-    f.write(final_clean_code)
-
-print("golf_app.py updated with strictly zeroed values & cleared comments.")
