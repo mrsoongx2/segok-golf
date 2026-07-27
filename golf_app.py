@@ -180,7 +180,7 @@ st.markdown("""
     
     .insta-card { background-color: #FFFFFF; border-radius: 12px; border: 1px solid #DBDBDB; max-width: 650px; margin: 0 auto 24px auto; box-shadow: 0 2px 8px rgba(0,0,0,0.03); overflow: hidden; }
     .insta-header { display: flex; align-items: center; padding: 14px 16px; border-bottom: 1px solid #EFEFEF; background-color: #FFFFFF; }
-    .insta-body { padding: 16px; font-size: 0.95rem; color: #262626; line-height: 1.5; }
+    .insta-body { padding: 16px; font-size: 0.92rem; color: #262626; line-height: 1.5; }
     
     .team-box { background-color: #1B3B2B; color: #FFFFFF; padding: 18px; border-radius: 12px; margin-bottom: 14px; border: 1px solid #C5A059; }
     .team-box h3 { color: #E5C585 !important; font-family: 'Playfair Display', serif; margin-bottom: 10px; border-bottom: 1px solid #325843; padding-bottom: 6px; }
@@ -635,7 +635,7 @@ else:
                         save_data(db)
                         st.rerun()
 
-    # 3. ⛳ 티타임 조편성 (필드 월례회 전용 + 조별 개별 티오프 시간 및 조별 코스 정보 입력)
+    # 3. ⛳ 티타임 조편성 (중복 등록 방지 로직 적용 완료)
     elif menu == "티타임 조편성":
         st.subheader("⛳ 필드 월례회 티타임 조편성")
         if not is_admin:
@@ -723,7 +723,7 @@ else:
                 cols = st.columns(min(len(teams), 4))
                 date_str = r_date_input.strftime("%Y-%m-%d")
                 
-                # 조별 상세 정보(티오프 시간 + 코스 정보)가 포함된 세련된 공지 포맷 생성
+                # 조별 상세 정보가 포함된 세련된 공지 포맷 생성 (폰트 크기 최적화)
                 notice_text = f"📢 [필드 월례회 조편성 공식 안내]\n\n"
                 notice_text += f"🗓️ 일정: {date_str}  |  🏟️ 장소: {golf_location or '장소 미입력'}\n"
                 notice_text += f"----------------------------------------\n"
@@ -746,51 +746,57 @@ else:
                 st.code(notice_text, language="text")
                 
                 if st.button("💾 이 조편성을 최종 확정 및 라운지 피드 자동 공지", use_container_width=True):
-                    for team in teams:
-                        for i in range(len(team)):
-                            for j in range(i + 1, len(team)):
-                                m1, m2 = team[i], team[j]
-                                if m1 in pair_history and m2 in pair_history[m1]:
-                                    pair_history[m1][m2] += 1
-                                    pair_history[m2][m1] += 1
-                                    
-                    now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
-                    match_logs.insert(0, {
-                        "id": len(match_logs) + 1,
-                        "date": now_str,
-                        "event_type": "필드 월례회",
-                        "teams": teams
-                    })
+                    # 중복 등록 방지 체크 (이미 동일한 일정의 조편성 공지가 피드에 있는지 확인)
+                    already_posted = any(date_str in p.get("content", "") and "조편성 공식 안내" in p.get("content", "") for p in feed_posts)
                     
-                    round_entry = {
-                        "id": int(datetime.now().timestamp()),
-                        "title": f"{r_date_input.month}월 정기 필드 월례회 ({golf_location or '필드'})",
-                        "date": date_str,
-                        "type": "필드 월례회",
-                        "teams": teams,
-                        "scores": {},
-                        "completed": False,
-                        "awards": {"medalist": "-", "longist": "-", "nearest": "-"}
-                    }
-                    rounds_data.insert(0, round_entry)
-                    
-                    # 클럽 라운지(피드)에 자동 공지 등록
-                    feed_posts.insert(0, {
-                        "id": int(datetime.now().timestamp()),
-                        "author": current_user,
-                        "nickname": user_info.get("nickname", current_user),
-                        "profile_img": user_info.get("profile_img", None),
-                        "date": now_str,
-                        "content": notice_text,
-                        "media_path": None,
-                        "media_type": None,
-                        "likes": 0,
-                        "liked_users": [],
-                        "comments": []
-                    })
-                    
-                    save_data(db)
-                    st.success("🎉 조편성 확정 및 [클럽 라운지 피드]와 [경기 결과] 메뉴에 성공적으로 자동 등록되었습니다!")
+                    if already_posted:
+                        st.warning("⚠️ 이미 해당 날짜의 조편성 공지가 클럽 라운지 피드에 등록되어 있습니다! (중복 등록 방지됨)")
+                    else:
+                        for team in teams:
+                            for i in range(len(team)):
+                                for j in range(i + 1, len(team)):
+                                    m1, m2 = team[i], team[j]
+                                    if m1 in pair_history and m2 in pair_history[m1]:
+                                        pair_history[m1][m2] += 1
+                                        pair_history[m2][m1] += 1
+                                        
+                        now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
+                        match_logs.insert(0, {
+                            "id": len(match_logs) + 1,
+                            "date": now_str,
+                            "event_type": "필드 월례회",
+                            "teams": teams
+                        })
+                        
+                        round_entry = {
+                            "id": int(datetime.now().timestamp()),
+                            "title": f"{r_date_input.month}월 정기 필드 월례회 ({golf_location or '필드'})",
+                            "date": date_str,
+                            "type": "필드 월례회",
+                            "teams": teams,
+                            "scores": {},
+                            "completed": False,
+                            "awards": {"medalist": "-", "longist": "-", "nearest": "-"}
+                        }
+                        rounds_data.insert(0, round_entry)
+                        
+                        # 클럽 라운지(피드)에 자동 공지 등록
+                        feed_posts.insert(0, {
+                            "id": int(datetime.now().timestamp()),
+                            "author": current_user,
+                            "nickname": user_info.get("nickname", current_user),
+                            "profile_img": user_info.get("profile_img", None),
+                            "date": now_str,
+                            "content": notice_text,
+                            "media_path": None,
+                            "media_type": None,
+                            "likes": 0,
+                            "liked_users": [],
+                            "comments": []
+                        })
+                        
+                        save_data(db)
+                        st.success("🎉 조편성 확정 및 [클럽 라운지 피드]와 [경기 결과] 메뉴에 성공적으로 자동 등록되었습니다!")
 
     # 4. 🏆 경기 결과 및 랭킹
     elif menu == "경기 결과 및 랭킹":
