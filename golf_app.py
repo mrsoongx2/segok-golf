@@ -157,7 +157,6 @@ if 'logged_in_user' not in st.session_state or st.session_state.logged_in_user i
     if query_user and query_user in member_db and member_db[query_user].get("status", "approved") == "approved":
         st.session_state.logged_in_user = query_user
 
-# 브라우저 뒤로가기 버튼 연동을 위한 쿼리 파라미터 동기화
 if 'current_menu' not in st.session_state:
     st.session_state.current_menu = query_menu if query_menu else "HOME"
 else:
@@ -670,7 +669,7 @@ else:
                                     st.success("공지사항이 삭제되었습니다.")
                                     st.rerun()
 
-    # 3. 💬 클럽 라운지 (작성자 수정, 작성자/운영진 삭제 가능)
+    # 3. 💬 클럽 라운지 (작성자 글/사진/투표 수정, 작성자/운영진 삭제 가능)
     elif menu == "클럽 라운지":
         if feed_posts:
             user_info["last_lounge_seen"] = feed_posts[0]["date"]
@@ -903,8 +902,131 @@ else:
                     with c_edit:
                         with st.expander("✏️ 글 수정"):
                             edit_post_text = st.text_area("내용 수정", value=post['content'], key=f"edit_post_txt_{post['id']}")
+                            
+                            # 사진/이미지 수정
+                            st.markdown("##### 🖼️ 이미지 변경/삭제")
+                            cur_img = post.get("media_path")
+                            rm_img = False
+                            if cur_img and os.path.exists(cur_img):
+                                st.image(cur_img, width=150, caption="현재 이미지")
+                                rm_img = st.checkbox("기존 이미지 삭제", key=f"edit_rm_img_{post['id']}")
+                            new_img_up = st.file_uploader("새 이미지 교체", type=["jpg", "png", "jpeg"], key=f"edit_new_img_{post['id']}")
+
+                            # 첨부파일 수정
+                            st.markdown("##### 📎 첨부파일 변경/삭제")
+                            cur_file = post.get("file_name")
+                            rm_file = False
+                            if cur_file:
+                                st.write(f"현재 파일: {cur_file}")
+                                rm_file = st.checkbox("기존 파일 삭제", key=f"edit_rm_file_{post['id']}")
+                            new_file_up = st.file_uploader("새 파일 교체", type=["xlsx", "xls", "pdf", "txt", "csv"], key=f"edit_new_file_{post['id']}")
+
+                            # 투표 수정
+                            st.markdown("##### 📊 투표 설정 변경")
+                            existing_p = post.get("poll")
+                            edit_has_poll = st.checkbox("투표 포함/수정", value=(existing_p is not None), key=f"edit_has_poll_{post['id']}")
+                            
+                            e_q = ""
+                            e_multi = False
+                            e_anon = False
+                            e_deadline = ""
+                            e_opts_list = []
+                            
+                            if edit_has_poll:
+                                e_q = st.text_input("투표 주제", value=existing_p["question"] if existing_p else "", key=f"edit_eq_{post['id']}")
+                                e_multi = st.checkbox("복수 선택 허용 (최대 3개)", value=existing_p.get("allow_multiple", False) if existing_p else False, key=f"edit_emulti_{post['id']}")
+                                e_anon = st.checkbox("익명 투표", value=existing_p.get("is_anonymous", False) if existing_p else False, key=f"edit_eanon_{post['id']}")
+                                
+                                # 데드라인
+                                prev_dl = existing_p.get("deadline", "") if existing_p else ""
+                                try:
+                                    dt_p = datetime.strptime(prev_dl, "%Y-%m-%d %H:%M") if prev_dl else datetime.now()
+                                except:
+                                    dt_p = datetime.now()
+                                
+                                c_d1, c_d2 = st.columns(2)
+                                with c_d1:
+                                    ed_date = st.date_input("마감 날짜", value=dt_p.date(), key=f"edit_ed_{post['id']}")
+                                with c_d2:
+                                    ed_time = st.time_input("마감 시간", value=dt_p.time(), key=f"edit_et_{post['id']}")
+                                e_deadline = datetime.combine(ed_date, ed_time).strftime("%Y-%m-%d %H:%M")
+
+                                def_opts = list(existing_p["options"].keys()) if existing_p else ["1번 투표", "2번 투표", "3번 투표"]
+                                edit_opt_count_key = f"edit_opt_cnt_{post['id']}"
+                                if edit_opt_count_key not in st.session_state:
+                                    st.session_state[edit_opt_count_key] = max(len(def_opts), 3)
+                                
+                                if st.button("➕ 항목 추가", key=f"edit_opt_add_btn_{post['id']}"):
+                                    st.session_state[edit_opt_count_key] += 1
+                                    st.rerun()
+                                    
+                                for i in range(st.session_state[edit_opt_count_key]):
+                                    val_o = def_opts[i] if i < len(def_opts) else ""
+                                    io_val = st.text_input(f"투표 항목 {i+1}", value=val_o, key=f"edit_opt_input_{post['id']}_{i}")
+                                    if io_val:
+                                        e_opts_list.append(io_val.strip())
+
                             if st.button("수정 저장", key=f"btn_save_post_{post['id']}", use_container_width=True):
                                 post['content'] = edit_post_text
+                                
+                                # 이미지 처리
+                                if rm_img:
+                                    if post.get("media_path") and os.path.exists(post["media_path"]):
+                                        try: os.remove(post["media_path"])
+                                        except: pass
+                                    post["media_path"] = None
+                                    post["media_type"] = None
+                                if new_img_up is not None:
+                                    if post.get("media_path") and os.path.exists(post["media_path"]):
+                                        try: os.remove(post["media_path"])
+                                        except: pass
+                                    fname = f"{int(datetime.now().timestamp())}_{new_img_up.name}"
+                                    m_path = os.path.join(UPLOAD_DIR, fname)
+                                    with open(m_path, "wb") as f:
+                                        f.write(new_img_up.getbuffer())
+                                    post["media_path"] = m_path
+                                    post["media_type"] = "image"
+
+                                # 파일 처리
+                                if rm_file:
+                                    if post.get("file_path") and os.path.exists(post["file_path"]):
+                                        try: os.remove(post["file_path"])
+                                        except: pass
+                                    post["file_path"] = None
+                                    post["file_name"] = None
+                                if new_file_up is not None:
+                                    if post.get("file_path") and os.path.exists(post["file_path"]):
+                                        try: os.remove(post["file_path"])
+                                        except: pass
+                                    f_name = new_file_up.name
+                                    f_path = os.path.join(UPLOAD_DIR, f"doc_{int(datetime.now().timestamp())}_{f_name}")
+                                    with open(f_path, "wb") as f:
+                                        f.write(new_file_up.getbuffer())
+                                    post["file_path"] = f_path
+                                    post["file_name"] = f_name
+
+                                # 투표 처리
+                                if edit_has_poll and e_q and len(e_opts_list) >= 2:
+                                    old_opts = existing_p["options"] if (existing_p and "options" in existing_p) else {}
+                                    new_opts_dict = {}
+                                    for opt_name in e_opts_list:
+                                        if opt_name in old_opts:
+                                            new_opts_dict[opt_name] = old_opts[opt_name]
+                                        else:
+                                            new_opts_dict[opt_name] = []
+                                    post["poll"] = {
+                                        "question": e_q,
+                                        "deadline": e_deadline,
+                                        "allow_multiple": e_multi,
+                                        "is_anonymous": e_anon,
+                                        "options": new_opts_dict
+                                    }
+                                else:
+                                    post["poll"] = None
+
+                                if f"edit_opt_cnt_{post['id']}" in st.session_state:
+                                    del st.session_state[f"edit_opt_cnt_{post['id']}"]
+
                                 save_data(db)
                                 st.success("게시물이 수정되었습니다.")
                                 st.rerun()
@@ -1413,7 +1535,7 @@ else:
             
             p_img_file = st.file_uploader("프로필 아바타 등록 (선택)", type=["jpg", "png", "jpeg"])
             if user_info.get("profile_img"):
-                st.image(base64.b64decode(user_info["profile_img"]), width=100, caption="현재 등록된 프로필 사진")
+                st.image(base64.b64decode(user_info["profile_img"]), width=100, caption="Current Profile Photo")
                 
             submit_btn = st.form_submit_button("💾 정보 저장하기", type="primary", use_container_width=True)
             
