@@ -49,6 +49,11 @@ def load_data():
                     for post in data.get("feed_posts", []):
                         if "liked_users" not in post:
                             post["liked_users"] = []
+                        if "poll" not in post:
+                            post["poll"] = None
+                        if "file_path" not in post:
+                            post["file_path"] = None
+                            post["file_name"] = None
                     return data
         except Exception:
             pass
@@ -166,46 +171,35 @@ st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,600&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
     
-    .stApp { background-color: #FAFAFA !important; font-family: 'Noto Sans KR', sans-serif; color: #262626; }
+    .stApp { background-color: #FAFAFA !important; font-family: 'Noto Sans KR', sans-serif; color: #262626; font-size: 0.9rem; }
     
-    /* 모바일 반응형 최적화 헤더 */
-    .compact-header { background-color: #FFFFFF; padding: 10px 16px; border-bottom: 1px solid #DBDBDB; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
-    .header-title { font-family: 'Playfair Display', serif; color: #1B3B2B; font-size: 1.3rem; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+    .compact-header { background-color: #FFFFFF; padding: 10px 20px; border-bottom: 1px solid #DBDBDB; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
     
-    /* 히어로 배너 */
     .logo-hero { text-align: center; padding: 30px 15px 20px 15px; background: linear-gradient(135deg, #1B3B2B 0%, #2C523D 100%); border-radius: 14px; color: #FFFFFF; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(27,59,43,0.12); }
-    .logo-hero h1 { font-family: 'Playfair Display', serif; font-size: 2.2rem; margin: 8px 0 4px 0; color: #F8F5F0; }
-    .logo-hero p { color: #D4B475; font-size: 0.75rem; letter-spacing: 3px; text-transform: uppercase; font-weight: 600; margin: 0; }
+    .logo-hero h1 { font-family: 'Playfair Display', serif; font-size: 2rem; margin: 6px 0 2px 0; color: #F8F5F0; }
+    .logo-hero p { color: #D4B475; font-size: 0.7rem; letter-spacing: 3px; text-transform: uppercase; font-weight: 600; margin: 0; }
     
-    /* 모바일 친화적 카드 스타일 */
-    .menu-card { background-color: #FFFFFF; border-radius: 12px; border: 1px solid #DBDBDB; padding: 18px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.02); transition: all 0.2s ease; margin-bottom: 12px; position: relative; }
-    .menu-card h3 { font-size: 1.1rem; margin-bottom: 6px; color: #1B3B2B; }
-    .menu-card p { color: #666; font-size: 0.82rem; margin-bottom: 12px; line-height: 1.4; }
+    .menu-card { background-color: #FFFFFF; border-radius: 10px; border: 1px solid #DBDBDB; padding: 16px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02); transition: all 0.2s ease; margin-bottom: 12px; position: relative; }
+    .menu-card h3 { font-size: 1rem; margin-bottom: 4px; color: #1B3B2B; }
+    .menu-card p { color: #666; font-size: 0.78rem; margin-bottom: 10px; line-height: 1.3; }
     
-    /* 인스타 피드 카드 */
-    .insta-card { background-color: #FFFFFF; border-radius: 10px; border: 1px solid #DBDBDB; max-width: 100%; margin: 0 auto 18px auto; box-shadow: 0 2px 6px rgba(0,0,0,0.02); overflow: hidden; }
-    .insta-header { display: flex; align-items: center; padding: 12px 14px; border-bottom: 1px solid #EFEFEF; background-color: #FFFFFF; }
-    .insta-body { padding: 14px; font-size: 0.9rem; color: #262626; line-height: 1.5; }
+    /* 밴드 스타일 피드 카드 */
+    .band-card { background-color: #FFFFFF; border-radius: 10px; border: 1px solid #E0E0E0; max-width: 100%; margin: 0 auto 16px auto; box-shadow: 0 1px 4px rgba(0,0,0,0.02); overflow: hidden; }
+    .band-header { display: flex; align-items: center; padding: 12px 14px; border-bottom: 1px solid #F0F0F0; background-color: #FAFAFA; }
+    .band-body { padding: 14px; font-size: 0.88rem; color: #262626; line-height: 1.5; }
     
-    .team-box { background-color: #1B3B2B; color: #FFFFFF; padding: 15px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #C5A059; font-size: 0.9rem; }
-    .team-box h3 { color: #E5C585 !important; font-family: 'Playfair Display', serif; font-size: 1.1rem; margin-bottom: 8px; border-bottom: 1px solid #325843; padding-bottom: 4px; }
+    .team-box { background-color: #1B3B2B; color: #FFFFFF; padding: 14px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #C5A059; font-size: 0.85rem; }
+    .team-box h3 { color: #E5C585 !important; font-family: 'Playfair Display', serif; font-size: 1rem; margin-bottom: 6px; border-bottom: 1px solid #325843; padding-bottom: 4px; }
     
     .badge-admin { background-color: #1B3B2B; color: #FFFFFF; padding: 2px 6px; border-radius: 8px; font-size: 0.65rem; font-weight: 600; border: 1px solid #C5A059; }
     .badge-user { background-color: #EFEFEF; color: #262626; padding: 2px 6px; border-radius: 8px; font-size: 0.65rem; font-weight: 600; }
     .badge-hc { background-color: #FDF8F0; color: #B38F4E; padding: 2px 6px; border-radius: 8px; font-size: 0.65rem; font-weight: 700; border: 1px solid #E5DEC3; }
-    .profile-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1.5px solid #C5A059; margin-right: 10px; }
+    .profile-avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; border: 1.5px solid #C5A059; margin-right: 10px; }
     
     .new-badge { background-color: #2E7D32; color: #FFFFFF; padding: 2px 5px; border-radius: 8px; font-size: 0.6rem; font-weight: 700; vertical-align: middle; margin-left: 4px; }
     
-    /* 모바일 터치 친화적 풀와이드 버튼 */
-    .stButton>button { background-color: #1B3B2B !important; color: #FFFFFF !important; border-radius: 8px !important; border: none !important; font-weight: 600 !important; width: 100% !important; padding: 8px 12px !important; }
+    .stButton>button { background-color: #1B3B2B !important; color: #FFFFFF !important; border-radius: 6px !important; border: none !important; font-weight: 600 !important; width: 100% !important; padding: 6px 10px !important; font-size: 0.85rem !important; }
     .stButton>button:hover { background-color: #27523C !important; }
-    
-    /* 모바일 작은 화면 대응 */
-    @media (max-width: 768px) {
-        .logo-hero h1 { font-size: 1.8rem; }
-        .menu-card { padding: 14px; }
-    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -304,7 +298,7 @@ last_l = user_info.get("last_lounge_seen", "")
 latest_lounge_date = feed_posts[0]["date"] if feed_posts else ""
 has_new_lounge = latest_lounge_date > last_l if latest_lounge_date else False
 
-# --- 상단 고정 헤더 (모바일 가독성 최적화) ---
+# --- 상단 고정 헤더 (배너 클릭 시 홈 링크 이동 기능) ---
 col_h1, col_h2 = st.columns([2, 3])
 with col_h1:
     if st.button("⛳ Segok Golf Club", key="logo_home_btn"):
@@ -314,7 +308,7 @@ with col_h2:
     hc_val = user_info.get('handicap', 0)
     att_val = user_info.get('attendance', 0)
     st.markdown(f"""
-    <div style="display: flex; justify-content: flex-end; align-items: center; gap: 6px; padding-top: 6px; font-size: 0.85rem;">
+    <div style="display: flex; justify-content: flex-end; align-items: center; gap: 8px; padding-top: 6px; font-size: 0.82rem;">
         <span><b>{display_nickname}</b>님 {admin_badge}</span>
         <span class="badge-hc">HC {hc_val}</span>
         <span class="badge-user">참석 {att_val}%</span>
@@ -326,13 +320,12 @@ st.markdown("<hr style='margin: 8px 0 15px 0; border-top: 1px solid #DBDBDB;'>",
 if st.session_state.current_menu == "HOME":
     st.markdown("""
     <div class="logo-hero">
-        <div style="font-size: 2.8rem; margin-bottom: 4px;">🏆</div>
+        <div style="font-size: 2.5rem; margin-bottom: 4px;">🏆</div>
         <h1>Segok Golf Club</h1>
         <p>PREMIUM GOLF SOCIETY & COMMUNITY</p>
     </div>
     """, unsafe_allow_html=True)
     
-    # 모바일에서 세로로 차곡차곡 쌓이는 1열 또는 간결한 그리드 구성
     c1, c2 = st.columns(2)
     
     with c1:
@@ -340,7 +333,7 @@ if st.session_state.current_menu == "HOME":
         st.markdown(f"""
         <div class="menu-card">
             <h3>📢 공지사항{notice_badge}</h3>
-            <p>클럽 주요 소식과 안내 사항 확인</p>
+            <p>클럽 소식 및 조편성 안내</p>
         </div>
         """, unsafe_allow_html=True)
         if st.button("공지사항 입장", use_container_width=True, key="go_notice"):
@@ -351,7 +344,7 @@ if st.session_state.current_menu == "HOME":
         st.markdown(f"""
         <div class="menu-card" style="margin-top: 15px;">
             <h3>💬 클럽 라운지{lounge_badge}</h3>
-            <p>라운딩 추억과 사진, 영상 공유</p>
+            <p>자유 소통, 투표 및 파일 공유</p>
         </div>
         """, unsafe_allow_html=True)
         if st.button("클럽 라운지 입장", use_container_width=True, key="go_lounge"):
@@ -372,7 +365,7 @@ if st.session_state.current_menu == "HOME":
         st.markdown("""
         <div class="menu-card">
             <h3>🏆 경기 결과 & 랭킹</h3>
-            <p>역대 스코어, 공식 시상 및 랭킹</p>
+            <p>역대 스코어 및 공식 시상</p>
         </div>
         """, unsafe_allow_html=True)
         if st.button("경기 결과 입장", use_container_width=True, key="go_result"):
@@ -392,7 +385,7 @@ if st.session_state.current_menu == "HOME":
         st.markdown("""
         <div class="menu-card" style="margin-top: 15px;">
             <h3>👤 마이페이지</h3>
-            <p>프로필 설정, 로그아웃 및 탈퇴</p>
+            <p>프로필, 로그아웃 및 클럽 탈퇴</p>
         </div>
         """, unsafe_allow_html=True)
         if st.button("마이페이지 입장", use_container_width=True, key="go_mypage"):
@@ -406,7 +399,7 @@ if st.session_state.current_menu == "HOME":
             st.markdown("""
             <div class="menu-card">
                 <h3>⛳ 티타임 조편성</h3>
-                <p>중복 방지 맞춤형 조편성 실행</p>
+                <p>맞춤형 조편성 및 공지 자동등록</p>
             </div>
             """, unsafe_allow_html=True)
             if st.button("조편성 실행", use_container_width=True, key="go_match"):
@@ -417,12 +410,12 @@ if st.session_state.current_menu == "HOME":
             badge_txt = f" (대기 {pending_cnt})" if pending_cnt > 0 else ""
             st.markdown(f"""
             <div class="menu-card">
-                <h3>👥 회원 명부{badge_txt}</h3>
-                <p>정회원 관리 및 가입 승인</p>
+                <h3>👥 회원 리스트{badge_txt}</h3>
+                <p>회원 관리 및 가입 승인</p>
             </div>
             """, unsafe_allow_html=True)
-            if st.button("회원 명부 관리", use_container_width=True, key="go_members"):
-                set_menu("클럽 회원 명부")
+            if st.button("회원 리스트 관리", use_container_width=True, key="go_members"):
+                set_menu("회원 리스트")
                 st.rerun()
 
 else:
@@ -432,7 +425,7 @@ else:
     menu_list = ["메인 홈", notice_label, lounge_label, "🏆 경기 결과 및 랭킹", "👑 명예의 전당", "📁 역대 조편성 아카이브", "👤 마이페이지"]
     if is_admin:
         menu_list.insert(3, "⛳ 티타임 조편성")
-        menu_list.append("👥 회원 명부")
+        menu_list.append("👥 회원 리스트")
         
     current_label_map = {
         "HOME": "메인 홈",
@@ -442,7 +435,7 @@ else:
         "경기 결과 및 랭킹": "🏆 경기 결과 및 랭킹",
         "명예의 전당": "👑 명예의 전당",
         "역대 조편성 아카이브": "📁 역대 조편성 아카이브",
-        "회원 명부": "👥 회원 명부",
+        "회원 리스트": "👥 회원 리스트",
         "마이페이지": "👤 마이페이지"
     }
     reverse_map = {v: k for k, v in current_label_map.items()}
@@ -463,14 +456,14 @@ else:
     
     menu = st.session_state.current_menu
 
-    # 1. 📢 클럽 공지사항
+    # 1. 📢 클럽 공지사항 (조편성 공지 자동 등록 연동 포함)
     if menu == "클럽 공지사항":
         if notices:
             user_info["last_notice_seen"] = notices[0]["date"]
             save_data(db)
             
         st.subheader("📢 클럽 공지사항")
-        st.caption("세곡 골프클럽의 주요 소식과 안내 사항을 확인하세요.")
+        st.caption("세곡 골프클럽의 주요 소식과 조편성 안내 사항을 확인하세요.")
         
         if is_admin:
             with st.expander("✍️ [운영진] 새 공지사항 등록하기"):
@@ -495,13 +488,16 @@ else:
         else:
             for n_idx, notice in enumerate(notices):
                 st.markdown(f"""
-                <div class="insta-card" style="padding: 15px; max-width: 100%;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                        <h4 style="color:#1B3B2B; margin:0; font-size:1rem;">📌 {notice['title']}</h4>
-                        <span style="color:#8E8E8E; font-size:0.75rem;">{notice['date']}</span>
+                <div class="band-card">
+                    <div class="band-header">
+                        <div>
+                            <strong style="color:#1B3B2B; font-size:0.9rem;">📌 {notice['title']}</strong><br>
+                            <span style="color:#8E8E8E; font-size:0.7rem;">{notice['date']}</span>
+                        </div>
                     </div>
-                    <hr style="margin:8px 0; border-top:1px solid #EFEFEF;">
-                    <p style="color:#262626; font-size:0.9rem; line-height:1.5; white-space: pre-wrap; margin:0;">{notice['content']}</p>
+                    <div class="band-body">
+                        <p style="margin:0; white-space: pre-wrap;">{notice['content']}</p>
+                    </div>
                 </div>
                 """, unsafe_allow_html=True)
                 
@@ -518,28 +514,56 @@ else:
                                 st.success("공지사항이 삭제되었습니다.")
                                 st.rerun()
 
-    # 2. 💬 클럽 라운지
+    # 2. 💬 클럽 라운지 (밴드 형식: 자유글, 사진첨부, 엑셀/파일첨부, 투표 기능)
     elif menu == "클럽 라운지":
         if feed_posts:
             user_info["last_lounge_seen"] = feed_posts[0]["date"]
             save_data(db)
             
         st.subheader("💬 클럽 라운지")
-        with st.expander("✍️ 새 라운딩 소식 및 미디어 공유하기", expanded=True):
-            post_text = st.text_area("내용 작성", placeholder="오늘의 멋진 라운딩 추억을 공유해 보세요...")
-            uploaded_file = st.file_uploader("사진 또는 동영상 첨부 (선택)", type=["jpg", "png", "jpeg", "mp4", "mov", "avi"])
+        with st.expander("✍️ 새 글 작성하기 (사진/파일/투표 첨부)", expanded=True):
+            post_text = st.text_area("내용 입력", placeholder="라운딩 후기, 모임 소식 등을 자유롭게 남겨보세요...")
             
-            if st.button("피드 발행하기", type="primary", use_container_width=True):
-                if post_text or uploaded_file:
+            col_u1, col_u2 = st.columns(2)
+            with col_u1:
+                uploaded_file = st.file_uploader("이미지 첨부 (선택)", type=["jpg", "png", "jpeg"])
+            with col_u2:
+                doc_file = st.file_uploader("문서/엑셀 파일 첨부 (선택)", type=["xlsx", "xls", "pdf", "txt", "csv"])
+            
+            use_poll = st.checkbox("📊 투표 생성하기")
+            poll_question = ""
+            poll_options = []
+            if use_poll:
+                poll_question = st.text_input("투표 주제", placeholder="예: 다음 모임 장소 추천")
+                opt_str = st.text_input("투표 항목 (쉼표로 구분)", placeholder="예: 남서울CC, 강남CC, 기흥CC")
+                if opt_str:
+                    poll_options = [o.strip() for o in opt_str.split(",") if o.strip()]
+
+            if st.button("게시물 등록하기", type="primary", use_container_width=True):
+                if post_text or uploaded_file or doc_file or use_poll:
                     media_path = None
                     media_type = None
                     if uploaded_file is not None:
-                        file_ext = uploaded_file.name.split('.')[-1].lower()
                         file_name = f"{int(datetime.now().timestamp())}_{uploaded_file.name}"
                         media_path = os.path.join(UPLOAD_DIR, file_name)
                         with open(media_path, "wb") as f:
                             f.write(uploaded_file.getbuffer())
-                        media_type = "video" if file_ext in ["mp4", "mov", "avi"] else "image"
+                        media_type = "image"
+                    
+                    file_path = None
+                    file_name = None
+                    if doc_file is not None:
+                        file_name = doc_file.name
+                        file_path = os.path.join(UPLOAD_DIR, f"doc_{int(datetime.now().timestamp())}_{file_name}")
+                        with open(file_path, "wb") as f:
+                            f.write(doc_file.getbuffer())
+
+                    poll_data = None
+                    if use_poll and poll_question and len(poll_options) >= 2:
+                        poll_data = {
+                            "question": poll_question,
+                            "options": {opt: [] for opt in poll_options}
+                        }
                     
                     feed_posts.insert(0, {
                         "id": int(datetime.now().timestamp()),
@@ -550,16 +574,19 @@ else:
                         "content": post_text,
                         "media_path": media_path,
                         "media_type": media_type,
+                        "file_path": file_path,
+                        "file_name": file_name,
+                        "poll": poll_data,
                         "likes": 0,
                         "liked_users": [],
                         "comments": []
                     })
                     save_data(db)
-                    st.success("피드가 발행되었습니다!")
+                    st.success("게시물이 등록되었습니다!")
                     st.rerun()
 
         if not feed_posts:
-            st.info("아직 등록된 피드가 없습니다. 첫 소식을 공유해 보세요!")
+            st.info("아직 등록된 게시물이 없습니다. 첫 소식을 공유해 보세요!")
         else:
             for idx, post in enumerate(feed_posts):
                 p_author = post.get("author", "알수없음")
@@ -573,8 +600,8 @@ else:
                     avatar_html = '<span style="font-size:1.3rem; margin-right:8px;">👤</span>'
                     
                 st.markdown(f"""
-                <div class="insta-card">
-                    <div class="insta-header">
+                <div class="band-card">
+                    <div class="band-header">
                         {avatar_html}
                         <div>
                             <strong style="color:#262626; font-size:0.9rem;">{p_nickname}</strong><br>
@@ -585,22 +612,43 @@ else:
                 
                 m_path = post.get("media_path")
                 if m_path and os.path.exists(m_path):
-                    if post.get("media_type") == "video":
-                        st.video(m_path)
-                    else:
-                        st.image(m_path, use_column_width=True)
+                    st.image(m_path, use_column_width=True)
+
+                f_path = post.get("file_path")
+                f_name = post.get("file_name")
+                if f_path and f_name and os.path.exists(f_path):
+                    with open(f_path, "rb") as fp:
+                        st.download_button(label=f"📎 첨부파일 다운로드: {f_name}", data=fp, file_name=f_name, key=f"dl_{post['id']}")
 
                 if post.get('content'):
                     st.markdown(f"""
-                    <div class="insta-body">
+                    <div class="band-body">
                         <p style="margin:0; color:#262626; word-break:break-all; white-space: pre-wrap;">{post['content']}</p>
                     </div>
                     """, unsafe_allow_html=True)
-                    
+
+                # 투표 UI 렌더링
+                poll = post.get("poll")
+                if poll:
+                    st.markdown(f"**📊 [투표] {poll['question']}**")
+                    total_votes = sum(len(v) for v in poll["options"].values())
+                    for opt, voters in poll["options"].items():
+                        voted_here = current_user in voters
+                        btn_label = f"✓ {opt} ({len(voters)}표)" if voted_here else f"{opt} ({len(voters)}표)"
+                        if st.button(btn_label, key=f"poll_{post['id']}_{opt}", use_container_width=True):
+                            # 다른 항목 투표 제거 후 해당 항목 토글
+                            for o_key, o_list in poll["options"].items():
+                                if current_user in o_list:
+                                    o_list.remove(current_user)
+                            if not voted_here:
+                                voters.append(current_user)
+                            save_data(db)
+                            st.rerun()
+                    st.caption(f"총 투표 참여 인원: {total_votes}명")
+
                 st.markdown("</div>", unsafe_allow_html=True)
                     
-                c_lk, c_edit, c_del = st.columns([1.2, 1, 1])
-                
+                c_lk, c_del = st.columns([1, 1])
                 with c_lk:
                     liked_list = post.setdefault("liked_users", [])
                     has_liked = current_user in liked_list
@@ -616,16 +664,6 @@ else:
                         save_data(db)
                         st.rerun()
                         
-                if post['author'] == current_user:
-                    with c_edit:
-                        with st.expander("✏️ 수정"):
-                            edited_content = st.text_area("내용 수정", value=post['content'], key=f"edt_txt_{post['id']}")
-                            if st.button("저장", key=f"btn_edt_{post['id']}", use_container_width=True):
-                                post['content'] = edited_content
-                                save_data(db)
-                                st.success("수정되었습니다.")
-                                st.rerun()
-
                 if post['author'] == current_user or is_admin:
                     with c_del:
                         with st.expander("🗑️ 삭제"):
@@ -648,17 +686,20 @@ else:
                         save_data(db)
                         st.rerun()
 
-    # 3. ⛳ 티타임 조편성
+    # 3. ⛳ 티타임 조편성 (확정 시 클럽 공지사항으로 자동 등록)
     elif menu == "티타임 조편성":
-        st.subheader("⛳ 티타임 조편성")
+        st.subheader("⛳ 필드 월례회 티타임 조편성")
         if not is_admin:
             st.error("⛔ 조편성 기능은 운영진 전용 메뉴입니다.")
         else:
-            st.success("👑 **운영자 권한 완료** | 모임 일정, 장소 및 각 조별 티오프 시간과 코스 설정")
+            st.success("👑 **운영자 권한 완료** | 모임 일정, 장소 및 각 조별 티오프 시간과 코스 정보를 개별 설정합니다.")
             
-            st.markdown("##### 📌 기본 정보 입력")
-            r_date_input = st.date_input("라운드 일정 (날짜)")
-            golf_location = st.text_input("골프장 장소", placeholder="예: 남서울CC")
+            st.markdown("##### 📌 기본 라운드 정보 입력")
+            col_t1, col_t2 = st.columns(2)
+            with col_t1:
+                r_date_input = st.date_input("라운드 일정 (날짜)")
+            with col_t2:
+                golf_location = st.text_input("골프장 장소", placeholder="예: 남서울CC")
 
             balance_rule = st.radio("조편성 방식", ["과거 동반 중복 방지 (기본)", "핸디캡 균등 배정 (고수+초보 믹스)"])
             
@@ -752,11 +793,12 @@ else:
                 st.subheader("📱 카카오톡 공지문 미리보기")
                 st.code(notice_text, language="text")
                 
-                if st.button("💾 최종 확정 및 라운지 피드 자동 공지", use_container_width=True):
-                    already_posted = any(date_str in p.get("content", "") and "조편성 공식 안내" in p.get("content", "") for p in feed_posts)
+                if st.button("💾 최종 확정 및 클럽 공지사항 자동 등록", use_container_width=True):
+                    # 공지사항 중복 등록 방지 체크
+                    already_posted = any(date_str in n.get("content", "") and "조편성 공식 안내" in n.get("content", "") for n in notices)
                     
                     if already_posted:
-                        st.warning("⚠️ 이미 해당 날짜의 조편성 공지가 클럽 라운지 피드에 등록되어 있습니다! (중복 등록 방지됨)")
+                        st.warning("⚠️ 이미 해당 날짜의 조편성 공지가 클럽 공지사항에 등록되어 있습니다! (중복 등록 방지됨)")
                     else:
                         for team in teams:
                             for i in range(len(team)):
@@ -786,22 +828,16 @@ else:
                         }
                         rounds_data.insert(0, round_entry)
                         
-                        feed_posts.insert(0, {
+                        # 클럽 공지사항에 자동 등록
+                        notices.insert(0, {
                             "id": int(datetime.now().timestamp()),
-                            "author": current_user,
-                            "nickname": user_info.get("nickname", current_user),
-                            "profile_img": user_info.get("profile_img", None),
                             "date": now_str,
-                            "content": notice_text,
-                            "media_path": None,
-                            "media_type": None,
-                            "likes": 0,
-                            "liked_users": [],
-                            "comments": []
+                            "title": f"[{date_str}] 필드 월례회 조편성 안내",
+                            "content": notice_text
                         })
                         
                         save_data(db)
-                        st.success("🎉 조편성 확정 및 [클럽 라운지 피드]에 성공적으로 등록되었습니다!")
+                        st.success("🎉 조편성 확정 및 [클럽 공지사항]과 [경기 결과] 메뉴에 성공적으로 자동 등록되었습니다!")
 
     # 4. 🏆 경기 결과 및 랭킹
     elif menu == "경기 결과 및 랭킹":
@@ -1085,9 +1121,9 @@ else:
                     team_names = ", ".join([f"{m}({member_db.get(m, {}).get('handicap', '0')})" for m in team])
                     st.markdown(f"**⛳ {t_idx+1}조:** {team_names}")
 
-    # 7. 👥 회원 명부
-    elif menu.startswith("회원 명부"):
-        st.subheader("👥 클럽 회원 명부")
+    # 7. 👥 회원 리스트 (명칭 변경 완료)
+    elif menu.startswith("회원 리스트") or menu.startswith("회원 명부"):
+        st.subheader("👥 클럽 회원 리스트")
         
         df_data = [{
             "성함": k, 
@@ -1137,7 +1173,7 @@ else:
     # 8. 👤 마이페이지
     elif menu == "마이페이지":
         st.subheader("👤 마이페이지 & 프로필 설정")
-        st.info("💡 회원 성함, 닉네임, 비밀번호, 프로필 사진 변경, 로그아웃 및 클럽 탈퇴를 관리할 수 있습니다.")
+        st.info("💡 회원 성함, 닉네임, 비밀번호, 프로필 사진 변경 및 클럽 탈퇴를 관리할 수 있습니다.")
         
         with st.form("edit_profile_form"):
             edit_name = st.text_input("회원 성함", value=current_user)
@@ -1169,17 +1205,6 @@ else:
                 save_data(db)
                 st.success("🎉 마이페이지 정보가 성공적으로 업데이트되었습니다!")
                 st.rerun()
-
-        st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
-        st.markdown("##### 🚪 세션 관리: 로그아웃")
-        if st.button("🚪 클럽 로그아웃", type="secondary", use_container_width=True, key="mypage_logout"):
-            st.session_state.logged_in_user = None
-            set_menu("HOME")
-            try:
-                st.query_params.clear()
-            except Exception:
-                pass
-            st.rerun()
 
         st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
         st.markdown("##### ❌ 위험 구역: 클럽 탈퇴")
