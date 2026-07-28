@@ -187,18 +187,6 @@ st.markdown("""
     
     .stApp { background-color: #F4F6F4 !important; font-family: 'Noto Sans KR', sans-serif; color: #1E2923; font-size: 0.9rem; }
     
-    [data-testid="stHorizontalBlock"] {
-        display: flex !important;
-        flex-direction: row !important;
-        align-items: center !important;
-        justify-content: space-between !important;
-    }
-    [data-testid="column"] {
-        flex: 1 !important;
-        width: auto !important;
-        min-width: 0 !important;
-    }
-    
     .logo-hero { 
         text-align: center; 
         padding: 40px 20px; 
@@ -232,7 +220,7 @@ st.markdown("""
         background-color: #FFFFFF; 
         border-radius: 12px; 
         border: 1px solid #E2E8F0; 
-        padding: 16px 12px; 
+        padding: 18px 14px; 
         text-align: center; 
         box-shadow: 0 4px 12px rgba(0,0,0,0.03); 
         transition: all 0.25s ease; 
@@ -272,17 +260,18 @@ st.markdown("""
     
     .new-badge { background-color: #16A34A; color: #FFFFFF; padding: 2px 5px; border-radius: 6px; font-size: 0.6rem; font-weight: 800; vertical-align: middle; margin-left: 4px; font-family: 'Montserrat', sans-serif; }
     
+    /* 버튼 기본 스타일 (자연스러운 너비) */
     .stButton>button { 
         background: linear-gradient(135deg, #1B4D33 0%, #0F2E1B 100%) !important; 
         color: #FFFFFF !important; 
         border-radius: 8px !important; 
         border: none !important; 
         font-weight: 700 !important; 
-        width: 100% !important; 
-        padding: 7px 10px !important; 
-        font-size: 0.82rem !important; 
+        padding: 7px 12px !important; 
+        font-size: 0.85rem !important; 
         box-shadow: 0 3px 8px rgba(27,77,51,0.2);
         font-family: 'Montserrat', 'Noto Sans KR', sans-serif;
+        width: auto !important;
     }
     .stButton>button:hover { 
         background: linear-gradient(135deg, #235C3D 100%, #164027 100%) !important; 
@@ -391,22 +380,24 @@ total_unread_alerts = unread_notices_count + unread_lounge_count
 
 alert_badge_label = f"🔔 INBOX ({total_unread_alerts})" if total_unread_alerts > 0 else "🔔 INBOX"
 
-# --- 상단 고정 헤더 ---
-col_h1, col_h2, col_h3 = st.columns([1.3, 2.0, 1.2])
+# --- 상단 고정 헤더 (모던 앱 네비게이션 바 스타일) ---
+col_h1, col_h2 = st.columns([1, 1])
 with col_h1:
-    if st.button("⛳ GOLF", key="logo_home_btn"):
+    if st.button("⛳ SEGOK GOLF", key="logo_home_btn"):
         set_menu("HOME")
         st.rerun()
 with col_h2:
-    st.markdown(f"""
-    <div style="display: flex; justify-content: center; align-items: center; gap: 4px; white-space: nowrap; font-size: 0.8rem;">
-        <span style="color: #0F2E1B;"><b>{display_nickname}</b></span> {admin_badge}
-    </div>
-    """, unsafe_allow_html=True)
-with col_h3:
-    if st.button(alert_badge_label, key="header_inbox_btn"):
-        set_menu("알림 센터")
-        st.rerun()
+    header_cols = st.columns([1.5, 1])
+    with header_cols[0]:
+        st.markdown(f"""
+        <div style="text-align: right; padding-top: 6px; font-size: 0.85rem; white-space: nowrap;">
+            <b>{display_nickname}</b>님 {admin_badge}
+        </div>
+        """, unsafe_allow_html=True)
+    with header_cols[1]:
+        if st.button(alert_badge_label, key="header_inbox_btn"):
+            set_menu("알림 센터")
+            st.rerun()
 
 st.markdown("<hr style='margin: 6px 0 12px 0; border-top: 1px solid #E2E8F0;'>", unsafe_allow_html=True)
 
