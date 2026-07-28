@@ -505,7 +505,6 @@ else:
     notice_label = f"📢 공지사항 (NOTICE) {'🟢' if has_new_notice else ''}"
     lounge_label = f"💬 클럽 라운지 (LOUNGE) {'🟢' if has_new_lounge else ''}"
     
-    # Selectbox 메뉴 리스트에서 Inbox 제거 (상단 독립 버튼으로 이동됨)
     menu_list = ["메인 홈", notice_label, lounge_label, "🏆 경기 결과 및 랭킹 (RESULTS)", "👑 명예의 전당 (HALL OF FAME)", "📁 조편성 아카이브 (ARCHIVE)", "👤 마이페이지 (MY PAGE)"]
     if is_admin:
         menu_list.insert(3, "⛳ 티타임 조편성 (MATCH)")
@@ -592,7 +591,7 @@ else:
                     st.rerun()
 
         st.markdown("##### 💬 내 게시물에 달린 댓글")
-        my_posts = [p for p in feed_posts if p.get("author"] == current_user]
+        my_posts = [p for p in feed_posts if p.get("author") == current_user]
         my_comments_found = False
         for p in my_posts:
             comments = p.get("comments", [])
@@ -1489,7 +1488,7 @@ else:
         if is_admin:
             st.divider()
             st.subheader("👑 [OPERATOR] 신입회원 가입 승인 센터")
-            pending_members = [k for k, v in member_db.items() if v.get("status"] == "pending"]
+            pending_members = [k for k, v in member_db.items() if v.get("status") == "pending"]
             
             if not pending_members:
                 st.info("현재 가입 승인 대기 중인 회원이 없습니다.")
