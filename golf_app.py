@@ -187,7 +187,6 @@ st.markdown("""
     .band-header { display: flex; align-items: center; padding: 12px 14px; border-bottom: 1px solid #F0F0F0; background-color: #FAFAFA; }
     .band-body { padding: 14px; font-size: 0.85rem; color: #262626; line-height: 1.5; }
     
-    /* 공지사항 전용 강제 고정 폰트 박스 (마크다운 무력화 및 크기 고정) */
     .kakao-notice-box { background-color: #F8F9FA; border-left: 4px solid #1B3B2B; padding: 12px 15px; border-radius: 6px; font-size: 0.82rem !important; font-family: monospace, sans-serif !important; color: #222222 !important; line-height: 1.5 !important; white-space: pre-wrap; word-break: break-all; margin-top: 8px; }
 
     .team-box { background-color: #1B3B2B; color: #FFFFFF; padding: 14px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #C5A059; font-size: 0.85rem; }
@@ -408,7 +407,7 @@ if st.session_state.current_menu == "HOME":
                 set_menu("티타임 조편성")
                 st.rerun()
         with ac2:
-            pending_cnt = len([k for k, v in member_db.items() if v.get("status") == "pending"])
+            pending_cnt = len([k for k, v in member_db.items() if v.get("status", "approved") == "pending"])
             badge_txt = f" (대기 {pending_cnt})" if pending_cnt > 0 else ""
             st.markdown(f"""
             <div class="menu-card">
@@ -539,7 +538,6 @@ else:
             if use_poll:
                 poll_question = st.text_input("투표 주제", placeholder="예: 다음 모임 장소 추천")
                 
-                # 세션 상태를 이용한 동적 투표 항목 개수 관리
                 if 'poll_option_count' not in st.session_state:
                     st.session_state.poll_option_count = 2
                 
@@ -596,7 +594,7 @@ else:
                         "liked_users": [],
                         "comments": []
                     })
-                    st.session_state.poll_option_count = 2 # 초기화
+                    st.session_state.poll_option_count = 2
                     save_data(db)
                     st.success("게시물이 등록되었습니다!")
                     st.rerun()
@@ -841,7 +839,7 @@ else:
                         }
                         rounds_data.insert(0, round_entry)
                         
-                        # 클럽 공지사항에 자동 등록
+                        # 클럽 공지사항에 자동 등록 (카카오톡 박스 스타일 적용)
                         notices.insert(0, {
                             "id": int(datetime.now().timestamp()),
                             "date": now_str,
@@ -968,7 +966,7 @@ else:
                 with st.expander("🗑️ 라운드 삭제 관리"):
                     conf_rnd = st.checkbox("정말로 이 라운드 기록을 삭제하시겠습니까?", key=f"conf_rnd_{r['id']}")
                     if conf_rnd:
-                        if st.button("⚠️ 최종 라운드 삭제 실행", key=f"btn_del_rnd_{r['id']}", type="primary", use_container_width=True):
+                        if st.button(f"⚠️ 최종 라운드 삭제 실행", key=f"btn_del_rnd_{r['id']}", type="primary", use_container_width=True):
                             rounds_data.remove(r)
                             recalculate_all_stats(db)
                             save_data(db)
@@ -1144,14 +1142,14 @@ else:
             "핸디캡": v.get('handicap', 0), 
             "참석률": f"{v.get('attendance', 0)}%", 
             "참석": f"{v.get('rounds_played', 0)}회"
-        } for k, v in member_db.items() if v.get("status", "approved"] == "approved"]
+        } for k, v in member_db.items() if v.get("status", "approved") == "approved"]
         
         st.table(pd.DataFrame(df_data))
         
         if is_admin:
             st.divider()
             st.subheader("👑 [운영진 전용] 신입회원 가입 승인 센터")
-            pending_members = [k for k, v in member_db.items() if v.get("status") == "pending"]
+            pending_members = [k for k, v in member_db.items() if v.get("status", "pending") == "pending"]
             
             if not pending_members:
                 st.info("현재 가입 승인 대기 중인 회원이 없습니다.")
