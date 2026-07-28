@@ -46,6 +46,15 @@ def load_data():
                                 data["member_db"][m]["last_lounge_seen"] = ""
                     if "notices" not in data:
                         data["notices"] = []
+                    for notice in data.get("notices", []):
+                        if "media_path" not in notice:
+                            notice["media_path"] = None
+                            notice["media_type"] = None
+                        if "file_path" not in notice:
+                            notice["file_path"] = None
+                            notice["file_name"] = None
+                        if "poll" not in notice:
+                            notice["poll"] = None
                     for post in data.get("feed_posts", []):
                         if "liked_users" not in post:
                             post["liked_users"] = []
@@ -178,8 +187,6 @@ st.markdown("""
     
     .stApp { background-color: #F4F6F4 !important; font-family: 'Noto Sans KR', sans-serif; color: #1E2923; font-size: 0.9rem; }
     
-    .compact-header { background-color: #FFFFFF; padding: 12px 20px; border-bottom: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.01); }
-    
     .logo-hero { 
         text-align: center; 
         padding: 45px 20px; 
@@ -249,13 +256,13 @@ st.markdown("""
     .team-box { background-color: #0F2E1B; color: #FFFFFF; padding: 16px; border-radius: 12px; margin-bottom: 14px; border: 1px solid #D4B475; font-size: 0.88rem; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
     .team-box h3 { color: #E5C585 !important; font-family: 'Montserrat', sans-serif; font-size: 1.05rem; margin-bottom: 8px; border-bottom: 1px solid #235C3D; padding-bottom: 6px; }
     
-    .badge-admin { background-color: #0F2E1B; color: #FFFFFF; padding: 3px 8px; border-radius: 6px; font-size: 0.68rem; font-weight: 700; border: 1px solid #D4B475; font-family: 'Montserrat', sans-serif; }
-    .badge-user { background-color: #E2E8F0; color: #334155; padding: 3px 8px; border-radius: 6px; font-size: 0.68rem; font-weight: 700; font-family: 'Montserrat', sans-serif; }
-    .badge-hc { background-color: #FEF3C7; color: #92400E; padding: 3px 8px; border-radius: 6px; font-size: 0.68rem; font-weight: 800; border: 1px solid #FDE68A; font-family: 'Montserrat', sans-serif; }
+    .badge-admin { background-color: #0F2E1B; color: #FFFFFF; padding: 4px 10px; border-radius: 6px; font-size: 0.72rem; font-weight: 700; border: 1px solid #D4B475; font-family: 'Montserrat', sans-serif; }
+    .badge-user { background-color: #E2E8F0; color: #334155; padding: 4px 10px; border-radius: 6px; font-size: 0.72rem; font-weight: 700; font-family: 'Montserrat', sans-serif; }
     .profile-avatar { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 2px solid #D4B475; margin-right: 12px; }
     
     .new-badge { background-color: #16A34A; color: #FFFFFF; padding: 2px 6px; border-radius: 6px; font-size: 0.65rem; font-weight: 800; vertical-align: middle; margin-left: 6px; font-family: 'Montserrat', sans-serif; }
     
+    /* 공통 버튼 스타일 */
     .stButton>button { 
         background: linear-gradient(135deg, #1B4D33 0%, #0F2E1B 100%) !important; 
         color: #FFFFFF !important; 
@@ -377,20 +384,16 @@ total_unread_alerts = unread_notices_count + unread_lounge_count
 
 alert_badge_label = f"🔔 INBOX ({total_unread_alerts})" if total_unread_alerts > 0 else "🔔 INBOX"
 
-# --- 상단 고정 헤더 (오른쪽 이름 옆에 독립된 Inbox 버튼 배치) ---
-col_h1, col_h2, col_h3 = st.columns([1.6, 2.3, 1.1])
+# --- 상단 고정 헤더 (이름/배지와 Inbox 버튼 높이 및 밸런스 완벽 맞춤) ---
+col_h1, col_h2, col_h3 = st.columns([1.5, 2.7, 1.1])
 with col_h1:
     if st.button("⛳ SEGOK GOLF", key="logo_home_btn"):
         set_menu("HOME")
         st.rerun()
 with col_h2:
-    hc_val = user_info.get('handicap', 0)
-    att_val = user_info.get('attendance', 0)
     st.markdown(f"""
-    <div style="display: flex; justify-content: flex-end; align-items: center; gap: 6px; padding-top: 6px; font-size: 0.78rem;">
-        <span><b>{display_nickname}</b>님 {admin_badge}</span>
-        <span class="badge-hc">HC {hc_val}</span>
-        <span class="badge-user">ATT {att_val}%</span>
+    <div style="display: flex; justify-content: flex-end; align-items: center; gap: 8px; padding-top: 4px; font-size: 0.92rem; font-weight: 600;">
+        <span style="color: #0F2E1B; font-size: 1rem;"><b>{display_nickname}</b>님</span> {admin_badge}
     </div>
     """, unsafe_allow_html=True)
 with col_h3:
@@ -607,7 +610,7 @@ else:
         if not my_comments_found:
             st.info("내 게시물에 달린 댓글이 없습니다.")
 
-    # 2. 📢 클럽 공지사항 (운영진 수정/삭제 가능)
+    # 2. 📢 클럽 공지사항 (첨부파일, 이미지, 투표, 수정/삭제 가능)
     elif menu == "클럽 공지사항":
         if notices:
             user_info["last_notice_seen"] = notices[0]["date"]
@@ -617,17 +620,89 @@ else:
         st.caption("세곡 골프클럽의 주요 소식과 안내 사항을 확인하세요.")
         
         if is_admin:
-            with st.expander("✍️ [OPERATOR] 새 공지사항 등록하기"):
-                n_title = st.text_input("공지 제목")
-                n_content = st.text_area("공지 내용 (카톡 복사본 붙여넣기 적합)")
-                if st.button("공지 발행", type="primary", use_container_width=True):
-                    if n_title and n_content:
+            with st.expander("✍️ [OPERATOR] 새 공지사항 등록하기 (사진/파일/투표 첨부)"):
+                n_title = st.text_input("공지 제목", key="notice_title_input")
+                n_content = st.text_area("공지 내용", key="notice_content_input")
+                
+                col_n_u1, col_n_u2 = st.columns(2)
+                with col_n_u1:
+                    n_uploaded_file = st.file_uploader("이미지 첨부 (선택)", type=["jpg", "png", "jpeg"], key="notice_img_up")
+                with col_n_u2:
+                    n_doc_file = st.file_uploader("문서/엑셀 파일 첨부 (선택)", type=["xlsx", "xls", "pdf", "txt", "csv"], key="notice_doc_up")
+                
+                n_use_poll = st.checkbox("📊 투표 생성하기", key="notice_use_poll")
+                n_poll_question = ""
+                n_poll_options = []
+                n_poll_deadline = None
+                n_allow_multiple = False
+                n_is_anonymous = False
+                
+                if n_use_poll:
+                    n_poll_question = st.text_input("투표 주제", placeholder="예: 정기 라운딩 참석 여부", key="notice_poll_q")
+                    n_allow_multiple = st.checkbox("복수 선택 허용 (최대 3개까지 선택 가능)", key="notice_poll_multi")
+                    n_is_anonymous = st.checkbox("익명 투표 (체크 시 누가 투표했는지 비공개)", key="notice_poll_anon")
+                    
+                    st.markdown("##### ⏳ 투표 마감 기한 (데드라인) 설정")
+                    col_nd1, col_nd2 = st.columns(2)
+                    with col_nd1:
+                        nd_date = st.date_input("마감 날짜", value=datetime.now().date(), key="notice_poll_date")
+                    with col_nd2:
+                        nd_time = st.time_input("마감 시간", value=time(23, 59), key="notice_poll_time")
+                    n_poll_deadline = datetime.combine(nd_date, nd_time).strftime("%Y-%m-%d %H:%M")
+
+                    if 'notice_poll_option_count' not in st.session_state:
+                        st.session_state.notice_poll_option_count = 3
+                    
+                    if st.button("➕ 항목 추가", key="notice_add_opt_btn"):
+                        st.session_state.notice_poll_option_count += 1
+                        st.rerun()
+                    
+                    for i in range(st.session_state.notice_poll_option_count):
+                        opt_val = st.text_input(f"투표 항목 {i+1}", key=f"notice_poll_opt_input_{i}", placeholder=f"투표 항목 {i+1}")
+                        if opt_val:
+                            n_poll_options.append(opt_val.strip())
+
+                if st.button("공지 발행", type="primary", use_container_width=True, key="notice_submit_btn"):
+                    if n_title and (n_content or n_uploaded_file or n_doc_file or n_use_poll):
+                        n_media_path = None
+                        n_media_type = None
+                        if n_uploaded_file is not None:
+                            file_name = f"{int(datetime.now().timestamp())}_{n_uploaded_file.name}"
+                            n_media_path = os.path.join(UPLOAD_DIR, file_name)
+                            with open(n_media_path, "wb") as f:
+                                f.write(n_uploaded_file.getbuffer())
+                            n_media_type = "image"
+                        
+                        n_file_path = None
+                        n_file_name = None
+                        if n_doc_file is not None:
+                            n_file_name = n_doc_file.name
+                            n_file_path = os.path.join(UPLOAD_DIR, f"notice_doc_{int(datetime.now().timestamp())}_{n_file_name}")
+                            with open(n_file_path, "wb") as f:
+                                f.write(n_doc_file.getbuffer())
+
+                        n_poll_data = None
+                        if n_use_poll and n_poll_question and len(n_poll_options) >= 2:
+                            n_poll_data = {
+                                "question": n_poll_question,
+                                "deadline": n_poll_deadline,
+                                "allow_multiple": n_allow_multiple,
+                                "is_anonymous": n_is_anonymous,
+                                "options": {opt: [] for opt in n_poll_options}
+                            }
+
                         notices.insert(0, {
                             "id": int(datetime.now().timestamp()),
                             "date": datetime.now().strftime("%Y-%m-%d %H:%M"),
                             "title": n_title,
-                            "content": n_content
+                            "content": n_content,
+                            "media_path": n_media_path,
+                            "media_type": n_media_type,
+                            "file_path": n_file_path,
+                            "file_name": n_file_name,
+                            "poll": n_poll_data
                         })
+                        st.session_state.notice_poll_option_count = 3
                         save_data(db)
                         st.success("공지가 성공적으로 발행되었습니다.")
                         st.rerun()
@@ -649,17 +724,139 @@ else:
                 </div>
                 """, unsafe_allow_html=True)
                 
-                st.code(notice['content'], language="text")
-                
+                n_m_path = notice.get("media_path")
+                if n_m_path and os.path.exists(n_m_path):
+                    st.image(n_m_path, use_column_width=True)
+
+                n_f_path = notice.get("file_path")
+                n_f_name = notice.get("file_name")
+                if n_f_path and n_f_name and os.path.exists(n_f_path):
+                    with open(n_f_path, "rb") as fp:
+                        st.download_button(label=f"📎 첨부파일 다운로드: {n_f_name}", data=fp, file_name=n_f_name, key=f"notice_dl_{notice['id']}")
+
+                if notice.get('content'):
+                    st.markdown(f"""
+                    <div class="band-body">
+                        <p style="margin:0; color:#1E2923; word-break:break-all; white-space: pre-wrap; user-select: text;">{notice['content']}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                n_poll = notice.get("poll")
+                if n_poll:
+                    deadline_str = n_poll.get("deadline", "")
+                    now_str_val = datetime.now().strftime("%Y-%m-%d %H:%M")
+                    is_closed = deadline_str and (now_str_val > deadline_str)
+                    allow_multi = n_poll.get("allow_multiple", False)
+                    is_anon = n_poll.get("is_anonymous", False)
+
+                    header_title = "🏁 [투표 최종 결과]" if is_closed else "📊 [투표]"
+                    st.markdown(f"**{header_title} {n_poll['question']}**")
+                    
+                    if deadline_str:
+                        st.caption(f"⏰ 마감 기한: {deadline_str}까지 {'(투표 마감됨 🔒)' if is_closed else ''}")
+                    
+                    mode_txt = "익명 투표" if is_anon else "실명 투표"
+                    multi_txt = "복수 선택(최대 3개)" if allow_multi else "단일 선택"
+                    st.caption(f"ℹ️ {mode_txt} | {multi_txt}")
+
+                    my_voted_options = [opt for opt, voters in n_poll["options"].items() if current_user in voters]
+
+                    for opt, voters in n_poll["options"].items():
+                        voted_here = current_user in voters
+                        btn_label = f"✓ {opt} ({len(voters)}표)" if voted_here else f"{opt} ({len(voters)}표)"
+                        
+                        if is_closed:
+                            st.button(btn_label, key=f"notice_poll_closed_{notice['id']}_{opt}", disabled=True, use_container_width=True)
+                        else:
+                            if st.button(btn_label, key=f"notice_poll_{notice['id']}_{opt}", use_container_width=True):
+                                if voted_here:
+                                    voters.remove(current_user)
+                                    save_data(db)
+                                    st.rerun()
+                                else:
+                                    if not allow_multi:
+                                        for o_key, o_list in n_poll["options"].items():
+                                            if current_user in o_list:
+                                                o_list.remove(current_user)
+                                        voters.append(current_user)
+                                    else:
+                                        if len(my_voted_options) >= 3:
+                                            st.warning("⚠️ 최대 3개까지만 선택할 수 있습니다!")
+                                        else:
+                                            voters.append(current_user)
+                                    save_data(db)
+                                    st.rerun()
+
+                        if not is_anon and voters:
+                            voter_names = [member_db.get(u, {}).get("nickname", u) for u in voters]
+                            st.caption(f"ㄴ 투표자: {', '.join(voter_names)}")
+                    
+                    total_voters = len(set([user for v_list in n_poll["options"].values() for user in v_list]))
+                    st.caption(f"총 참여 인원: {total_voters}명")
+
+                st.markdown("</div>", unsafe_allow_html=True)
+
                 if is_admin:
                     col_n_edit, col_n_del = st.columns(2)
                     with col_n_edit:
                         with st.expander("✏️ 공지 수정"):
                             edit_n_title = st.text_input("제목 수정", value=notice['title'], key=f"edit_n_title_{notice['id']}")
                             edit_n_content = st.text_area("내용 수정", value=notice['content'], key=f"edit_n_content_{notice['id']}")
+                            
+                            st.markdown("##### 🖼️ 이미지 변경/삭제")
+                            cur_n_img = notice.get("media_path")
+                            rm_n_img = False
+                            if cur_n_img and os.path.exists(cur_n_img):
+                                st.image(cur_n_img, width=150, caption="현재 이미지")
+                                rm_n_img = st.checkbox("기존 이미지 삭제", key=f"edit_rm_n_img_{notice['id']}")
+                            new_n_img_up = st.file_uploader("새 이미지 교체", type=["jpg", "png", "jpeg"], key=f"edit_new_n_img_{notice['id']}")
+
+                            st.markdown("##### 📎 첨부파일 변경/삭제")
+                            cur_n_file = notice.get("file_name")
+                            rm_n_file = False
+                            if cur_n_file:
+                                st.write(f"현재 파일: {cur_n_file}")
+                                rm_n_file = st.checkbox("기존 파일 삭제", key=f"edit_rm_n_file_{notice['id']}")
+                            new_n_file_up = st.file_uploader("새 파일 교체", type=["xlsx", "xls", "pdf", "txt", "csv"], key=f"edit_new_n_file_{notice['id']}")
+
                             if st.button("수정 저장", key=f"btn_save_notice_{notice['id']}", use_container_width=True):
                                 notice['title'] = edit_n_title
                                 notice['content'] = edit_n_content
+
+                                if rm_n_img:
+                                    if notice.get("media_path") and os.path.exists(notice["media_path"]):
+                                        try: os.remove(notice["media_path"])
+                                        except: pass
+                                    notice["media_path"] = None
+                                    notice["media_type"] = None
+                                if new_n_img_up is not None:
+                                    if notice.get("media_path") and os.path.exists(notice["media_path"]):
+                                        try: os.remove(notice["media_path"])
+                                        except: pass
+                                    fname = f"{int(datetime.now().timestamp())}_{new_n_img_up.name}"
+                                    m_path = os.path.join(UPLOAD_DIR, fname)
+                                    with open(m_path, "wb") as f:
+                                        f.write(new_n_img_up.getbuffer())
+                                    notice["media_path"] = m_path
+                                    notice["media_type"] = "image"
+
+                                if rm_n_file:
+                                    if notice.get("file_path") and os.path.exists(notice["file_path"]):
+                                        try: os.remove(notice["file_path"])
+                                        except: pass
+                                    notice["file_path"] = None
+                                    notice["file_name"] = None
+                                if new_n_file_up is not None:
+                                    if notice.get("file_path") and os.path.exists(notice["file_path"]):
+                                        try: os.remove(notice["file_path"])
+                                        except: pass
+                                    f_name = new_n_file_up.name
+                                    f_path = os.path.join(UPLOAD_DIR, f"notice_doc_{int(datetime.now().timestamp())}_{f_name}")
+                                    with open(f_path, "wb") as f:
+                                        f.write(new_n_file_up.getbuffer())
+                                    notice["file_path"] = f_path
+                                    notice["file_name"] = f_name
+
                                 save_data(db)
                                 st.success("공지가 수정되었습니다.")
                                 st.rerun()
