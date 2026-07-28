@@ -1270,7 +1270,7 @@ else:
                         save_data(db)
                         st.rerun()
 
-    # 3. ⛳ 티타임 조편성 (부부 분리/무관, 직전 라운드 제외, 성별 맞춤, 1~3지망 가중치 반영)
+    # 3. ⛳ 티타임 조편성
     elif menu == "티타임 조편성":
         st.subheader("⛳ TEE-OFF MATCH (티타임 조편성)")
         if not is_admin:
@@ -1313,7 +1313,7 @@ else:
                     
                     if st.button("지망 사항 저장", key=f"save_pref_{pref_member}"):
                         val1 = "" if p1 == "선택 안 함" else p1
-                        val2 = "" if p2 == "선택 안 함" else p2
+                        val2 = "" if p2 == "선택 안 함" else val2
                         val3 = "" if p3 == "선택 안 함" else p3
                         st.session_state.match_preferences[pref_member] = [val1, val2, val3]
                         st.success(f"🎉 {pref_member}님의 동반 희망 지망이 저장되었습니다!")
@@ -1744,9 +1744,59 @@ else:
                 df_m_rounds = pd.DataFrame(member_rounds_data)
                 st.table(df_m_rounds)
 
-    # 6. 📁 역대 조편성 아카이브
+    # 6. 📁 역대 조편성 아카이브 (수동 등록 기능 추가)
     elif menu == "역대 조편성 아카이브":
         st.subheader("📁 ARCHIVE (조편성 아카이브)")
+        
+        with st.expander("✍️ [OPERATOR] 조편성 기록 수동 직접 등록하기"):
+            m_date = st.date_input("라운드 날짜", value=datetime.now().date(), key="manual_archive_date")
+            m_title = st.text_input("라운드 명칭", value="8월 정기 필드 월례회", key="manual_archive_title")
+            m_loc = st.text_input("골프장 장소", value="남서울CC", key="manual_archive_loc")
+            
+            st.markdown("##### ⛳ 조별 구성원 입력 (최대 4개 조)")
+            approved_names = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
+            
+            m_teams = []
+            m_tee_times = []
+            m_courses = []
+            
+            for j_idx in range(4):
+                st.markdown(f"**{j_idx+1}조 구성**")
+                mc1, mc2, mc3 = st.columns([2, 1, 1])
+                with mc1:
+                    j_members = st.multiselect(f"{j_idx+1}조 멤버 선택", approved_names, key=f"manual_team_{j_idx}")
+                with mc2:
+                    j_time = st.text_input(f"{j_idx+1}조 시간", value=f"08:{(j_idx*8):02d}", key=f"manual_time_{j_idx}")
+                with mc3:
+                    j_course = st.text_input(f"{j_idx+1}조 코스", value="IN 코스" if j_idx%2==1 else "OUT 코스", key=f"manual_course_{j_idx}")
+                
+                if j_members:
+                    m_teams.append(j_members)
+                    m_tee_times.append(j_time)
+                    m_courses.append(j_course)
+
+            if st.button("💾 아카이브에 수동 등록 저장", type="primary", use_container_width=True):
+                if m_title and m_teams:
+                    date_str_val = m_date.strftime("%Y-%m-%d")
+                    new_log = {
+                        "id": int(datetime.now().timestamp()),
+                        "date": date_str_val,
+                        "title": m_title,
+                        "location": m_loc,
+                        "tee_times": m_tee_times,
+                        "courses": m_courses,
+                        "event_type": "필드 월례회",
+                        "teams": m_teams
+                    }
+                    match_logs.insert(0, new_log)
+                    save_data(db)
+                    st.success("🎉 아카이브에 수동 조편성 기록이 성공적으로 등록되었습니다!")
+                    st.rerun()
+                else:
+                    st.warning("라운드 명칭과 최소 1개 조 이상의 멤버를 선택해 주세요.")
+
+        st.markdown("---")
+
         if not match_logs:
             st.warning("아직 저장된 조편성 이력이 없습니다.")
         else:
