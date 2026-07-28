@@ -878,7 +878,7 @@ else:
                                     st.success("수정되었습니다!")
                                     st.rerun()
 
-    # 3. 💬 클럽 라운지 (텍스트 단독 등록 가능, 투표 선택사항)
+    # 3. 💬 클럽 라운지 (공지와 동일한 일반 버튼 방식으로 변경하여 100% 정상 등록)
     elif menu == "클럽 라운지":
         if feed_posts:
             user_info["last_lounge_seen"] = feed_posts[0]["date"]
@@ -897,9 +897,10 @@ else:
                 st.rerun()
 
         if st.session_state.show_lounge_write:
-            with st.form("lounge_post_form"):
+            with st.container():
+                st.markdown("---")
                 st.markdown("##### 📝 새 게시물 작성")
-                post_text = st.text_area("내용 입력", placeholder="라운딩 후기, 소식 등을 자유롭게 남겨보세요...")
+                post_text = st.text_area("내용 입력", placeholder="라운딩 후기, 소식 등을 자유롭게 남겨보세요...", key="lounge_post_text_input")
                 
                 col_u1, col_u2 = st.columns(2)
                 with col_u1:
@@ -907,9 +908,7 @@ else:
                 with col_u2:
                     doc_file = st.file_uploader("문서/엑셀 파일 첨부 (선택)", type=["xlsx", "xls", "pdf", "txt", "csv"], key="lounge_doc_up")
 
-                form_submitted = st.form_submit_button("게시물 등록하기", use_container_width=True)
-
-                if form_submitted:
+                if st.button("게시물 등록하기", type="primary", use_container_width=True, key="lounge_submit_btn"):
                     if (post_text and post_text.strip() != "") or uploaded_file is not None or doc_file is not None:
                         media_path = None
                         media_type = None
@@ -950,6 +949,7 @@ else:
                         st.rerun()
                     else:
                         st.warning("내용, 이미지 또는 첨부파일 중 하나 이상을 입력해 주세요.")
+                st.markdown("---")
 
         if not feed_posts:
             st.info("아직 등록된 게시물이 없습니다. 첫 소식을 공유해 보세요!")
