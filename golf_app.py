@@ -146,7 +146,7 @@ match_logs = db.setdefault("match_logs", [])
 notices = db.setdefault("notices", [])
 
 query_user = None
-query_menu = None
+query_menu = "HOME"
 try:
     query_user = st.query_params.get("u", None)
     query_menu = st.query_params.get("m", "HOME")
@@ -157,8 +157,12 @@ if 'logged_in_user' not in st.session_state or st.session_state.logged_in_user i
     if query_user and query_user in member_db and member_db[query_user].get("status", "approved") == "approved":
         st.session_state.logged_in_user = query_user
 
+# 브라우저 뒤로가기 버튼 연동을 위한 쿼리 파라미터 동기화
 if 'current_menu' not in st.session_state:
     st.session_state.current_menu = query_menu if query_menu else "HOME"
+else:
+    if query_menu and query_menu != st.session_state.current_menu:
+        st.session_state.current_menu = query_menu
 
 def set_menu(menu_name):
     st.session_state.current_menu = menu_name
@@ -600,7 +604,7 @@ else:
         if not my_comments_found:
             st.info("내 게시물에 달린 댓글이 없습니다.")
 
-    # 2. 📢 클럽 공지사항 (수정 및 삭제 모두 가능)
+    # 2. 📢 클럽 공지사항 (운영진 수정/삭제 가능)
     elif menu == "클럽 공지사항":
         if notices:
             user_info["last_notice_seen"] = notices[0]["date"]
@@ -666,7 +670,7 @@ else:
                                     st.success("공지사항이 삭제되었습니다.")
                                     st.rerun()
 
-    # 3. 💬 클럽 라운지 (작성자 글 수정 및 삭제 모두 가능)
+    # 3. 💬 클럽 라운지 (작성자 수정, 작성자/운영진 삭제 가능)
     elif menu == "클럽 라운지":
         if feed_posts:
             user_info["last_lounge_seen"] = feed_posts[0]["date"]
