@@ -183,12 +183,15 @@ st.markdown("""
     .menu-card h3 { font-size: 1rem; margin-bottom: 4px; color: #1B3B2B; }
     .menu-card p { color: #666; font-size: 0.78rem; margin-bottom: 10px; line-height: 1.3; }
     
-    /* 밴드 스타일 피드 카드 */
+    /* 밴드 스타일 피드 및 카카오톡 공지 스타일 클래스 */
     .band-card { background-color: #FFFFFF; border-radius: 10px; border: 1px solid #E0E0E0; max-width: 100%; margin: 0 auto 16px auto; box-shadow: 0 1px 4px rgba(0,0,0,0.02); overflow: hidden; }
     .band-header { display: flex; align-items: center; padding: 12px 14px; border-bottom: 1px solid #F0F0F0; background-color: #FAFAFA; }
-    .band-body { padding: 14px; font-size: 0.88rem; color: #262626; line-height: 1.5; }
+    .band-body { padding: 14px; font-size: 0.85rem; color: #262626; line-height: 1.5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
     
-    .team-box { background-color: #1B3B2B; color: #FFFFFF; padding: 14px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #C5A059; font-size: 0.85rem; }
+    /* 카카오톡 붙여넣기 스타일 (폰트 크기 작고 정돈된 형태) */
+    .kakao-notice-box { background-color: #F8F9FA; border-left: 4px solid #1B3B2B; padding: 12px 15px; border-radius: 6px; font-size: 0.82rem; font-family: monospace, sans-serif; color: #222222; line-height: 1.5; white-space: pre-wrap; word-break: break-all; margin-top: 8px; }
+
+    .team-box { background-color: #1B3B2B; color: #FFFFFF; padding: 14px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #C5A059; font-size: 0.85rem; }
     .team-box h3 { color: #E5C585 !important; font-family: 'Playfair Display', serif; font-size: 1rem; margin-bottom: 6px; border-bottom: 1px solid #325843; padding-bottom: 4px; }
     
     .badge-admin { background-color: #1B3B2B; color: #FFFFFF; padding: 2px 6px; border-radius: 8px; font-size: 0.65rem; font-weight: 600; border: 1px solid #C5A059; }
@@ -298,7 +301,7 @@ last_l = user_info.get("last_lounge_seen", "")
 latest_lounge_date = feed_posts[0]["date"] if feed_posts else ""
 has_new_lounge = latest_lounge_date > last_l if latest_lounge_date else False
 
-# --- 상단 고정 헤더 (배너 클릭 시 홈 링크 이동 기능) ---
+# --- 상단 고정 헤더 ---
 col_h1, col_h2 = st.columns([2, 3])
 with col_h1:
     if st.button("⛳ Segok Golf Club", key="logo_home_btn"):
@@ -411,7 +414,7 @@ if st.session_state.current_menu == "HOME":
             st.markdown(f"""
             <div class="menu-card">
                 <h3>👥 회원 리스트{badge_txt}</h3>
-                <p>회원 관리 및 가입 승인</p>
+                <p>정회원 관리 및 가입 승인</p>
             </div>
             """, unsafe_allow_html=True)
             if st.button("회원 리스트 관리", use_container_width=True, key="go_members"):
@@ -456,7 +459,7 @@ else:
     
     menu = st.session_state.current_menu
 
-    # 1. 📢 클럽 공지사항 (조편성 공지 자동 등록 연동 포함)
+    # 1. 📢 클럽 공지사항 (카카오톡 붙여넣기 스타일 적용 - 작고 정돈된 글씨체)
     if menu == "클럽 공지사항":
         if notices:
             user_info["last_notice_seen"] = notices[0]["date"]
@@ -468,7 +471,7 @@ else:
         if is_admin:
             with st.expander("✍️ [운영진] 새 공지사항 등록하기"):
                 n_title = st.text_input("공지 제목")
-                n_content = st.text_area("공지 내용")
+                n_content = st.text_area("공지 내용 (카톡 복사본 붙여넣기 적합)")
                 if st.button("공지 발행", type="primary", use_container_width=True):
                     if n_title and n_content:
                         notices.insert(0, {
@@ -496,7 +499,7 @@ else:
                         </div>
                     </div>
                     <div class="band-body">
-                        <p style="margin:0; white-space: pre-wrap;">{notice['content']}</p>
+                        <div class="kakao-notice-box">{notice['content']}</div>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
@@ -514,7 +517,7 @@ else:
                                 st.success("공지사항이 삭제되었습니다.")
                                 st.rerun()
 
-    # 2. 💬 클럽 라운지 (밴드 형식: 자유글, 사진첨부, 엑셀/파일첨부, 투표 기능)
+    # 2. 💬 클럽 라운지 (밴드 형식)
     elif menu == "클럽 라운지":
         if feed_posts:
             user_info["last_lounge_seen"] = feed_posts[0]["date"]
@@ -627,7 +630,6 @@ else:
                     </div>
                     """, unsafe_allow_html=True)
 
-                # 투표 UI 렌더링
                 poll = post.get("poll")
                 if poll:
                     st.markdown(f"**📊 [투표] {poll['question']}**")
@@ -636,7 +638,6 @@ else:
                         voted_here = current_user in voters
                         btn_label = f"✓ {opt} ({len(voters)}표)" if voted_here else f"{opt} ({len(voters)}표)"
                         if st.button(btn_label, key=f"poll_{post['id']}_{opt}", use_container_width=True):
-                            # 다른 항목 투표 제거 후 해당 항목 토글
                             for o_key, o_list in poll["options"].items():
                                 if current_user in o_list:
                                     o_list.remove(current_user)
@@ -794,7 +795,6 @@ else:
                 st.code(notice_text, language="text")
                 
                 if st.button("💾 최종 확정 및 클럽 공지사항 자동 등록", use_container_width=True):
-                    # 공지사항 중복 등록 방지 체크
                     already_posted = any(date_str in n.get("content", "") and "조편성 공식 안내" in n.get("content", "") for n in notices)
                     
                     if already_posted:
@@ -1121,7 +1121,7 @@ else:
                     team_names = ", ".join([f"{m}({member_db.get(m, {}).get('handicap', '0')})" for m in team])
                     st.markdown(f"**⛳ {t_idx+1}조:** {team_names}")
 
-    # 7. 👥 회원 리스트 (명칭 변경 완료)
+    # 7. 👥 회원 리스트
     elif menu.startswith("회원 리스트") or menu.startswith("회원 명부"):
         st.subheader("👥 클럽 회원 리스트")
         
@@ -1205,6 +1205,17 @@ else:
                 save_data(db)
                 st.success("🎉 마이페이지 정보가 성공적으로 업데이트되었습니다!")
                 st.rerun()
+
+        st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
+        st.markdown("##### 🚪 세션 관리: 로그아웃")
+        if st.button("🚪 클럽 로그아웃", type="secondary", use_container_width=True, key="mypage_logout"):
+            st.session_state.logged_in_user = None
+            set_menu("HOME")
+            try:
+                st.query_params.clear()
+            except Exception:
+                pass
+            st.rerun()
 
         st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
         st.markdown("##### ❌ 위험 구역: 클럽 탈퇴")
