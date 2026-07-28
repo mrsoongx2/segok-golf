@@ -600,7 +600,7 @@ else:
         if not my_comments_found:
             st.info("내 게시물에 달린 댓글이 없습니다.")
 
-    # 2. 📢 클럽 공지사항
+    # 2. 📢 클럽 공지사항 (수정 및 삭제 모두 가능)
     elif menu == "클럽 공지사항":
         if notices:
             user_info["last_notice_seen"] = notices[0]["date"]
@@ -645,19 +645,28 @@ else:
                 st.code(notice['content'], language="text")
                 
                 if is_admin:
-                    del_key = f"del_notice_{notice['id']}"
-                    confirm_key = f"conf_notice_{notice['id']}"
-                    
-                    with st.expander("🗑️ 공지 삭제 관리"):
-                        confirm_del = st.checkbox("정말로 이 공지사항을 삭제하시겠습니까?", key=confirm_key)
-                        if confirm_del:
-                            if st.button("⚠️ 최종 삭제 실행", key=del_key, type="primary", use_container_width=True):
-                                notices.pop(n_idx)
+                    col_n_edit, col_n_del = st.columns(2)
+                    with col_n_edit:
+                        with st.expander("✏️ 공지 수정"):
+                            edit_n_title = st.text_input("제목 수정", value=notice['title'], key=f"edit_n_title_{notice['id']}")
+                            edit_n_content = st.text_area("내용 수정", value=notice['content'], key=f"edit_n_content_{notice['id']}")
+                            if st.button("수정 저장", key=f"btn_save_notice_{notice['id']}", use_container_width=True):
+                                notice['title'] = edit_n_title
+                                notice['content'] = edit_n_content
                                 save_data(db)
-                                st.success("공지사항이 삭제되었습니다.")
+                                st.success("공지가 수정되었습니다.")
                                 st.rerun()
+                    with col_n_del:
+                        with st.expander("🗑️ 공지 삭제"):
+                            confirm_del = st.checkbox("정말로 이 공지사항을 삭제하시겠습니까?", key=f"conf_notice_{notice['id']}")
+                            if confirm_del:
+                                if st.button("⚠️ 최종 삭제 실행", key=f"del_notice_{notice['id']}", type="primary", use_container_width=True):
+                                    notices.pop(n_idx)
+                                    save_data(db)
+                                    st.success("공지사항이 삭제되었습니다.")
+                                    st.rerun()
 
-    # 3. 💬 클럽 라운지
+    # 3. 💬 클럽 라운지 (작성자 글 수정 및 삭제 모두 가능)
     elif menu == "클럽 라운지":
         if feed_posts:
             user_info["last_lounge_seen"] = feed_posts[0]["date"]
@@ -870,7 +879,7 @@ else:
 
                 st.markdown("</div>", unsafe_allow_html=True)
                     
-                c_lk, c_del = st.columns([1, 1])
+                c_lk, c_edit, c_del = st.columns([1, 1, 1])
                 with c_lk:
                     liked_list = post.setdefault("liked_users", [])
                     has_liked = current_user in liked_list
@@ -885,6 +894,16 @@ else:
                             post['likes'] += 1
                         save_data(db)
                         st.rerun()
+
+                if post['author'] == current_user:
+                    with c_edit:
+                        with st.expander("✏️ 글 수정"):
+                            edit_post_text = st.text_area("내용 수정", value=post['content'], key=f"edit_post_txt_{post['id']}")
+                            if st.button("수정 저장", key=f"btn_save_post_{post['id']}", use_container_width=True):
+                                post['content'] = edit_post_text
+                                save_data(db)
+                                st.success("게시물이 수정되었습니다.")
+                                st.rerun()
                         
                 if post['author'] == current_user or is_admin:
                     with c_del:
