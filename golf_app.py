@@ -27,8 +27,21 @@ DEFAULT_MEMBERS = [
     "김미화", "김영준", "김주연", "김춘환", "김치훈", "김태성", "김현태", "나승환", 
     "박재영", "변성규", "서영완", "안종원", "이민숙", "이승준", "이승환", "이윤진", 
     "이재익", "이주원", "이진아", "이태성", "이형준", "이희완", "임혜영", "정기영", 
-    "진지영", "최성준", "최승락"
+    "진지영", "최성준", "최승락", "황성준", "최혁중"
 ]
+
+COUPLES_LIST = [
+    ("김성모", "김지윤"),
+    ("김경수", "이진아"),
+    ("Kim Shawn", "이주원"),
+    ("김동숙", "김현태"),
+    ("김미화", "이승준"),
+    ("이승환", "진지영"),
+    ("이윤진", "황성준"),
+    ("임혜영", "최혁중")
+]
+
+FEMALE_SET = {"김지윤", "김동숙", "김미화", "김주연", "이민숙", "이윤진", "이주원", "이진아", "임혜영", "진지영"}
 
 def load_data():
     if os.path.exists(DB_FILE):
@@ -266,7 +279,6 @@ st.markdown("""
     
     .new-badge { background-color: #16A34A; color: #FFFFFF; padding: 2px 5px; border-radius: 6px; font-size: 0.6rem; font-weight: 800; vertical-align: middle; margin-left: 4px; font-family: 'Montserrat', sans-serif; }
     
-    /* 완벽하게 동일한 크기를 가지는 입장 버튼 스타일 */
     .stButton>button { 
         background: linear-gradient(135deg, #1B4D33 0%, #0F2E1B 100%) !important; 
         color: #FFFFFF !important; 
@@ -416,7 +428,6 @@ if st.session_state.current_menu == "HOME":
     </div>
     """, unsafe_allow_html=True)
     
-    # 균형 잡힌 2열 그리드 구조 (모든 카드와 버튼의 크기가 완벽히 일치)
     c1, c2 = st.columns(2)
     
     with c1:
@@ -623,7 +634,7 @@ else:
         if not my_comments_found:
             st.info("내 게시물에 달린 댓글이 없습니다.")
 
-    # 2. 📢 클럽 공지사항 (첨부파일, 이미지, 투표, 수정/삭제 가능)
+    # 2. 📢 클럽 공지사항
     elif menu == "클럽 공지사항":
         if notices:
             user_info["last_notice_seen"] = notices[0]["date"]
@@ -883,7 +894,7 @@ else:
                                     st.success("공지사항이 삭제되었습니다.")
                                     st.rerun()
 
-    # 3. 💬 클럽 라운지 (작성자 글/사진/투표 수정, 작성자/운영진 삭제 가능)
+    # 3. 💬 클럽 라운지
     elif menu == "클럽 라운지":
         if feed_posts:
             user_info["last_lounge_seen"] = feed_posts[0]["date"]
@@ -1260,13 +1271,13 @@ else:
                         save_data(db)
                         st.rerun()
 
-    # 3. ⛳ 티타임 조편성
+    # 3. ⛳ 티타임 조편성 (부부 옵션, 직전 라운드 제외, 성별 위주, 1~3지망 지망 반영)
     elif menu == "티타임 조편성":
         st.subheader("⛳ TEE-OFF MATCH (티타임 조편성)")
         if not is_admin:
             st.error("⛔ 조편성 기능은 운영진 전용 메뉴입니다.")
         else:
-            st.success("👑 **운영자 권한 완료** | 모임 일정, 장소 및 각 조별 티오프 시간과 코스 정보를 개별 설정합니다.")
+            st.success("👑 **운영자 권한 완료** | 고급 조편성 조건(부부 배정, 직전 라운드 제외, 지망 멤버, 성비 맞춤)을 설정합니다.")
             
             st.markdown("##### 📌 기본 라운드 정보 입력")
             col_t1, col_t2 = st.columns(2)
@@ -1275,39 +1286,121 @@ else:
             with col_t2:
                 golf_location = st.text_input("골프장 장소", placeholder="예: 남서울CC")
 
-            balance_rule = st.radio("조편성 방식", ["과거 동반 중복 방지 (기본)", "핸디캡 균등 배정 (고수+초보 믹스)"])
-            
+            st.markdown("##### ⚙️ 고급 조편성 옵션 설정")
+            col_op1, col_op2 = st.columns(2)
+            with col_op1:
+                couple_rule = st.radio("부부 동반 옵션", ["부부 분리 (같은 조 배치 안함)", "부부 라운딩 무관"])
+                exclude_recent = st.checkbox("직전 라운드 동반자 제외 최적화", value=True)
+            with col_op2:
+                gender_rule = st.radio("성별 맞춤 옵션", ["기본 (핸디캡 균등)", "동성 위주 배치", "성비 맞춤 위주 (남녀 균등)"])
+
             approved_names = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
             default_selected = approved_names[:16] if len(approved_names) >= 16 else approved_names
             selected_attendees = st.multiselect("오늘 참석자 선택", approved_names, default=default_selected)
-            
-            def generate_teams_smart(attendees, pair_hist, mem_db, rule="중복방지", team_sz=4, iterations=300):
+
+            # 1, 2, 3지망 동반 희망 멤버 설정 섹션
+            with st.expander("💌 회원별 동반 희망 멤버 (1, 2, 3지망) 설정"):
+                if 'match_preferences' not in st.session_state:
+                    st.session_state.match_preferences = {}
+                
+                pref_member = st.selectbox("희망 멤버를 설정할 회원 선택", ["선택하세요"] + selected_attendees, key="pref_mem_select")
+                if pref_member != "선택하세요":
+                    current_prefs = st.session_state.match_preferences.get(pref_member, ["", "", ""])
+                    p1 = st.selectbox("1지망 희망 멤버", ["선택 안 함"] + [m for m in selected_attendees if m != pref_member], 
+                                      index=([ "선택 안 함" ] + [m for m in selected_attendees if m != pref_member]).index(current_prefs[0]) if current_prefs[0] in selected_attendees else 0, key=f"pref_1_{pref_member}")
+                    p2 = st.selectbox("2지망 희망 멤버", ["선택 안 함"] + [m for m in selected_attendees if m != pref_member], 
+                                      index=([ "선택 안 함" ] + [m for m in selected_attendees if m != pref_member]).index(current_prefs[1]) if current_prefs[1] in selected_attendees else 0, key=f"pref_2_{pref_member}")
+                    p3 = st.selectbox("3지망 희망 멤버", ["선택 안 함"] + [m for m in selected_attendees if m != pref_member], 
+                                      index=([ "선택 안 함" ] + [m for m in selected_attendees if m != pref_member]).index(current_prefs[2]) if current_prefs[2] in selected_attendees else 0, key=f"pref_3_{pref_member}")
+                    
+                    if st.button("지망 사항 저장", key=f"save_pref_{pref_member}"):
+                        val1 = "" if p1 == "선택 안 함" else p1
+                        val2 = "" if p2 == "선택 안 함" else p2
+                        val3 = "" if p3 == "선택 안 함" else p3
+                        st.session_state.match_preferences[pref_member] = [val1, val2, val3]
+                        st.success(f"🎉 {pref_member}님의 동반 희망 지망이 저장되었습니다!")
+
+            def generate_teams_smart_advanced(attendees, pair_hist, mem_db, couple_rule, exclude_recent, gender_rule, preferences, team_sz=4, iterations=1200):
                 if not attendees:
                     return []
+                
+                couple_map = {}
+                for m1, m2 in COUPLES_LIST:
+                    if m1 in attendees and m2 in attendees:
+                        couple_map[m1] = m2
+                        couple_map[m2] = m1
+
+                recent_pairs = set()
+                if exclude_recent and rounds_data:
+                    for r in rounds_data:
+                        if r.get("teams"):
+                            for t in r["teams"]:
+                                for i in range(len(t)):
+                                    for j in range(i+1, len(t)):
+                                        recent_pairs.add(tuple(sorted([t[i], t[j]])))
+                            break
+
                 best_teams = []
                 min_score = float('inf')
+
                 for _ in range(iterations):
                     shuffled = attendees.copy()
                     random.shuffle(shuffled)
                     teams = [shuffled[i:i + team_sz] for i in range(0, len(shuffled), team_sz)]
+                    
                     score = 0
-                    if "중복방지" in rule:
-                        for t in teams:
+                    
+                    for t in teams:
+                        # 1. 부부 분리 규칙
+                        if "분리" in couple_rule:
                             for i in range(len(t)):
                                 for j in range(i+1, len(t)):
-                                    score += (pair_hist.get(t[i], {}).get(t[j], 0) ** 2) * 10
-                    else:
-                        team_hcs = [sum(mem_db[m]['handicap'] for m in t)/len(t) for t in teams]
-                        score = np.std(team_hcs) * 100
+                                    if couple_map.get(t[i]) == t[j]:
+                                        score += 100000
+                        
+                        # 2. 직전 라운드 페어 제외
+                        if exclude_recent:
+                            for i in range(len(t)):
+                                for j in range(i+1, len(t)):
+                                    if tuple(sorted([t[i], t[j]])) in recent_pairs:
+                                        score += 5000
+
+                        # 3. 성별 맞춤 규칙
+                        females_in_team = sum(1 for m in t if m in FEMALE_SET)
+                        males_in_team = len(t) - females_in_team
+                        if "동성" in gender_rule:
+                            if females_in_team > 0 and males_in_team > 0:
+                                score += 3000 * min(females_in_team, males_in_team)
+                        elif "성비" in gender_rule:
+                            ideal_f = team_sz / 2
+                            score += abs(females_in_team - ideal_f) * 1500
+
+                        # 4. 과거 동반 중복 방지
+                        for i in range(len(t)):
+                            for j in range(i+1, len(t)):
+                                score += (pair_hist.get(t[i], {}).get(t[j], 0) ** 2) * 10
+
+                    # 5. 1, 2, 3지망 선호도 반영
+                    for u, choices in preferences.items():
+                        if u in attendees:
+                            u_team = next((t for t in teams if u in t), [])
+                            for rank, target in enumerate(choices):
+                                if target and target in attendees:
+                                    penalty_weight = [4000, 2000, 1000][rank]
+                                    if target not in u_team:
+                                        score += penalty_weight
+
                     if score < min_score:
                         min_score = score
                         best_teams = teams
+                
                 return best_teams
 
-            if st.button("🎲 자동 조편성 실행하기", type="primary", use_container_width=True):
-                teams = generate_teams_smart(selected_attendees, pair_history, member_db, balance_rule)
+            if st.button("🎲 고급 조건 맞춤 조편성 실행하기", type="primary", use_container_width=True):
+                user_prefs = st.session_state.get('match_preferences', {})
+                teams = generate_teams_smart_advanced(selected_attendees, pair_history, member_db, couple_rule, exclude_recent, gender_rule, user_prefs)
                 st.session_state.generated_teams = teams
-                st.success("🎉 자동 조편성이 완료되었습니다!")
+                st.success("🎉 고급 조건이 반영된 최적의 조편성이 완료되었습니다!")
 
             if 'generated_teams' in st.session_state and st.session_state.generated_teams:
                 teams = st.session_state.generated_teams
@@ -1397,7 +1490,7 @@ else:
                     rounds_data.insert(0, round_entry)
                     
                     save_data(db)
-                    st.success("🎉 조편성이 저장되었으며, [경기 결과] 메뉴에 성적 입력 카드가 생성되었습니다! (위 코드 박스의 복사 버튼을 눌러 카카오톡에 공유하세요)")
+                    st.success("🎉 조편성이 저장되었으며, [경기 결과] 메뉴에 성적 입력 카드가 생성되었습니다!")
 
     # 4. 🏆 경기 결과 및 랭킹
     elif menu == "경기 결과 및 랭킹":
