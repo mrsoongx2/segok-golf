@@ -1462,18 +1462,13 @@ else:
                                     pair_history[m1][m2] += 1
                                     pair_history[m2][m1] += 1
                                     
-                    now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
-                    match_logs.insert(0, {
-                        "id": len(match_logs) + 1,
-                        "date": now_str,
-                        "event_type": "필드 월례회",
-                        "teams": teams
-                    })
-                    
                     round_entry = {
                         "id": int(datetime.now().timestamp()),
                         "title": f"{r_date_input.month}월 정기 필드 월례회 ({golf_location or '필드'})",
                         "date": date_str,
+                        "location": golf_location or "필드",
+                        "tee_times": group_tee_times,
+                        "courses": group_courses,
                         "type": "필드 월례회",
                         "teams": teams,
                         "scores": {},
@@ -1482,8 +1477,19 @@ else:
                     }
                     rounds_data.insert(0, round_entry)
                     
+                    match_logs.insert(0, {
+                        "id": len(match_logs) + 1,
+                        "date": date_str,
+                        "location": golf_location or "필드",
+                        "title": f"{r_date_input.month}월 정기 필드 월례회 ({golf_location or '필드'})",
+                        "tee_times": group_tee_times,
+                        "courses": group_courses,
+                        "event_type": "필드 월례회",
+                        "teams": teams
+                    })
+                    
                     save_data(db)
-                    st.success("🎉 조편성이 저장되었으며, [경기 결과] 메뉴에 성적 입력 카드가 생성되었습니다!")
+                    st.success("🎉 조편성이 저장되었으며, 조편성 아카이브 및 경기 결과 메뉴에 등록되었습니다!")
 
     # 4. 🏆 경기 결과 및 랭킹
     elif menu == "경기 결과 및 랭킹":
@@ -1743,12 +1749,12 @@ else:
         if not match_logs:
             st.warning("아직 저장된 조편성 이력이 없습니다.")
         else:
-            log_options = [f"{log['date']} | {log['event_type']}" for log in match_logs]
+            log_options = [f"{log.get('date', '')} | {log.get('title', log.get('event_type', '필드'))} ({log.get('location', '')})" for log in match_logs]
             selected_log_label = st.selectbox("📂 조회할 조편성 이력 선택", log_options)
             selected_log_idx = log_options.index(selected_log_label)
             log = match_logs[selected_log_idx]
             
-            st.markdown(f"### 🗓️ {log['date']} | {log['event_type']}")
+            st.markdown(f"### 🗓️ {log.get('date', '')} | {log.get('title', log.get('event_type', '필드'))} - 🏟️ {log.get('location', '')}")
             
             if is_admin:
                 with st.expander("🗑️ 조편성 이력 삭제 관리"):
@@ -1761,11 +1767,17 @@ else:
                             st.rerun()
                     
             st.markdown("---")
-            cols = st.columns(min(len(log['teams']), 4))
-            for t_idx, team in enumerate(log['teams']):
-                with cols[t_idx % 4]:
-                    team_names = ", ".join([f"{m}({member_db.get(m, {}).get('handicap', '0')})" for m in team])
-                    st.markdown(f"**⛳ {t_idx+1}조:** {team_names}")
+            teams_list = log.get('teams', [])
+            tee_times_list = log.get('tee_times', [])
+            courses_list = log.get('courses', [])
+
+            for t_idx, team in enumerate(teams_list):
+                t_time = tee_times_list[t_idx] if t_idx < len(tee_times_list) else ""
+                c_info = courses_list[t_idx] if t_idx < len(courses_list) else ""
+                meta_str = f" ({t_time} / {c_info})" if (t_time or c_info) else ""
+                
+                team_html = f"<div class='team-box'><h3>⛳ {t_idx+1}조{meta_str}</h3>" + "<br>".join([f"• <b>{m}</b> ({member_db.get(m, {}).get('handicap', 0)})" for m in team]) + "</div>"
+                st.markdown(team_html, unsafe_allow_html=True)
 
     # 7. 👥 회원 리스트
     elif menu.startswith("회원 리스트") or menu.startswith("회원 명부"):
