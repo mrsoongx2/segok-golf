@@ -1270,7 +1270,7 @@ else:
                         save_data(db)
                         st.rerun()
 
-    # 3. ⛳ 티타임 조편성 (고급 조건: 부부 분리/무관, 직전 라운드 제외, 성별 맞춤, 1~3지망 가중치 반영)
+    # 3. ⛳ 티타임 조편성 (부부 분리/무관, 직전 라운드 제외, 성별 맞춤, 1~3지망 가중치 반영)
     elif menu == "티타임 조편성":
         st.subheader("⛳ TEE-OFF MATCH (티타임 조편성)")
         if not is_admin:
@@ -1374,7 +1374,6 @@ else:
                             for j in range(i+1, len(t)):
                                 score += (pair_hist.get(t[i], {}).get(t[j], 0) ** 2) * 10
 
-                    # 1, 2, 3지망 선호도 반영 (강력한 가중치 부여로 1명만 설정해도 반드시 함께 배치되도록 유도)
                     pref_weights = [100000, 50000, 25000]
                     for u, choices in preferences.items():
                         if u in attendees:
@@ -1778,7 +1777,7 @@ else:
             "핸디캡": v.get('handicap', 0), 
             "참석률": f"{v.get('attendance', 0)}%", 
             "참석": f"{v.get('rounds_played', 0)}회"
-        } for k, v in member_db.items() if v.get("status", "approved"] == "approved"]
+        } for k, v in member_db.items() if v.get("status", "approved") == "approved"]
         
         st.table(pd.DataFrame(df_data))
         
