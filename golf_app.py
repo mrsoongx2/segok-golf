@@ -1708,4 +1708,4 @@ else:
         if is_admin:
             st.divider()
             st.subheader("👑 [OPERATOR] 신입회원 가입 승인 센터")
-            pending_members = [k for k, v in member_db.items() if v.get("status"] == "pending"] # Wait, let's make sure this line is correct: v.get("status") == "pending"
+            pending_members = [k for k, v in member_db.items() if v.get("status" == "pending") # Wait, let's make sure this line is correct: v.get("status") == "pending"
