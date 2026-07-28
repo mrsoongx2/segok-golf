@@ -216,33 +216,39 @@ st.markdown("""
         font-family: 'Montserrat', sans-serif;
     }
     
-    .menu-card { 
+    /* 완벽하게 동일한 높이와 크기를 가지는 프리미엄 메뉴 카드 */
+    .menu-card-box { 
         background-color: #FFFFFF; 
         border-radius: 12px; 
         border: 1px solid #E2E8F0; 
-        padding: 18px 14px; 
+        padding: 22px 18px; 
         text-align: center; 
         box-shadow: 0 4px 12px rgba(0,0,0,0.03); 
         transition: all 0.25s ease; 
-        margin-bottom: 12px; 
+        margin-bottom: 10px;
+        height: 110px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
     }
-    .menu-card:hover { 
+    .menu-card-box:hover { 
         transform: translateY(-2px); 
         box-shadow: 0 6px 16px rgba(27,77,51,0.1); 
         border-color: #1B4D33; 
     }
-    .menu-card h3 { 
+    .menu-card-box h3 { 
         font-family: 'Montserrat', sans-serif;
-        font-size: 0.95rem; 
+        font-size: 1rem; 
         font-weight: 700;
         margin-bottom: 4px; 
         color: #0F2E1B; 
         text-transform: uppercase;
     }
-    .menu-card p { 
+    .menu-card-box p { 
         color: #64748B; 
-        font-size: 0.75rem; 
-        margin-bottom: 10px; 
+        font-size: 0.78rem; 
+        margin: 0; 
         line-height: 1.3; 
     }
     
@@ -260,18 +266,18 @@ st.markdown("""
     
     .new-badge { background-color: #16A34A; color: #FFFFFF; padding: 2px 5px; border-radius: 6px; font-size: 0.6rem; font-weight: 800; vertical-align: middle; margin-left: 4px; font-family: 'Montserrat', sans-serif; }
     
-    /* 버튼 기본 스타일 (자연스러운 너비) */
+    /* 완벽하게 동일한 크기를 가지는 입장 버튼 스타일 */
     .stButton>button { 
         background: linear-gradient(135deg, #1B4D33 0%, #0F2E1B 100%) !important; 
         color: #FFFFFF !important; 
         border-radius: 8px !important; 
         border: none !important; 
         font-weight: 700 !important; 
-        padding: 7px 12px !important; 
-        font-size: 0.85rem !important; 
+        width: 100% !important; 
+        height: 42px !important;
+        font-size: 0.88rem !important; 
         box-shadow: 0 3px 8px rgba(27,77,51,0.2);
         font-family: 'Montserrat', 'Noto Sans KR', sans-serif;
-        width: auto !important;
     }
     .stButton>button:hover { 
         background: linear-gradient(135deg, #235C3D 100%, #164027 100%) !important; 
@@ -380,7 +386,7 @@ total_unread_alerts = unread_notices_count + unread_lounge_count
 
 alert_badge_label = f"🔔 INBOX ({total_unread_alerts})" if total_unread_alerts > 0 else "🔔 INBOX"
 
-# --- 상단 고정 헤더 (모던 앱 네비게이션 바 스타일) ---
+# --- 상단 고정 헤더 ---
 col_h1, col_h2 = st.columns([1, 1])
 with col_h1:
     if st.button("⛳ SEGOK GOLF", key="logo_home_btn"):
@@ -410,12 +416,13 @@ if st.session_state.current_menu == "HOME":
     </div>
     """, unsafe_allow_html=True)
     
+    # 균형 잡힌 2열 그리드 구조 (모든 카드와 버튼의 크기가 완벽히 일치)
     c1, c2 = st.columns(2)
     
     with c1:
         notice_badge = '<span class="new-badge">NEW</span>' if has_new_notice else ''
         st.markdown(f"""
-        <div class="menu-card">
+        <div class="menu-card-box">
             <h3>📢 NOTICE{notice_badge}</h3>
             <p>클럽 소식 및 조편성 안내</p>
         </div>
@@ -424,9 +431,11 @@ if st.session_state.current_menu == "HOME":
             set_menu("클럽 공지사항")
             st.rerun()
             
+        st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
+
         lounge_badge = '<span class="new-badge">NEW</span>' if has_new_lounge else ''
         st.markdown(f"""
-        <div class="menu-card" style="margin-top: 12px;">
+        <div class="menu-card-box">
             <h3>💬 LOUNGE{lounge_badge}</h3>
             <p>자유 소통, 투표 및 파일 공유</p>
         </div>
@@ -435,8 +444,10 @@ if st.session_state.current_menu == "HOME":
             set_menu("클럽 라운지")
             st.rerun()
 
-        st.markdown(f"""
-        <div class="menu-card" style="margin-top: 12px;">
+        st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
+
+        st.markdown("""
+        <div class="menu-card-box">
             <h3>📁 ARCHIVE</h3>
             <p>지난 날짜별 조편성 기록 확인</p>
         </div>
@@ -447,7 +458,7 @@ if st.session_state.current_menu == "HOME":
 
     with c2:
         st.markdown("""
-        <div class="menu-card">
+        <div class="menu-card-box">
             <h3>🏆 RESULTS</h3>
             <p>역대 스코어 및 공식 시상</p>
         </div>
@@ -456,8 +467,10 @@ if st.session_state.current_menu == "HOME":
             set_menu("경기 결과 및 랭킹")
             st.rerun()
             
+        st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
+
         st.markdown("""
-        <div class="menu-card" style="margin-top: 12px;">
+        <div class="menu-card-box">
             <h3>👑 FAME</h3>
             <p>회원별 평균타수 및 출석 현황</p>
         </div>
@@ -466,8 +479,10 @@ if st.session_state.current_menu == "HOME":
             set_menu("명예의 전당")
             st.rerun()
 
+        st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
+
         st.markdown("""
-        <div class="menu-card" style="margin-top: 12px;">
+        <div class="menu-card-box">
             <h3>👤 MY PAGE</h3>
             <p>프로필, 로그아웃 및 클럽 탈퇴</p>
         </div>
@@ -477,11 +492,11 @@ if st.session_state.current_menu == "HOME":
             st.rerun()
 
     if is_admin:
-        st.markdown("<div style='margin-top: 12px;'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
         ac1, ac2 = st.columns(2)
         with ac1:
             st.markdown("""
-            <div class="menu-card">
+            <div class="menu-card-box">
                 <h3>⛳ MATCH</h3>
                 <p>맞춤형 조편성 및 수동 복사</p>
             </div>
@@ -493,7 +508,7 @@ if st.session_state.current_menu == "HOME":
             pending_cnt = len([k for k, v in member_db.items() if v.get("status") == "pending"])
             badge_txt = f" (대기 {pending_cnt})" if pending_cnt > 0 else ""
             st.markdown(f"""
-            <div class="menu-card">
+            <div class="menu-card-box">
                 <h3>👥 MEMBERS{badge_txt}</h3>
                 <p>정회원 관리 및 가입 승인</p>
             </div>
