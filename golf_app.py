@@ -633,7 +633,7 @@ else:
         if not my_comments_found:
             st.info("내 게시물에 달린 댓글이 없습니다.")
 
-    # 2. 📢 클럽 공지사항
+    # 2. 📢 클럽 공지사항 (사용자가 직접 투표 항목들을 추가할 수 있도록 개선)
     elif menu == "클럽 공지사항":
         if notices:
             user_info["last_notice_seen"] = notices[0]["date"]
@@ -644,75 +644,94 @@ else:
         
         if is_admin:
             with st.expander("✍️ [OPERATOR] 새 공지사항 등록하기 (사진/파일/투표 첨부)"):
-                with st.form("notice_write_form"):
-                    n_title = st.text_input("공지 제목")
-                    n_content = st.text_area("공지 내용")
-                    
-                    col_n_u1, col_n_u2 = st.columns(2)
-                    with col_n_u1:
-                        n_uploaded_file = st.file_uploader("이미지 첨부 (선택)", type=["jpg", "png", "jpeg"], key="notice_img_up")
-                    with col_n_u2:
-                        n_doc_file = st.file_uploader("문서/엑셀 파일 첨부 (선택)", type=["xlsx", "xls", "pdf", "txt", "csv"], key="notice_doc_up")
-                    
-                    n_use_poll = st.checkbox("📊 투표 생성하기", key="notice_use_poll")
-                    n_poll_question = st.text_input("투표 주제", placeholder="예: 정기 라운딩 참석 여부", key="notice_poll_q")
+                n_title = st.text_input("공지 제목", key="notice_title_input")
+                n_content = st.text_area("공지 내용", key="notice_content_input")
+                
+                col_n_u1, col_n_u2 = st.columns(2)
+                with col_n_u1:
+                    n_uploaded_file = st.file_uploader("이미지 첨부 (선택)", type=["jpg", "png", "jpeg"], key="notice_img_up")
+                with col_n_u2:
+                    n_doc_file = st.file_uploader("문서/엑셀 파일 첨부 (선택)", type=["xlsx", "xls", "pdf", "txt", "csv"], key="notice_doc_up")
+                
+                n_use_poll = st.checkbox("📊 투표 생성하기", key="notice_use_poll")
+                n_poll_question = ""
+                n_poll_options = []
+                n_poll_deadline = None
+                n_allow_multiple = False
+                n_is_anonymous = False
+                
+                if n_use_poll:
+                    n_poll_question = st.text_input("투표 주제", placeholder="예: 8월 정기 라운딩 참석 투표", key="notice_poll_q")
                     n_allow_multiple = st.checkbox("복수 선택 허용 (최대 3개까지 선택 가능)", key="notice_poll_multi")
                     n_is_anonymous = st.checkbox("익명 투표", key="notice_poll_anon")
                     
+                    st.markdown("##### ⏳ 투표 마감 기한 (데드라인) 설정")
                     col_nd1, col_nd2 = st.columns(2)
                     with col_nd1:
                         nd_date = st.date_input("마감 날짜", value=datetime.now().date(), key="notice_poll_date")
                     with col_nd2:
                         nd_time = st.time_input("마감 시간", value=time(23, 59), key="notice_poll_time")
+                    n_poll_deadline = datetime.combine(nd_date, nd_time).strftime("%Y-%m-%d %H:%M")
 
-                    notice_submitted = st.form_submit_button("공지 발행", use_container_width=True)
+                    if 'notice_poll_option_count' not in st.session_state:
+                        st.session_state.notice_poll_option_count = 3
                     
-                    if notice_submitted:
-                        if n_title and (n_content or n_uploaded_file or n_doc_file or n_use_poll):
-                            n_media_path = None
-                            n_media_type = None
-                            if n_uploaded_file is not None:
-                                file_name = f"{int(datetime.now().timestamp())}_{n_uploaded_file.name}"
-                                n_media_path = os.path.join(UPLOAD_DIR, file_name)
-                                with open(n_media_path, "wb") as f:
-                                    f.write(n_uploaded_file.getbuffer())
-                                n_media_type = "image"
-                            
-                            n_file_path = None
-                            n_file_name = None
-                            if n_doc_file is not None:
-                                n_file_name = n_doc_file.name
-                                n_file_path = os.path.join(UPLOAD_DIR, f"notice_doc_{int(datetime.now().timestamp())}_{n_file_name}")
-                                with open(n_file_path, "wb") as f:
-                                    f.write(n_doc_file.getbuffer())
+                    if st.button("➕ 투표 항목 추가", key="notice_add_opt_btn"):
+                        st.session_state.notice_poll_option_count += 1
+                        st.rerun()
+                    
+                    st.caption("💡 원하시는 투표 선택 항목을 직접 입력하세요 (예: 1. 참석, 2. 불참, 3. 미정 등)")
+                    for i in range(st.session_state.notice_poll_option_count):
+                        opt_val = st.text_input(f"투표 항목 {i+1}", key=f"notice_poll_opt_input_{i}", placeholder=f"예: {i+1}. 항목 입력")
+                        if opt_val:
+                            n_poll_options.append(opt_val.strip())
 
-                            n_poll_deadline = datetime.combine(nd_date, nd_time).strftime("%Y-%m-%d %H:%M")
-                            n_poll_data = None
-                            if n_use_poll and n_poll_question:
-                                n_poll_data = {
-                                    "question": n_poll_question,
-                                    "deadline": n_poll_deadline,
-                                    "allow_multiple": n_allow_multiple,
-                                    "is_anonymous": n_is_anonymous,
-                                    "options": {"참석": [], "불참": [], "미정": []}
-                                }
+                if st.button("공지 발행", type="primary", use_container_width=True, key="notice_submit_btn"):
+                    if n_title and (n_content or n_uploaded_file or n_doc_file or n_use_poll):
+                        n_media_path = None
+                        n_media_type = None
+                        if n_uploaded_file is not None:
+                            file_name = f"{int(datetime.now().timestamp())}_{n_uploaded_file.name}"
+                            n_media_path = os.path.join(UPLOAD_DIR, file_name)
+                            with open(n_media_path, "wb") as f:
+                                f.write(n_uploaded_file.getbuffer())
+                            n_media_type = "image"
+                        
+                        n_file_path = None
+                        n_file_name = None
+                        if n_doc_file is not None:
+                            n_file_name = n_doc_file.name
+                            n_file_path = os.path.join(UPLOAD_DIR, f"notice_doc_{int(datetime.now().timestamp())}_{n_file_name}")
+                            with open(n_file_path, "wb") as f:
+                                f.write(n_doc_file.getbuffer())
 
-                            notices.insert(0, {
-                                "id": int(datetime.now().timestamp()),
-                                "date": datetime.now().strftime("%Y-%m-%d %H:%M"),
-                                "title": n_title,
-                                "content": n_content,
-                                "media_path": n_media_path,
-                                "media_type": n_media_type,
-                                "file_path": n_file_path,
-                                "file_name": n_file_name,
-                                "poll": n_poll_data
-                            })
-                            save_data(db)
-                            st.success("등록되었습니다!")
-                            st.rerun()
-                        else:
-                            st.warning("제목과 내용을 모두 입력해 주세요.")
+                        n_poll_data = None
+                        if n_use_poll and n_poll_question and len(n_poll_options) >= 2:
+                            n_poll_data = {
+                                "question": n_poll_question,
+                                "deadline": n_poll_deadline,
+                                "allow_multiple": n_allow_multiple,
+                                "is_anonymous": n_is_anonymous,
+                                "options": {opt: [] for opt in n_poll_options}
+                            }
+
+                        notices.insert(0, {
+                            "id": int(datetime.now().timestamp()),
+                            "date": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                            "title": n_title,
+                            "content": n_content,
+                            "media_path": n_media_path,
+                            "media_type": n_media_type,
+                            "file_path": n_file_path,
+                            "file_name": n_file_name,
+                            "poll": n_poll_data
+                        })
+                        st.session_state.notice_poll_option_count = 3
+                        save_data(db)
+                        st.success("등록되었습니다!")
+                        st.rerun()
+                    else:
+                        st.warning("제목과 내용을 모두 입력해 주세요 (투표 사용 시 주제와 최소 2개 이상의 항목 필수).")
                         
         if not notices:
             st.info("등록된 공지사항이 없습니다.")
@@ -875,7 +894,7 @@ else:
                                     st.success("수정되었습니다!")
                                     st.rerun()
 
-    # 3. 💬 새로 다시 만든 클럽 라운지 (완전 신규 작성, 텍스트 단독 등록 100% 보장)
+    # 3. 💬 클럽 라운지
     elif menu == "클럽 라운지":
         if feed_posts:
             user_info["last_lounge_seen"] = feed_posts[0]["date"]
