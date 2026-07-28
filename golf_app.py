@@ -402,7 +402,7 @@ total_unread_alerts = unread_notices_count + unread_lounge_count
 
 alert_badge_label = f"🔔 INBOX ({total_unread_alerts})" if total_unread_alerts > 0 else "🔔 INBOX"
 
-# --- 상단 고정 헤더 (좌측: 로고 + INBOX, 우측: 회원 이름, HC, 뱃지) ---
+# --- 상단 고정 헤더 ---
 col_h1, col_h2 = st.columns([1.2, 1.2])
 with col_h1:
     left_header_cols = st.columns([1, 1])
@@ -963,7 +963,8 @@ else:
                             poll_options.append(opt_val.strip())
 
             if st.button("게시물 등록하기", type="primary", use_container_width=True, key="lounge_submit_btn"):
-                if post_text or uploaded_file or doc_file or use_poll:
+                # 수정된 부분: 투표가 없어도 post_text나 업로드 파일이 있으면 글이 정상 등록되도록 수정
+                if post_text or uploaded_file or doc_file or (use_poll and poll_question and len(poll_options) >= 2):
                     media_path = None
                     media_type = None
                     if uploaded_file is not None:
@@ -1301,9 +1302,9 @@ else:
             with col_op2:
                 gender_rule = st.radio("성별 맞춤 옵션", ["기본 (핸디캡 균등)", "동성 위주 배치", "성비 맞춤 위주 (남녀 균등)"])
 
-            approved_members = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
-            default_selected = approved_members[:16] if len(approved_members) >= 16 else approved_members
-            selected_attendees = st.multiselect("오늘 참석자 선택", approved_members, default=default_selected)
+            approved_names = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
+            default_selected = approved_names[:16] if len(approved_names) >= 16 else approved_names
+            selected_attendees = st.multiselect("오늘 참석자 선택", approved_names, default=default_selected)
 
             with st.expander("💌 회원별 동반 희망 멤버 (1, 2, 3지망) 설정"):
                 if 'match_preferences' not in st.session_state:
