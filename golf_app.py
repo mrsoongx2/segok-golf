@@ -377,22 +377,26 @@ total_unread_alerts = unread_notices_count + unread_lounge_count
 
 alert_badge_label = f"🔔 INBOX ({total_unread_alerts})" if total_unread_alerts > 0 else "🔔 INBOX"
 
-# --- 상단 고정 헤더 ---
-col_h1, col_h2 = st.columns([2, 3])
+# --- 상단 고정 헤더 (오른쪽 이름 옆에 독립된 Inbox 버튼 배치) ---
+col_h1, col_h2, col_h3 = st.columns([1.6, 2.3, 1.1])
 with col_h1:
-    if st.button("⛳ SEGOK GOLF CLUB", key="logo_home_btn"):
+    if st.button("⛳ SEGOK GOLF", key="logo_home_btn"):
         set_menu("HOME")
         st.rerun()
 with col_h2:
     hc_val = user_info.get('handicap', 0)
     att_val = user_info.get('attendance', 0)
     st.markdown(f"""
-    <div style="display: flex; justify-content: flex-end; align-items: center; gap: 8px; padding-top: 6px; font-size: 0.82rem;">
+    <div style="display: flex; justify-content: flex-end; align-items: center; gap: 6px; padding-top: 6px; font-size: 0.78rem;">
         <span><b>{display_nickname}</b>님 {admin_badge}</span>
         <span class="badge-hc">HC {hc_val}</span>
         <span class="badge-user">ATT {att_val}%</span>
     </div>
     """, unsafe_allow_html=True)
+with col_h3:
+    if st.button(alert_badge_label, key="header_inbox_btn"):
+        set_menu("알림 센터")
+        st.rerun()
 
 st.markdown("<hr style='margin: 8px 0 15px 0; border-top: 1px solid #E2E8F0;'>", unsafe_allow_html=True)
 
@@ -501,7 +505,8 @@ else:
     notice_label = f"📢 공지사항 (NOTICE) {'🟢' if has_new_notice else ''}"
     lounge_label = f"💬 클럽 라운지 (LOUNGE) {'🟢' if has_new_lounge else ''}"
     
-    menu_list = ["메인 홈", notice_label, lounge_label, alert_badge_label, "🏆 경기 결과 및 랭킹 (RESULTS)", "👑 명예의 전당 (HALL OF FAME)", "📁 조편성 아카이브 (ARCHIVE)", "👤 마이페이지 (MY PAGE)"]
+    # Selectbox 메뉴 리스트에서 Inbox 제거 (상단 독립 버튼으로 이동됨)
+    menu_list = ["메인 홈", notice_label, lounge_label, "🏆 경기 결과 및 랭킹 (RESULTS)", "👑 명예의 전당 (HALL OF FAME)", "📁 조편성 아카이브 (ARCHIVE)", "👤 마이페이지 (MY PAGE)"]
     if is_admin:
         menu_list.insert(3, "⛳ 티타임 조편성 (MATCH)")
         menu_list.append("👥 회원 리스트 (MEMBERS)")
@@ -510,7 +515,7 @@ else:
         "HOME": "메인 홈",
         "클럽 공지사항": notice_label,
         "클럽 라운지": lounge_label,
-        "알림 센터": alert_badge_label,
+        "알림 센터": "알림 센터",
         "티타임 조편성": "⛳ 티타임 조편성 (MATCH)",
         "경기 결과 및 랭킹": "🏆 경기 결과 및 랭킹 (RESULTS)",
         "명예의 전당": "👑 명예의 전당 (HALL OF FAME)",
@@ -523,11 +528,11 @@ else:
 
     nav_c1, _ = st.columns([1, 0.01])
     with nav_c1:
-        selected_nav = st.selectbox("📌 QUICK MENU", menu_list, index=menu_list.index(curr_label) if curr_label in menu_list else 0)
+        nav_index = menu_list.index(curr_label) if curr_label in menu_list else 0
+        selected_nav = st.selectbox("📌 QUICK MENU", menu_list, index=nav_index)
         target_menu = reverse_map.get(selected_nav, "HOME")
         if "공지사항" in selected_nav: target_menu = "클럽 공지사항"
         elif "라운지" in selected_nav: target_menu = "클럽 라운지"
-        elif "INBOX" in selected_nav or "알림" in selected_nav: target_menu = "알림 센터"
         
         if target_menu != st.session_state.current_menu:
             set_menu(target_menu)
@@ -587,7 +592,7 @@ else:
                     st.rerun()
 
         st.markdown("##### 💬 내 게시물에 달린 댓글")
-        my_posts = [p for p in feed_posts if p.get("author") == current_user]
+        my_posts = [p for p in feed_posts if p.get("author"] == current_user]
         my_comments_found = False
         for p in my_posts:
             comments = p.get("comments", [])
@@ -903,7 +908,6 @@ else:
                         with st.expander("✏️ 글 수정"):
                             edit_post_text = st.text_area("내용 수정", value=post['content'], key=f"edit_post_txt_{post['id']}")
                             
-                            # 사진/이미지 수정
                             st.markdown("##### 🖼️ 이미지 변경/삭제")
                             cur_img = post.get("media_path")
                             rm_img = False
@@ -912,7 +916,6 @@ else:
                                 rm_img = st.checkbox("기존 이미지 삭제", key=f"edit_rm_img_{post['id']}")
                             new_img_up = st.file_uploader("새 이미지 교체", type=["jpg", "png", "jpeg"], key=f"edit_new_img_{post['id']}")
 
-                            # 첨부파일 수정
                             st.markdown("##### 📎 첨부파일 변경/삭제")
                             cur_file = post.get("file_name")
                             rm_file = False
@@ -921,7 +924,6 @@ else:
                                 rm_file = st.checkbox("기존 파일 삭제", key=f"edit_rm_file_{post['id']}")
                             new_file_up = st.file_uploader("새 파일 교체", type=["xlsx", "xls", "pdf", "txt", "csv"], key=f"edit_new_file_{post['id']}")
 
-                            # 투표 수정
                             st.markdown("##### 📊 투표 설정 변경")
                             existing_p = post.get("poll")
                             edit_has_poll = st.checkbox("투표 포함/수정", value=(existing_p is not None), key=f"edit_has_poll_{post['id']}")
@@ -937,7 +939,6 @@ else:
                                 e_multi = st.checkbox("복수 선택 허용 (최대 3개)", value=existing_p.get("allow_multiple", False) if existing_p else False, key=f"edit_emulti_{post['id']}")
                                 e_anon = st.checkbox("익명 투표", value=existing_p.get("is_anonymous", False) if existing_p else False, key=f"edit_eanon_{post['id']}")
                                 
-                                # 데드라인
                                 prev_dl = existing_p.get("deadline", "") if existing_p else ""
                                 try:
                                     dt_p = datetime.strptime(prev_dl, "%Y-%m-%d %H:%M") if prev_dl else datetime.now()
@@ -969,7 +970,6 @@ else:
                             if st.button("수정 저장", key=f"btn_save_post_{post['id']}", use_container_width=True):
                                 post['content'] = edit_post_text
                                 
-                                # 이미지 처리
                                 if rm_img:
                                     if post.get("media_path") and os.path.exists(post["media_path"]):
                                         try: os.remove(post["media_path"])
@@ -987,7 +987,6 @@ else:
                                     post["media_path"] = m_path
                                     post["media_type"] = "image"
 
-                                # 파일 처리
                                 if rm_file:
                                     if post.get("file_path") and os.path.exists(post["file_path"]):
                                         try: os.remove(post["file_path"])
@@ -1005,7 +1004,6 @@ else:
                                     post["file_path"] = f_path
                                     post["file_name"] = f_name
 
-                                # 투표 처리
                                 if edit_has_poll and e_q and len(e_opts_list) >= 2:
                                     old_opts = existing_p["options"] if (existing_p and "options" in existing_p) else {}
                                     new_opts_dict = {}
@@ -1491,7 +1489,7 @@ else:
         if is_admin:
             st.divider()
             st.subheader("👑 [OPERATOR] 신입회원 가입 승인 센터")
-            pending_members = [k for k, v in member_db.items() if v.get("status") == "pending"]
+            pending_members = [k for k, v in member_db.items() if v.get("status"] == "pending"]
             
             if not pending_members:
                 st.info("현재 가입 승인 대기 중인 회원이 없습니다.")
