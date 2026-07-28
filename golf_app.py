@@ -187,29 +187,42 @@ st.markdown("""
     
     .stApp { background-color: #F4F6F4 !important; font-family: 'Noto Sans KR', sans-serif; color: #1E2923; font-size: 0.9rem; }
     
+    /* 모바일 및 데스크톱 공통 상단 헤더 강제 가로 정렬 (줄바꿈 방지) */
+    [data-testid="stHorizontalBlock"] {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+    }
+    [data-testid="column"] {
+        flex: 1 !important;
+        width: auto !important;
+        min-width: 0 !important;
+    }
+    
     .logo-hero { 
         text-align: center; 
-        padding: 45px 20px; 
+        padding: 40px 20px; 
         background: linear-gradient(135deg, #0F2E1B 0%, #1B4D33 50%, #123822 100%); 
         border-radius: 16px; 
         color: #FFFFFF; 
-        margin-bottom: 25px; 
+        margin-bottom: 20px; 
         box-shadow: 0 8px 24px rgba(15,46,27,0.18); 
         border: 1px solid rgba(212,180,117,0.3);
     }
     .logo-hero h1 { 
         font-family: 'Montserrat', sans-serif; 
-        font-size: 2.3rem; 
+        font-size: 2rem; 
         font-weight: 800; 
         letter-spacing: 2px; 
-        margin: 10px 0 6px 0; 
+        margin: 8px 0 4px 0; 
         color: #F8F5F0; 
         text-transform: uppercase;
     }
     .logo-hero p { 
         color: #D4B475; 
-        font-size: 0.75rem; 
-        letter-spacing: 5px; 
+        font-size: 0.7rem; 
+        letter-spacing: 4px; 
         text-transform: uppercase; 
         font-weight: 600; 
         margin: 0; 
@@ -220,49 +233,47 @@ st.markdown("""
         background-color: #FFFFFF; 
         border-radius: 12px; 
         border: 1px solid #E2E8F0; 
-        padding: 20px 16px; 
+        padding: 16px 12px; 
         text-align: center; 
         box-shadow: 0 4px 12px rgba(0,0,0,0.03); 
         transition: all 0.25s ease; 
-        margin-bottom: 15px; 
-        position: relative; 
+        margin-bottom: 12px; 
     }
     .menu-card:hover { 
-        transform: translateY(-3px); 
-        box-shadow: 0 8px 20px rgba(27,77,51,0.1); 
+        transform: translateY(-2px); 
+        box-shadow: 0 6px 16px rgba(27,77,51,0.1); 
         border-color: #1B4D33; 
     }
     .menu-card h3 { 
         font-family: 'Montserrat', sans-serif;
-        font-size: 1.05rem; 
+        font-size: 0.95rem; 
         font-weight: 700;
-        margin-bottom: 6px; 
+        margin-bottom: 4px; 
         color: #0F2E1B; 
         text-transform: uppercase;
     }
     .menu-card p { 
         color: #64748B; 
-        font-size: 0.8rem; 
-        margin-bottom: 14px; 
-        line-height: 1.4; 
+        font-size: 0.75rem; 
+        margin-bottom: 10px; 
+        line-height: 1.3; 
     }
     
-    .band-card { background-color: #FFFFFF; border-radius: 12px; border: 1px solid #E2E8F0; max-width: 100%; margin: 0 auto 18px auto; box-shadow: 0 2px 6px rgba(0,0,0,0.03); overflow: hidden; }
-    .band-header { display: flex; align-items: center; padding: 14px 16px; border-bottom: 1px solid #F1F5F9; background-color: #FAFAFA; }
-    .band-body { padding: 16px; font-size: 0.9rem; color: #1E2923; line-height: 1.6; }
+    .band-card { background-color: #FFFFFF; border-radius: 12px; border: 1px solid #E2E8F0; max-width: 100%; margin: 0 auto 16px auto; box-shadow: 0 2px 6px rgba(0,0,0,0.03); overflow: hidden; }
+    .band-header { display: flex; align-items: center; padding: 12px 14px; border-bottom: 1px solid #F1F5F9; background-color: #FAFAFA; }
+    .band-body { padding: 14px; font-size: 0.88rem; color: #1E2923; line-height: 1.5; }
     
-    .kakao-notice-box { background-color: #F8FAFC; border-left: 4px solid #1B4D33; padding: 14px 18px; border-radius: 8px; font-size: 0.85rem !important; font-family: monospace, sans-serif !important; color: #0F172A !important; line-height: 1.6 !important; white-space: pre-wrap; word-break: break-all; margin-top: 10px; }
+    .kakao-notice-box { background-color: #F8FAFC; border-left: 4px solid #1B4D33; padding: 12px 15px; border-radius: 8px; font-size: 0.82rem !important; font-family: monospace, sans-serif !important; color: #0F172A !important; line-height: 1.5 !important; white-space: pre-wrap; word-break: break-all; margin-top: 8px; }
 
-    .team-box { background-color: #0F2E1B; color: #FFFFFF; padding: 16px; border-radius: 12px; margin-bottom: 14px; border: 1px solid #D4B475; font-size: 0.88rem; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-    .team-box h3 { color: #E5C585 !important; font-family: 'Montserrat', sans-serif; font-size: 1.05rem; margin-bottom: 8px; border-bottom: 1px solid #235C3D; padding-bottom: 6px; }
+    .team-box { background-color: #0F2E1B; color: #FFFFFF; padding: 14px; border-radius: 12px; margin-bottom: 12px; border: 1px solid #D4B475; font-size: 0.85rem; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    .team-box h3 { color: #E5C585 !important; font-family: 'Montserrat', sans-serif; font-size: 1rem; margin-bottom: 6px; border-bottom: 1px solid #235C3D; padding-bottom: 4px; }
     
-    .badge-admin { background-color: #0F2E1B; color: #FFFFFF; padding: 4px 10px; border-radius: 6px; font-size: 0.72rem; font-weight: 700; border: 1px solid #D4B475; font-family: 'Montserrat', sans-serif; }
-    .badge-user { background-color: #E2E8F0; color: #334155; padding: 4px 10px; border-radius: 6px; font-size: 0.72rem; font-weight: 700; font-family: 'Montserrat', sans-serif; }
-    .profile-avatar { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 2px solid #D4B475; margin-right: 12px; }
+    .badge-admin { background-color: #0F2E1B; color: #FFFFFF; padding: 2px 6px; border-radius: 6px; font-size: 0.65rem; font-weight: 700; border: 1px solid #D4B475; font-family: 'Montserrat', sans-serif; }
+    .badge-user { background-color: #E2E8F0; color: #334155; padding: 2px 6px; border-radius: 6px; font-size: 0.65rem; font-weight: 700; font-family: 'Montserrat', sans-serif; }
     
-    .new-badge { background-color: #16A34A; color: #FFFFFF; padding: 2px 6px; border-radius: 6px; font-size: 0.65rem; font-weight: 800; vertical-align: middle; margin-left: 6px; font-family: 'Montserrat', sans-serif; }
+    .new-badge { background-color: #16A34A; color: #FFFFFF; padding: 2px 5px; border-radius: 6px; font-size: 0.6rem; font-weight: 800; vertical-align: middle; margin-left: 4px; font-family: 'Montserrat', sans-serif; }
     
-    /* 공통 버튼 스타일 */
+    /* 모바일 맞춤형 버튼 디자인 */
     .stButton>button { 
         background: linear-gradient(135deg, #1B4D33 0%, #0F2E1B 100%) !important; 
         color: #FFFFFF !important; 
@@ -270,15 +281,13 @@ st.markdown("""
         border: none !important; 
         font-weight: 700 !important; 
         width: 100% !important; 
-        padding: 8px 14px !important; 
-        font-size: 0.88rem !important; 
-        box-shadow: 0 4px 10px rgba(27,77,51,0.2);
-        transition: all 0.2s ease;
+        padding: 7px 10px !important; 
+        font-size: 0.82rem !important; 
+        box-shadow: 0 3px 8px rgba(27,77,51,0.2);
         font-family: 'Montserrat', 'Noto Sans KR', sans-serif;
     }
     .stButton>button:hover { 
         background: linear-gradient(135deg, #235C3D 100%, #164027 100%) !important; 
-        box-shadow: 0 6px 15px rgba(27,77,51,0.3);
     }
     </style>
 """, unsafe_allow_html=True)
@@ -286,10 +295,10 @@ st.markdown("""
 # --- LOGIN & SIGNUP ---
 if not st.session_state.get('logged_in_user'):
     st.markdown("""
-    <div style="text-align: center; padding: 40px 20px 25px 20px;">
-        <div style="font-size: 3rem;">⛳</div>
-        <h1 style="font-family: 'Montserrat', sans-serif; color: #0F2E1B; margin: 8px 0 0 0; font-size: 2.2rem; font-weight: 800; letter-spacing: 1px;">SEGOK GOLF CLUB</h1>
-        <p style="color: #64748B; font-size: 0.75rem; letter-spacing: 4px; text-transform: uppercase; font-weight: 700; font-family: 'Montserrat', sans-serif;">PREMIUM GOLF SOCIETY & COMMUNITY</p>
+    <div style="text-align: center; padding: 35px 15px 20px 15px;">
+        <div style="font-size: 2.8rem;">⛳</div>
+        <h1 style="font-family: 'Montserrat', sans-serif; color: #0F2E1B; margin: 6px 0 0 0; font-size: 1.8rem; font-weight: 800; letter-spacing: 1px;">SEGOK GOLF CLUB</h1>
+        <p style="color: #64748B; font-size: 0.7rem; letter-spacing: 3px; text-transform: uppercase; font-weight: 700; font-family: 'Montserrat', sans-serif;">PREMIUM GOLF SOCIETY</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -368,7 +377,7 @@ user_info = member_db.get(current_user, {
 
 is_admin = user_info.get('is_admin', False)
 display_nickname = user_info.get('nickname', current_user)
-admin_badge = '<span class="badge-admin">👑 OPERATOR</span>' if is_admin else '<span class="badge-user">👤 MEMBER</span>'
+admin_badge = '<span class="badge-admin">👑 OP</span>' if is_admin else '<span class="badge-user">👤 MEM</span>'
 
 last_n = user_info.get("last_notice_seen", "")
 latest_notice_date = notices[0]["date"] if notices else ""
@@ -384,16 +393,16 @@ total_unread_alerts = unread_notices_count + unread_lounge_count
 
 alert_badge_label = f"🔔 INBOX ({total_unread_alerts})" if total_unread_alerts > 0 else "🔔 INBOX"
 
-# --- 상단 고정 헤더 (이름/배지와 Inbox 버튼 높이 및 밸런스 완벽 맞춤) ---
-col_h1, col_h2, col_h3 = st.columns([1.5, 2.7, 1.1])
+# --- 상단 고정 헤더 (모바일 가로 밸런스 최적화) ---
+col_h1, col_h2, col_h3 = st.columns([1.3, 2.0, 1.2])
 with col_h1:
-    if st.button("⛳ SEGOK GOLF", key="logo_home_btn"):
+    if st.button("⛳ GOLF", key="logo_home_btn"):
         set_menu("HOME")
         st.rerun()
 with col_h2:
     st.markdown(f"""
-    <div style="display: flex; justify-content: flex-end; align-items: center; gap: 8px; padding-top: 4px; font-size: 0.92rem; font-weight: 600;">
-        <span style="color: #0F2E1B; font-size: 1rem;"><b>{display_nickname}</b>님</span> {admin_badge}
+    <div style="display: flex; justify-content: center; align-items: center; gap: 4px; white-space: nowrap; font-size: 0.8rem;">
+        <span style="color: #0F2E1B;"><b>{display_nickname}</b></span> {admin_badge}
     </div>
     """, unsafe_allow_html=True)
 with col_h3:
@@ -401,12 +410,12 @@ with col_h3:
         set_menu("알림 센터")
         st.rerun()
 
-st.markdown("<hr style='margin: 8px 0 15px 0; border-top: 1px solid #E2E8F0;'>", unsafe_allow_html=True)
+st.markdown("<hr style='margin: 6px 0 12px 0; border-top: 1px solid #E2E8F0;'>", unsafe_allow_html=True)
 
 if st.session_state.current_menu == "HOME":
     st.markdown("""
     <div class="logo-hero">
-        <div style="font-size: 3rem; margin-bottom: 6px;">⛳</div>
+        <div style="font-size: 2.8rem; margin-bottom: 4px;">⛳</div>
         <h1>SEGOK GOLF CLUB</h1>
         <p>PREMIUM GOLF SOCIETY & COMMUNITY</p>
     </div>
@@ -428,7 +437,7 @@ if st.session_state.current_menu == "HOME":
             
         lounge_badge = '<span class="new-badge">NEW</span>' if has_new_lounge else ''
         st.markdown(f"""
-        <div class="menu-card" style="margin-top: 15px;">
+        <div class="menu-card" style="margin-top: 12px;">
             <h3>💬 LOUNGE{lounge_badge}</h3>
             <p>자유 소통, 투표 및 파일 공유</p>
         </div>
@@ -438,7 +447,7 @@ if st.session_state.current_menu == "HOME":
             st.rerun()
 
         st.markdown(f"""
-        <div class="menu-card" style="margin-top: 15px;">
+        <div class="menu-card" style="margin-top: 12px;">
             <h3>📁 ARCHIVE</h3>
             <p>지난 날짜별 조편성 기록 확인</p>
         </div>
@@ -450,7 +459,7 @@ if st.session_state.current_menu == "HOME":
     with c2:
         st.markdown("""
         <div class="menu-card">
-            <h3>🏆 RESULTS & RANKING</h3>
+            <h3>🏆 RESULTS</h3>
             <p>역대 스코어 및 공식 시상</p>
         </div>
         """, unsafe_allow_html=True)
@@ -459,8 +468,8 @@ if st.session_state.current_menu == "HOME":
             st.rerun()
             
         st.markdown("""
-        <div class="menu-card" style="margin-top: 15px;">
-            <h3>👑 HALL OF FAME</h3>
+        <div class="menu-card" style="margin-top: 12px;">
+            <h3>👑 FAME</h3>
             <p>회원별 평균타수 및 출석 현황</p>
         </div>
         """, unsafe_allow_html=True)
@@ -469,7 +478,7 @@ if st.session_state.current_menu == "HOME":
             st.rerun()
 
         st.markdown("""
-        <div class="menu-card" style="margin-top: 15px;">
+        <div class="menu-card" style="margin-top: 12px;">
             <h3>👤 MY PAGE</h3>
             <p>프로필, 로그아웃 및 클럽 탈퇴</p>
         </div>
@@ -479,13 +488,13 @@ if st.session_state.current_menu == "HOME":
             st.rerun()
 
     if is_admin:
-        st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='margin-top: 12px;'></div>", unsafe_allow_html=True)
         ac1, ac2 = st.columns(2)
         with ac1:
             st.markdown("""
             <div class="menu-card">
-                <h3>⛳ TEE-OFF MATCH</h3>
-                <p>맞춤형 조편성 및 수동 복사 지원</p>
+                <h3>⛳ MATCH</h3>
+                <p>맞춤형 조편성 및 수동 복사</p>
             </div>
             """, unsafe_allow_html=True)
             if st.button("조편성 실행", use_container_width=True, key="go_match"):
@@ -496,7 +505,7 @@ if st.session_state.current_menu == "HOME":
             badge_txt = f" (대기 {pending_cnt})" if pending_cnt > 0 else ""
             st.markdown(f"""
             <div class="menu-card">
-                <h3>👥 MEMBER LIST{badge_txt}</h3>
+                <h3>👥 MEMBERS{badge_txt}</h3>
                 <p>정회원 관리 및 가입 승인</p>
             </div>
             """, unsafe_allow_html=True)
@@ -540,7 +549,7 @@ else:
             set_menu(target_menu)
             st.rerun()
 
-    st.markdown("<hr style='margin: 12px 0 15px 0; border-top: 1px solid #E2E8F0;'>", unsafe_allow_html=True)
+    st.markdown("<hr style='margin: 10px 0 12px 0; border-top: 1px solid #E2E8F0;'>", unsafe_allow_html=True)
     
     menu = st.session_state.current_menu
 
@@ -594,7 +603,7 @@ else:
                     st.rerun()
 
         st.markdown("##### 💬 내 게시물에 달린 댓글")
-        my_posts = [p for p in feed_posts if p.get("author") == current_user]
+        my_posts = [p for p in feed_posts if p.get("author"] == current_user]
         my_comments_found = False
         for p in my_posts:
             comments = p.get("comments", [])
@@ -1264,7 +1273,7 @@ else:
 
             balance_rule = st.radio("조편성 방식", ["과거 동반 중복 방지 (기본)", "핸디캡 균등 배정 (고수+초보 믹스)"])
             
-            approved_names = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
+            approved_names = [k for k, v in member_db.items() if v.get("status", "approved"] == "approved"]
             default_selected = approved_names[:16] if len(approved_names) >= 16 else approved_names
             selected_attendees = st.multiselect("오늘 참석자 선택", approved_names, default=default_selected)
             
