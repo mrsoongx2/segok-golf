@@ -1462,9 +1462,10 @@ else:
                                     pair_history[m1][m2] += 1
                                     pair_history[m2][m1] += 1
                                     
+                    round_title_str = f"{r_date_input.month}월 정기 필드 월례회 ({golf_location or '필드'})"
                     round_entry = {
                         "id": int(datetime.now().timestamp()),
-                        "title": f"{r_date_input.month}월 정기 필드 월례회 ({golf_location or '필드'})",
+                        "title": round_title_str,
                         "date": date_str,
                         "location": golf_location or "필드",
                         "tee_times": group_tee_times,
@@ -1481,7 +1482,7 @@ else:
                         "id": len(match_logs) + 1,
                         "date": date_str,
                         "location": golf_location or "필드",
-                        "title": f"{r_date_input.month}월 정기 필드 월례회 ({golf_location or '필드'})",
+                        "title": round_title_str,
                         "tee_times": group_tee_times,
                         "courses": group_courses,
                         "event_type": "필드 월례회",
@@ -1749,12 +1750,16 @@ else:
         if not match_logs:
             st.warning("아직 저장된 조편성 이력이 없습니다.")
         else:
-            log_options = [f"{log.get('date', '')} | {log.get('title', log.get('event_type', '필드'))} ({log.get('location', '')})" for log in match_logs]
+            log_options = [f"{log.get('date', '날짜미상')} | {log.get('title', log.get('event_type', '필드 월례회'))} ({log.get('location', '장소미상')})" for log in match_logs]
             selected_log_label = st.selectbox("📂 조회할 조편성 이력 선택", log_options)
             selected_log_idx = log_options.index(selected_log_label)
             log = match_logs[selected_log_idx]
             
-            st.markdown(f"### 🗓️ {log.get('date', '')} | {log.get('title', log.get('event_type', '필드'))} - 🏟️ {log.get('location', '')}")
+            log_date = log.get('date', '날짜미상')
+            log_title = log.get('title', log.get('event_type', '필드 월례회'))
+            log_loc = log.get('location', '장소미상')
+            
+            st.markdown(f"### 🗓️ {log_date} | {log_title} - 🏟️ {log_loc}")
             
             if is_admin:
                 with st.expander("🗑️ 조편성 이력 삭제 관리"):
