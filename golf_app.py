@@ -958,13 +958,13 @@ else:
                             st.rerun()
                     
                     for i in range(st.session_state.poll_option_count):
-                        opt_val = st.text_input(f"투표 항목 {i+1} (예: {i+1}번 투표)", key=f"poll_opt_input_{i}", placeholder=f"투표 항목 {i+1}")
+                        opt_val = st.text_input(f"투표 항목 {i+1}", key=f"poll_opt_input_{i}", placeholder=f"투표 항목 {i+1}")
                         if opt_val:
                             poll_options.append(opt_val.strip())
 
             if st.button("게시물 등록하기", type="primary", use_container_width=True, key="lounge_submit_btn"):
                 # 수정된 부분: 투표가 없어도 post_text나 업로드 파일이 있으면 글이 정상 등록되도록 수정
-                if post_text or uploaded_file or doc_file or (use_poll and poll_question and len(poll_options) >= 2):
+                if (post_text and post_text.strip()) or uploaded_file or doc_file or (use_poll and poll_question and len(poll_options) >= 2):
                     media_path = None
                     media_type = None
                     if uploaded_file is not None:
@@ -998,7 +998,7 @@ else:
                         "nickname": user_info.get("nickname", current_user),
                         "profile_img": user_info.get("profile_img", None),
                         "date": datetime.now().strftime("%Y-%m-%d %H:%M"),
-                        "content": post_text,
+                        "content": post_text if post_text else "",
                         "media_path": media_path,
                         "media_type": media_type,
                         "file_path": file_path,
@@ -1195,7 +1195,7 @@ else:
                                         e_opts_list.append(io_val.strip())
 
                             if st.button("수정 저장", key=f"btn_save_post_{post['id']}", use_container_width=True):
-                                post['content'] = edit_post_text
+                                post['content'] = edit_post_text if edit_post_text else ""
                                 
                                 if rm_img:
                                     if post.get("media_path") and os.path.exists(post["media_path"]):
@@ -1302,9 +1302,9 @@ else:
             with col_op2:
                 gender_rule = st.radio("성별 맞춤 옵션", ["기본 (핸디캡 균등)", "동성 위주 배치", "성비 맞춤 위주 (남녀 균등)"])
 
-            approved_names = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
-            default_selected = approved_names[:16] if len(approved_names) >= 16 else approved_names
-            selected_attendees = st.multiselect("오늘 참석자 선택", approved_names, default=default_selected)
+            approved_members = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
+            default_selected = approved_members[:16] if len(approved_names) >= 16 else approved_members
+            selected_attendees = st.multiselect("오늘 참석자 선택", approved_members, default=default_selected)
 
             with st.expander("💌 회원별 동반 희망 멤버 (1, 2, 3지망) 설정"):
                 if 'match_preferences' not in st.session_state:
@@ -1763,7 +1763,7 @@ else:
             m_loc = st.text_input("골프장 장소", value="남서울CC", key="manual_archive_loc")
             
             st.markdown("##### ⛳ 조별 구성원 입력 (최대 4개 조)")
-            approved_names = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
+            approved_members = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
             
             m_teams = []
             m_tee_times = []
