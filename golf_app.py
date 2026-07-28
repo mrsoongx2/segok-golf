@@ -446,7 +446,7 @@ if st.session_state.current_menu == "HOME":
         lounge_badge = '<span class="new-badge">NEW</span>' if has_new_lounge else ''
         st.markdown(f"""
         <div class="menu-card-box">
-            <h3>💬 LOUNGE{lounge_badge}</h3>
+            <h3>💬 CLUB LOUNGE{lounge_badge}</h3>
             <p>자유 소통, 투표 및 파일 공유</p>
         </div>
         """, unsafe_allow_html=True)
@@ -481,7 +481,7 @@ if st.session_state.current_menu == "HOME":
 
         st.markdown("""
         <div class="menu-card-box">
-            <h3>👑 FAME</h3>
+            <h3>👑 HALL OF FAME</h3>
             <p>회원별 평균타수 및 출석 현황</p>
         </div>
         """, unsafe_allow_html=True)
@@ -529,7 +529,7 @@ if st.session_state.current_menu == "HOME":
 
 else:
     notice_label = f"📢 공지사항 (NOTICE) {'🟢' if has_new_notice else ''}"
-    lounge_label = f"💬 클럽 라운지 (LOUNGE) {'🟢' if has_new_lounge else ''}"
+    lounge_label = f"💬 클럽 라운지 (CLUB LOUNGE) {'🟢' if has_new_lounge else ''}"
     
     menu_list = ["메인 홈", notice_label, lounge_label, "🏆 경기 결과 및 랭킹 (RESULTS)", "👑 명예의 전당 (HALL OF FAME)", "📁 조편성 아카이브 (ARCHIVE)", "👤 마이페이지 (MY PAGE)"]
     if is_admin:
@@ -570,7 +570,7 @@ else:
     # 1. 🔔 알림 센터 (인박스)
     if menu == "알림 센터":
         st.subheader("🔔 INBOX (알림 센터)")
-        st.caption("읽지 않은 공지사항, 라운지 새 글 및 내 게시물에 달린 댓글을 모아봅니다.")
+        st.caption("읽지 않은 공지사항, 클럽 라운지 새 글 및 내 게시물에 달린 댓글을 모아봅니다.")
 
         if st.button("✔️ 모든 알림 읽음 처리", type="primary", use_container_width=True):
             if notices:
@@ -602,7 +602,7 @@ else:
         st.markdown("##### 💬 미확인 클럽 라운지 소식")
         unread_posts = [p for p in feed_posts if p["date"] > last_l] if last_l else feed_posts
         if not unread_posts:
-            st.info("새로운 라운지 소식이 없습니다.")
+            st.info("새로운 클럽 라운지 소식이 없습니다.")
         else:
             for p in unread_posts:
                 nick = member_db.get(p.get("author"), {}).get("nickname", p.get("author"))
@@ -612,7 +612,7 @@ else:
                     <div style="font-size:0.85rem; color:#444; margin-top:4px;">{p['content'][:50]}...</div>
                 </div>
                 """, unsafe_allow_html=True)
-                if st.button("라운지로 이동", key=f"go_p_{p['id']}"):
+                if st.button("클럽 라운지로 이동", key=f"go_p_{p['id']}"):
                     set_menu("클럽 라운지")
                     st.rerun()
 
@@ -899,7 +899,7 @@ else:
             user_info["last_lounge_seen"] = feed_posts[0]["date"]
             save_data(db)
             
-        st.subheader("💬 LOUNGE (클럽 라운지)")
+        st.subheader("💬 CLUB LOUNGE (클럽 라운지)")
         
         if 'show_lounge_write' not in st.session_state:
             st.session_state.show_lounge_write = False
@@ -1553,8 +1553,8 @@ else:
                                     nd = st.number_input(f"[{m_nick}] 니어(m)", min_value=0.0, max_value=50.0, value=float(curr['near']), step=0.1, key=f"nd_{r['id']}_{m}")
                                 entered_mod_scores[m] = {"score": sc, "long": ld, "near": nd}
                     else:
-                        approved_names = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
-                        sel_mems = st.multiselect("참석 회원 선택", approved_names, default=list(r.get("scores", {}).keys()), key=f"melsel_{r['id']}")
+                        approved_members = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
+                        sel_mems = st.multiselect("참석 회원 선택", approved_members, default=list(r.get("scores", {}).keys()), key=f"melsel_{r['id']}")
                         for m in sel_mems:
                             curr = r.get("scores", {}).get(m, {"score": 85, "long": 0, "near": 0.0})
                             m_nick = member_db.get(m, {}).get("nickname", m)
