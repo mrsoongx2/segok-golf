@@ -268,6 +268,9 @@ st.markdown("""
     .band-header { display: flex; align-items: center; padding: 12px 14px; border-bottom: 1px solid #F1F5F9; background-color: #FAFAFA; }
     .band-body { padding: 14px; font-size: 0.88rem; color: #1E2923; line-height: 1.5; }
     
+    .schedule-card { background: #FFFFFF; border-radius: 12px; border: 1px solid #E2E8F0; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border-left: 5px solid #1B4D33; }
+    .schedule-card h4 { margin: 0 0 8px 0; color: #0F2E1B; font-family: 'Montserrat', sans-serif; font-size: 1rem; }
+    
     .team-box { background-color: #0F2E1B; color: #FFFFFF; padding: 14px; border-radius: 12px; margin-bottom: 12px; border: 1px solid #D4B475; font-size: 0.85rem; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
     .team-box h3 { color: #E5C585 !important; font-family: 'Montserrat', sans-serif; font-size: 0.95rem; margin-bottom: 6px; border-bottom: 1px solid #235C3D; padding-bottom: 4px; }
     
@@ -635,22 +638,42 @@ else:
         if not my_comments_found:
             st.info("내 게시물에 달린 댓글이 없습니다.")
 
-    # 2. 📅 연간 일정 (SCHEDULE)
+    # 2. 📅 연간 일정 (SCHEDULE) - 멋진 카드 타임라인 형태로 업그레이드
     elif menu == "연간 일정":
         st.subheader("📅 ANNUAL SCHEDULE (세곡 골프 클럽 연간 일정)")
-        st.caption("2026년 8월 1일 ~ 2027년 7월 31일 (Yr.26-27) 시즌 주요 클럽 일정 및 규정 안내")
+        st.caption("시즌 Yr.26-27 (2026. 8. 1 ~ 2027. 7. 31) 주요 클럽 월례회 및 행사 일정")
 
-        schedule_data = [
-            {"구분": "필드 월례회 (M)", "8월('26)": "2026-08-21(금)", "9월": "2026-09-19(토)", "10월": "2026-10-23(금)", "11월": "2026-11-21(토)", "12월": "2026-12-05(토)", "1월('27)": "2027-01-15(금)", "2월": "2027-02-27(토)", "3월": "2027-03-19(금)", "4월": "2027-04-17(토)", "5월": "2027-05-21(금)", "6월": "2027-06-19(토)", "7월": "2027-07-23(금)"},
-            {"구분": "스크린 월례회 (M)", "8월('26)": "2026-08-08(토)", "9월": "2026-09-05(토)", "10월": "2026-10-17(토)", "11월": "2026-11-07(토)", "12월": "2026-12-19(토)", "1월('27)": "2027-01-09(토)", "2월": "2027-02-13(토)", "3월": "2027-03-06(토)", "4월": "2027-04-03(토)", "5월": "2027-05-15(토)", "6월": "2027-06-05(토)", "7월": "2027-07-03(토)"},
-            {"구분": "송년회 (A)", "8월('26)": "-", "9월": "-", "10월": "-", "11월": "-", "12월": "2026-12-05(토)", "1월('27)": "-", "2월": "-", "3월": "-", "4월": "-", "5월": "-", "6월": "-", "7월": "-"}
+        schedule_items = [
+            {"month": "2026. 08 (Yr.26 AUG)", "field": "2026-08-21 (금)", "screen": "2026-08-08 (토)", "etc": ""},
+            {"month": "2026. 09 (Yr.26 SEP)", "field": "2026-09-19 (토)", "screen": "2026-09-05 (토)", "etc": ""},
+            {"month": "2026. 10 (Yr.26 OCT)", "field": "2026-10-23 (금)", "screen": "2026-10-17 (토)", "etc": ""},
+            {"month": "2026. 11 (Yr.26 NOV)", "field": "2026-11-21 (토)", "screen": "2026-11-07 (토)", "etc": ""},
+            {"month": "2026. 12 (Yr.26 DEC)", "field": "2026-12-05 (토)", "screen": "2026-12-19 (토)", "etc": "🎉 송년회 겸사 (12/5)"},
+            {"month": "2027. 01 (Yr.27 JAN)", "field": "2027-01-15 (금)", "screen": "2027-01-09 (토)", "etc": ""},
+            {"month": "2027. 02 (Yr.27 FEB)", "field": "2027-02-27 (토)", "screen": "2027-02-13 (토)", "etc": ""},
+            {"month": "2027. 03 (Yr.27 MAR)", "field": "2027-03-19 (금)", "screen": "2027-03-06 (토)", "etc": ""},
+            {"month": "2027. 04 (Yr.27 APR)", "field": "2027-04-17 (토)", "screen": "2027-04-03 (토)", "etc": ""},
+            {"month": "2027. 05 (Yr.27 MAY)", "field": "2027-05-21 (금)", "screen": "2027-05-15 (토)", "etc": ""},
+            {"month": "2027. 06 (Yr.27 JUN)", "field": "2027-06-19 (토)", "screen": "2027-06-05 (토)", "etc": ""},
+            {"month": "2027. 07 (Yr.27 JUL)", "field": "2027-07-23 (금)", "screen": "2027-07-03 (토)", "etc": ""},
         ]
-        
-        st.table(pd.DataFrame(schedule_data))
 
+        for s in schedule_items:
+            etc_badge = f"<span style='background:#FEF3C7; color:#92400E; padding:2px 8px; border-radius:6px; font-size:0.75rem; font-weight:700; margin-left:8px;'>{s['etc']}</span>" if s['etc'] else ""
+            st.markdown(f"""
+            <div class="schedule-card">
+                <h4>🗓️ {s['month']} {etc_badge}</h4>
+                <div style="display: flex; gap: 20px; font-size: 0.88rem; color: #334155; margin-top: 6px;">
+                    <div>⛳ <b>필드 월례회:</b> <span style="color: #1B4D33; font-weight: 600;">{s['field']}</span></div>
+                    <div>🖥️ <b>스크린 월례회:</b> <span style="color: #2563EB; font-weight: 600;">{s['screen']}</span></div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
+        st.markdown("##### 📌 클럽 운영 및 참석 규정 노트")
         st.markdown("""
-        <div style="background-color: #F8FAFC; border-left: 4px solid #1B4D33; padding: 14px 18px; border-radius: 8px; font-size: 0.85rem; color: #1E2923; line-height: 1.6; margin-top: 15px;">
-            <b>📌 세곡 골프클럽 운영 및 참석 규정 노트</b><br>
+        <div style="background-color: #F8FAFC; border-left: 4px solid #1B4D33; padding: 14px 18px; border-radius: 8px; font-size: 0.85rem; color: #1E2923; line-height: 1.6;">
             • <b>필드 월례회:</b> 금요일과 토요일 격월로 번갈아 매월 3주 차에 진행합니다. (12월 제외)<br>
             • <b>스크린 월례회:</b> 매월 1주 차 토요일에 진행하며, 연휴 및 주요 행사(어버이날 등) 시 조정될 수 있습니다.<br>
             • <b>자율 모임:</b> 월례회 외의 사적인 라운드는 정기 횟수로 집계하지 않습니다.<br>
@@ -1171,7 +1194,7 @@ else:
                     if st.button("지망 사항 저장", key=f"save_pref_{pref_member}"):
                         val1 = "" if p1 == "선택 안 함" else p1
                         val2 = "" if p2 == "선택 안 함" else p2
-                        val3 = "" if p3 == "선택 안 함" else p3
+                        val3 = "" if p3 == "선택 안 함" else val3
                         st.session_state.match_preferences[pref_member] = [val1, val2, val3]
                         st.success("수정되었습니다!")
 
@@ -1708,4 +1731,94 @@ else:
         if is_admin:
             st.divider()
             st.subheader("👑 [OPERATOR] 신입회원 가입 승인 센터")
-            pending_members = [k for k, v in member_db.items() if v.get("status") == "pending"] # Wait, let's make sure this line is correct: v.get("status") == "pending"
+            pending_members = [k for k, v in member_db.items() if v.get("status") == "pending"]
+            
+            if not pending_members:
+                st.info("현재 가입 승인 대기 중인 회원이 없습니다.")
+            else:
+                for p_name in pending_members:
+                    col_p1, col_p2 = st.columns([3, 1])
+                    with col_p1:
+                        st.write(f"👤 **가입 대기 회원:** `{p_name}`")
+                    with col_p2:
+                        if st.button(f"✅ {p_name} 승인", key=f"app_{p_name}", use_container_width=True):
+                            member_db[p_name]["status"] = "approved"
+                            save_data(db)
+                            st.success("등록되었습니다!")
+                            st.rerun()
+
+            st.divider()
+            st.subheader("🚫 [OPERATOR] 회원 강퇴 관리")
+            expel_candidates = [k for k in member_db.keys() if k != current_user and member_db[k].get("status", "approved") == "approved"]
+            if expel_candidates:
+                target_expel = st.selectbox("강퇴할 회원 선택", expel_candidates, key="target_expel")
+                with st.expander("⚠️ 회원 강퇴 실행"):
+                    conf_expel = st.checkbox(f"정말로 '{target_expel}' 회원을 클럽에서 강퇴하시겠습니까?", key="conf_expel")
+                    if conf_expel:
+                        if st.button("🚨 최종 강퇴 실행", type="primary", key="btn_expel", use_container_width=True):
+                            member_db.pop(target_expel, None)
+                            save_data(db)
+                            st.success("수정되었습니다!")
+                            st.rerun()
+            else:
+                st.info("강퇴할 수 있는 회원이 없습니다.")
+
+    # 10. 👤 마이페이지
+    elif menu == "마이페이지":
+        st.subheader("👤 MY PAGE (마이페이지)")
+        st.info("💡 회원 성함, 닉네임, 비밀번호, 프로필 사진 변경 및 클럽 탈퇴를 관리할 수 있습니다.")
+        
+        with st.form("edit_profile_form"):
+            edit_name = st.text_input("회원 성함", value=current_user)
+            edit_nickname = st.text_input("클럽 닉네임", value=user_info.get("nickname", current_user))
+            edit_pw = st.text_input("비밀번호 변경", value=user_info.get("password", "1234"), type="password")
+            
+            p_img_file = st.file_uploader("프로필 아바타 등록 (선택)", type=["jpg", "png", "jpeg"])
+            if user_info.get("profile_img"):
+                st.image(base64.b64decode(user_info["profile_img"]), width=100, caption="Current Profile Photo")
+                
+            submit_btn = st.form_submit_button("💾 정보 저장하기", type="primary", use_container_width=True)
+            
+            if submit_btn:
+                if edit_name != current_user:
+                    if edit_name in member_db:
+                        st.error("이미 존재하는 회원 성함입니다.")
+                    else:
+                        member_db[edit_name] = member_db.pop(current_user)
+                        st.session_state.logged_in_user = edit_name
+                        current_user = edit_name
+                
+                user_info['nickname'] = edit_nickname
+                user_info['password'] = edit_pw
+                
+                if p_img_file is not None:
+                    img_bytes = p_img_file.getvalue()
+                    user_info['profile_img'] = base64.b64encode(img_bytes).decode()
+                    
+                save_data(db)
+                st.success("수정되었습니다!")
+                st.rerun()
+
+        st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
+        st.markdown("##### 🚪 세션 관리: 로그아웃")
+        if st.button("🚪 클럽 로그아웃", type="secondary", use_container_width=True, key="mypage_logout"):
+            st.session_state.logged_in_user = None
+            set_menu("HOME")
+            try:
+                st.query_params.clear()
+            except Exception:
+                pass
+            st.rerun()
+
+        st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
+        st.markdown("##### ❌ 위험 구역: 클럽 탈퇴")
+        with st.expander("⚠️ 클럽 탈퇴하기 (계정 삭제)"):
+            conf_withdraw = st.checkbox("정말로 클럽에서 탈퇴하시겠습니까? 계정 정보가 영구 삭제됩니다.", key="conf_withdraw_mypage")
+            if conf_withdraw:
+                if st.button("🚨 최종 클럽 탈퇴 실행", type="primary", key="btn_withdraw_mypage", use_container_width=True):
+                    member_db.pop(current_user, None)
+                    save_data(db)
+                    st.session_state.logged_in_user = None
+                    set_menu("HOME")
+                    st.success("수정되었습니다!")
+                    st.rerun()
