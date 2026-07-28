@@ -43,6 +43,21 @@ COUPLES_LIST = [
 
 FEMALE_SET = {"김지윤", "김동숙", "김미화", "김주연", "이민숙", "이윤진", "이주원", "이진아", "임혜영", "진지영"}
 
+DEFAULT_SCHEDULES = [
+    {"month": "2026. 08 (Yr.26 AUG)", "field": "2026-08-21 (금)", "screen": "2026-08-08 (토)", "etc": ""},
+    {"month": "2026. 09 (Yr.26 SEP)", "field": "2026-09-19 (토)", "screen": "2026-09-05 (토)", "etc": ""},
+    {"month": "2026. 10 (Yr.26 OCT)", "field": "2026-10-23 (금)", "screen": "2026-10-17 (토)", "etc": ""},
+    {"month": "2026. 11 (Yr.26 NOV)", "field": "2026-11-21 (토)", "screen": "2026-11-07 (토)", "etc": ""},
+    {"month": "2026. 12 (Yr.26 DEC)", "field": "2026-12-05 (토)", "screen": "2026-12-19 (토)", "etc": "🎉 송년회 겸사 (12/5)"},
+    {"month": "2027. 01 (Yr.27 JAN)", "field": "2027-01-15 (금)", "screen": "2027-01-09 (토)", "etc": ""},
+    {"month": "2027. 02 (Yr.27 FEB)", "field": "2027-02-27 (토)", "screen": "2027-02-13 (토)", "etc": ""},
+    {"month": "2027. 03 (Yr.27 MAR)", "field": "2027-03-19 (금)", "screen": "2027-03-06 (토)", "etc": ""},
+    {"month": "2027. 04 (Yr.27 APR)", "field": "2027-04-17 (토)", "screen": "2027-04-03 (토)", "etc": ""},
+    {"month": "2027. 05 (Yr.27 MAY)", "field": "2027-05-21 (금)", "screen": "2027-05-15 (토)", "etc": ""},
+    {"month": "2027. 06 (Yr.27 JUN)", "field": "2027-06-19 (토)", "screen": "2027-06-05 (토)", "etc": ""},
+    {"month": "2027. 07 (Yr.27 JUL)", "field": "2027-07-23 (금)", "screen": "2027-07-03 (토)", "etc": ""},
+]
+
 def load_data():
     if os.path.exists(DB_FILE):
         try:
@@ -59,6 +74,8 @@ def load_data():
                                 data["member_db"][m]["last_lounge_seen"] = ""
                     if "notices" not in data:
                         data["notices"] = []
+                    if "annual_schedules" not in data:
+                        data["annual_schedules"] = DEFAULT_SCHEDULES
                     for notice in data.get("notices", []):
                         if "media_path" not in notice:
                             notice["media_path"] = None
@@ -100,6 +117,7 @@ def load_data():
     rounds_data = [] 
     match_logs = []
     notices = []
+    annual_schedules = DEFAULT_SCHEDULES
     
     return {
         "total_events": 0,
@@ -108,7 +126,8 @@ def load_data():
         "feed_posts": feed_posts,
         "rounds_data": rounds_data,
         "match_logs": match_logs,
-        "notices": notices
+        "notices": notices,
+        "annual_schedules": annual_schedules
     }
 
 def save_data(data):
@@ -163,6 +182,7 @@ feed_posts = db.setdefault("feed_posts", [])
 rounds_data = db.setdefault("rounds_data", [])
 match_logs = db.setdefault("match_logs", [])
 notices = db.setdefault("notices", [])
+annual_schedules = db.setdefault("annual_schedules", DEFAULT_SCHEDULES)
 
 query_user = None
 query_menu = "HOME"
@@ -195,11 +215,11 @@ st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
     
-    /* Streamlit 기본 워터마크(Hosted with Streamlit), 상단 메뉴, 푸터 숨기기 */
     #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
     header {visibility: hidden;}
-    .stDeployButton {display:none;}
+    footer {visibility: hidden; display: none !important;}
+    .stDeployButton {display: none !important;}
+    div[data-testid="stStatusWidget"] {visibility: hidden;}
     
     .stApp { background-color: #F4F6F4 !important; font-family: 'Noto Sans KR', sans-serif; color: #1E2923; font-size: 0.9rem; }
     
@@ -274,8 +294,8 @@ st.markdown("""
     .band-header { display: flex; align-items: center; padding: 12px 14px; border-bottom: 1px solid #F1F5F9; background-color: #FAFAFA; }
     .band-body { padding: 14px; font-size: 0.88rem; color: #1E2923; line-height: 1.5; }
     
-    .schedule-card { background: #FFFFFF; border-radius: 12px; border: 1px solid #E2E8F0; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border-left: 5px solid #1B4D33; }
-    .schedule-card h4 { margin: 0 0 8px 0; color: #0F2E1B; font-family: 'Montserrat', sans-serif; font-size: 1rem; }
+    .schedule-card { background: #FFFFFF; border-radius: 12px; border: 1px solid #E2E8F0; padding: 14px 16px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border-left: 5px solid #1B4D33; }
+    .schedule-card h4 { margin: 0 0 8px 0; color: #0F2E1B; font-family: 'Montserrat', sans-serif; font-size: 0.95rem; }
     
     .team-box { background-color: #0F2E1B; color: #FFFFFF; padding: 14px; border-radius: 12px; margin-bottom: 12px; border: 1px solid #D4B475; font-size: 0.85rem; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
     .team-box h3 { color: #E5C585 !important; font-family: 'Montserrat', sans-serif; font-size: 0.95rem; margin-bottom: 6px; border-bottom: 1px solid #235C3D; padding-bottom: 4px; }
@@ -320,7 +340,6 @@ if not st.session_state.get('logged_in_user'):
         
         with tab1:
             st.caption("초기 비밀번호는 '1234' 입니다.")
-            approved_members = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"] # Wait, let's keep it safe.
             approved_members = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
             login_name = st.selectbox("회원 성함 선택", ["선택하세요"] + approved_members)
             login_pw = st.text_input("비밀번호 입력", type="password")
@@ -645,37 +664,81 @@ else:
         if not my_comments_found:
             st.info("내 게시물에 달린 댓글이 없습니다.")
 
-    # 2. 📅 연간 일정 (SCHEDULE) - 카드 타임라인 형태로 업그레이드
+    # 2. 📅 연간 일정 (SCHEDULE) - 모바일 최적화 2줄 배치 및 운영진 수정/등록 기능 추가
     elif menu == "연간 일정":
         st.subheader("📅 ANNUAL SCHEDULE (세곡 골프 클럽 연간 일정)")
         st.caption("시즌 Yr.26-27 (2026. 8. 1 ~ 2027. 7. 31) 주요 클럽 월례회 및 행사 일정")
 
-        schedule_items = [
-            {"month": "2026. 08 (Yr.26 AUG)", "field": "2026-08-21 (금)", "screen": "2026-08-08 (토)", "etc": ""},
-            {"month": "2026. 09 (Yr.26 SEP)", "field": "2026-09-19 (토)", "screen": "2026-09-05 (토)", "etc": ""},
-            {"month": "2026. 10 (Yr.26 OCT)", "field": "2026-10-23 (금)", "screen": "2026-10-17 (토)", "etc": ""},
-            {"month": "2026. 11 (Yr.26 NOV)", "field": "2026-11-21 (토)", "screen": "2026-11-07 (토)", "etc": ""},
-            {"month": "2026. 12 (Yr.26 DEC)", "field": "2026-12-05 (토)", "screen": "2026-12-19 (토)", "etc": "🎉 송년회 겸사 (12/5)"},
-            {"month": "2027. 01 (Yr.27 JAN)", "field": "2027-01-15 (금)", "screen": "2027-01-09 (토)", "etc": ""},
-            {"month": "2027. 02 (Yr.27 FEB)", "field": "2027-02-27 (토)", "screen": "2027-02-13 (토)", "etc": ""},
-            {"month": "2027. 03 (Yr.27 MAR)", "field": "2027-03-19 (금)", "screen": "2027-03-06 (토)", "etc": ""},
-            {"month": "2027. 04 (Yr.27 APR)", "field": "2027-04-17 (토)", "screen": "2027-04-03 (토)", "etc": ""},
-            {"month": "2027. 05 (Yr.27 MAY)", "field": "2027-05-21 (금)", "screen": "2027-05-15 (토)", "etc": ""},
-            {"month": "2027. 06 (Yr.27 JUN)", "field": "2027-06-19 (토)", "screen": "2027-06-05 (토)", "etc": ""},
-            {"month": "2027. 07 (Yr.27 JUL)", "field": "2027-07-23 (금)", "screen": "2027-07-03 (토)", "etc": ""},
-        ]
+        if is_admin:
+            with st.expander("✍️ [OPERATOR] 연간 일정 추가 및 관리"):
+                with st.form("add_schedule_form"):
+                    st.markdown("##### ➕ 새로운 월별 일정 추가")
+                    new_month = st.text_input("월/시즌 명칭", placeholder="예: 2026. 08 (Yr.26 AUG)")
+                    new_field = st.text_input("필드 월례회 일정", placeholder="예: 2026-08-21 (금)")
+                    new_screen = st.text_input("스크린 월례회 일정", placeholder="예: 2026-08-08 (토)")
+                    new_etc = st.text_input("기타 메모 (선택)", placeholder="예: 🎉 송년회 겸사 (12/5)")
+                    
+                    add_sch_btn = st.form_submit_button("일정 추가하기", use_container_width=True)
+                    if add_sch_btn:
+                        if new_month:
+                            annual_schedules.append({
+                                "month": new_month,
+                                "field": new_field if new_field else "-",
+                                "screen": new_screen if new_screen else "-",
+                                "etc": new_etc if new_etc else ""
+                            })
+                            save_data(db)
+                            st.success("등록되었습니다!")
+                            st.rerun()
+                        else:
+                            st.warning("월/시즌 명칭을 입력해 주세요.")
 
-        for s in schedule_items:
-            etc_badge = f"<span style='background:#FEF3C7; color:#92400E; padding:2px 8px; border-radius:6px; font-size:0.75rem; font-weight:700; margin-left:8px;'>{s['etc']}</span>" if s['etc'] else ""
+        st.markdown("<div style='height: 4px;'></div>", unsafe_allow_html=True)
+
+        for s_idx, s in enumerate(annual_schedules):
+            etc_badge = f"<span style='background:#FEF3C7; color:#92400E; padding:2px 8px; border-radius:6px; font-size:0.75rem; font-weight:700; margin-left:8px;'>{s['etc']}</span>" if s.get('etc') else ""
+            
+            # 모바일에서 한 줄이 길어지지 않도록 필드와 스크린 일정을 세로(두 줄)로 배치
             st.markdown(f"""
             <div class="schedule-card">
-                <h4>🗓️ {s['month']} {etc_badge}</h4>
-                <div style="display: flex; gap: 20px; font-size: 0.88rem; color: #334155; margin-top: 6px;">
+                <h4 style="margin-bottom: 6px;">🗓️ {s['month']} {etc_badge}</h4>
+                <div style="font-size: 0.88rem; color: #334155; line-height: 1.6;">
                     <div>⛳ <b>필드 월례회:</b> <span style="color: #1B4D33; font-weight: 600;">{s['field']}</span></div>
                     <div>🖥️ <b>스크린 월례회:</b> <span style="color: #2563EB; font-weight: 600;">{s['screen']}</span></div>
                 </div>
             </div>
             """, unsafe_allow_html=True)
+
+            if is_admin:
+                with st.expander(f"✏️ [{s['month']}] 일정 수정/삭제"):
+                    with st.form(f"edit_sch_form_{s_idx}"):
+                        e_month = st.text_input("월/시즌 명칭", value=s['month'], key=f"e_m_{s_idx}")
+                        e_field = st.text_input("필드 월례회 일정", value=s['field'], key=f"e_f_{s_idx}")
+                        e_screen = st.text_input("스크린 월례회 일정", value=s['screen'], key=f"e_s_{s_idx}")
+                        e_etc = st.text_input("기타 메모", value=s.get('etc', ''), key=f"e_e_{s_idx}")
+                        
+                        col_se1, col_se2 = st.columns(2)
+                        with col_se1:
+                            save_sch = st.form_submit_button("💾 수정 저장", use_container_width=True)
+                        with col_se2:
+                            del_sch = st.form_submit_button("🗑️ 일정 삭제", use_container_width=True)
+
+                        if save_sch:
+                            annual_schedules[s_idx] = {
+                                "month": e_month,
+                                "field": e_field,
+                                "screen": e_screen,
+                                "etc": e_etc
+                            }
+                            save_data(db)
+                            st.success("수정되었습니다!")
+                            st.rerun()
+                        
+                        if del_sch:
+                            annual_schedules.pop(s_idx)
+                            save_data(db)
+                            st.success("수정되었습니다!")
+                            st.rerun()
 
         st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
         st.markdown("##### 📌 클럽 운영 및 참석 규정 노트")
@@ -1200,7 +1263,7 @@ else:
                     
                     if st.button("지망 사항 저장", key=f"save_pref_{pref_member}"):
                         val1 = "" if p1 == "선택 안 함" else p1
-                        val2 = "" if p2 == "선택 안 함" else p2
+                        val2 = "" if p2 == "선택 안 함" else val2
                         val3 = "" if p3 == "선택 안 함" else val3
                         st.session_state.match_preferences[pref_member] = [val1, val2, val3]
                         st.success("수정되었습니다!")
