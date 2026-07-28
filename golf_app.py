@@ -5,7 +5,7 @@ import random
 import json
 import os
 import base64
-from datetime import datetime
+from datetime import datetime, time
 
 st.set_page_config(
     page_title="Segok Golf Club", 
@@ -184,8 +184,10 @@ st.markdown("""
     
     .band-card { background-color: #FFFFFF; border-radius: 10px; border: 1px solid #E0E0E0; max-width: 100%; margin: 0 auto 16px auto; box-shadow: 0 1px 4px rgba(0,0,0,0.02); overflow: hidden; }
     .band-header { display: flex; align-items: center; padding: 12px 14px; border-bottom: 1px solid #F0F0F0; background-color: #FAFAFA; }
-    .band-body { padding: 14px; font-size: 0.88rem; color: #262626; line-height: 1.5; word-break: break-all; user-select: text; }
+    .band-body { padding: 14px; font-size: 0.88rem; color: #262626; line-height: 1.5; }
     
+    .kakao-notice-box { background-color: #F8F9FA; border-left: 4px solid #1B3B2B; padding: 12px 15px; border-radius: 6px; font-size: 0.82rem !important; font-family: monospace, sans-serif !important; color: #222222 !important; line-height: 1.5 !important; white-space: pre-wrap; word-break: break-all; margin-top: 8px; }
+
     .team-box { background-color: #1B3B2B; color: #FFFFFF; padding: 14px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #C5A059; font-size: 0.85rem; }
     .team-box h3 { color: #E5C585 !important; font-family: 'Playfair Display', serif; font-size: 1rem; margin-bottom: 6px; border-bottom: 1px solid #325843; padding-bottom: 4px; }
     
@@ -342,7 +344,7 @@ if st.session_state.current_menu == "HOME":
         st.markdown(f"""
         <div class="menu-card" style="margin-top: 15px;">
             <h3>💬 클럽 라운지{lounge_badge}</h3>
-            <p>자유 소통, 투표 및 파일 공유</p>
+            <p>자유 소통, 복수 투표 및 파일 공유</p>
         </div>
         """, unsafe_allow_html=True)
         if st.button("클럽 라운지 입장", use_container_width=True, key="go_lounge"):
@@ -454,7 +456,7 @@ else:
     
     menu = st.session_state.current_menu
 
-    # 1. 📢 클럽 공지사항 (복사하기 쉽도록 standard text/code block 사용)
+    # 1. 📢 클럽 공지사항
     if menu == "클럽 공지사항":
         if notices:
             user_info["last_notice_seen"] = notices[0]["date"]
@@ -496,7 +498,6 @@ else:
                 </div>
                 """, unsafe_allow_html=True)
                 
-                # 쉽게 복사할 수 있도록 st.code 사용 (우측 상단에 복사 버튼 제공됨)
                 st.code(notice['content'], language="text")
                 
                 if is_admin:
@@ -512,89 +513,119 @@ else:
                                 st.success("공지사항이 삭제되었습니다.")
                                 st.rerun()
 
-    # 2. 💬 클럽 라운지 (동적 항목 추가 버튼식 투표 시스템 도입)
+    # 2. 💬 클럽 라운지 (글쓰기 버튼 토글 + 동적 항목 추가 버튼식 투표 + 복수 선택 설정 + 데드라인)
     elif menu == "클럽 라운지":
         if feed_posts:
             user_info["last_lounge_seen"] = feed_posts[0]["date"]
             save_data(db)
             
         st.subheader("💬 클럽 라운지")
-        with st.expander("✍️ 새 글 작성하기 (사진/파일/투표 첨부)", expanded=True):
-            post_text = st.text_area("내용 입력", placeholder="라운딩 후기, 모임 소식 등을 자유롭게 남겨보세요...")
-            
-            col_u1, col_u2 = st.columns(2)
-            with col_u1:
-                uploaded_file = st.file_uploader("이미지 첨부 (선택)", type=["jpg", "png", "jpeg"])
-            with col_u2:
-                doc_file = st.file_uploader("문서/엑셀 파일 첨부 (선택)", type=["xlsx", "xls", "pdf", "txt", "csv"])
-            
-            use_poll = st.checkbox("📊 투표 생성하기")
-            poll_question = ""
-            poll_options = []
-            
-            if use_poll:
-                poll_question = st.text_input("투표 주제", placeholder="예: 다음 모임 장소 추천")
+        
+        # 글쓰기 버튼을 눌러야만 보이도록 토글 상태 관리
+        if 'show_lounge_write' not in st.session_state:
+            st.session_state.show_lounge_write = False
+
+        col_w_btn, _ = st.columns([1, 2])
+        with col_w_btn:
+            write_btn_label = "✕ 글 작성 닫기" if st.session_state.show_lounge_write else "✍️ 새 글 작성하기"
+            if st.button(write_btn_label, type="primary"):
+                st.session_state.show_lounge_write = not st.session_state.show_lounge_write
+                st.rerun()
+
+        if st.session_state.show_lounge_write:
+            with st.container():
+                st.markdown("---")
+                st.markdown("##### 📝 새 게시물 작성")
+                post_text = st.text_area("내용 입력", placeholder="라운딩 후기, 모임 소식 등을 자유롭게 남겨보세요...", key="lounge_post_text_input")
                 
-                if 'poll_option_count' not in st.session_state:
-                    st.session_state.poll_option_count = 2
+                col_u1, col_u2 = st.columns(2)
+                with col_u1:
+                    uploaded_file = st.file_uploader("이미지 첨부 (선택)", type=["jpg", "png", "jpeg"], key="lounge_img_up")
+                with col_u2:
+                    doc_file = st.file_uploader("문서/엑셀 파일 첨부 (선택)", type=["xlsx", "xls", "pdf", "txt", "csv"], key="lounge_doc_up")
                 
-                col_cnt1, col_cnt2 = st.columns([3, 1])
-                with col_cnt2:
-                    if st.button("➕ 항목 추가"):
-                        st.session_state.poll_option_count += 1
+                use_poll = st.checkbox("📊 투표 생성하기", key="lounge_use_poll")
+                poll_question = ""
+                poll_options = []
+                poll_deadline = None
+                allow_multiple = False
+                
+                if use_poll:
+                    poll_question = st.text_input("투표 주제", placeholder="예: 다음 모임 장소 추천", key="lounge_poll_q")
+                    allow_multiple = st.checkbox("복수 선택 허용 (체크 시 최대 3개까지 선택 가능)", key="lounge_poll_multi")
+                    
+                    st.markdown("##### ⏳ 투표 마감 기한 (데드라인) 설정")
+                    col_d1, col_d2 = st.columns(2)
+                    with col_d1:
+                        d_date = st.date_input("마감 날짜", value=datetime.now().date(), key="lounge_poll_date")
+                    with col_d2:
+                        d_time = st.time_input("마감 시간", value=time(23, 59), key="lounge_poll_time")
+                    poll_deadline = datetime.combine(d_date, d_time).strftime("%Y-%m-%d %H:%M")
+
+                    if 'poll_option_count' not in st.session_state:
+                        st.session_state.poll_option_count = 2
+                    
+                    col_cnt1, col_cnt2 = st.columns([3, 1])
+                    with col_cnt2:
+                        if st.button("➕ 항목 추가", key="lounge_add_opt_btn"):
+                            st.session_state.poll_option_count += 1
+                            st.rerun()
+                    
+                    for i in range(st.session_state.poll_option_count):
+                        opt_val = st.text_input(f"투표 항목 {i+1}", key=f"poll_opt_input_{i}", placeholder=f"항목 {i+1} 입력")
+                        if opt_val:
+                            poll_options.append(opt_val.strip())
+
+                if st.button("게시물 등록하기", type="primary", use_container_width=True, key="lounge_submit_btn"):
+                    if post_text or uploaded_file or doc_file or use_poll:
+                        media_path = None
+                        media_type = None
+                        if uploaded_file is not None:
+                            file_name = f"{int(datetime.now().timestamp())}_{uploaded_file.name}"
+                            media_path = os.path.join(UPLOAD_DIR, file_name)
+                            with open(media_path, "wb") as f:
+                                f.write(uploaded_file.getbuffer())
+                            media_type = "image"
+                        
+                        file_path = None
+                        file_name = None
+                        if doc_file is not None:
+                            file_name = doc_file.name
+                            file_path = os.path.join(UPLOAD_DIR, f"doc_{int(datetime.now().timestamp())}_{file_name}")
+                            with open(file_path, "wb") as f:
+                                f.write(doc_file.getbuffer())
+
+                        poll_data = None
+                        if use_poll and poll_question and len(poll_options) >= 2:
+                            poll_data = {
+                                "question": poll_question,
+                                "deadline": poll_deadline,
+                                "allow_multiple": allow_multiple,
+                                "options": {opt: [] for opt in poll_options}
+                            }
+                        
+                        feed_posts.insert(0, {
+                            "id": int(datetime.now().timestamp()),
+                            "author": current_user,
+                            "nickname": user_info.get("nickname", current_user),
+                            "profile_img": user_info.get("profile_img", None),
+                            "date": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                            "content": post_text,
+                            "media_path": media_path,
+                            "media_type": media_type,
+                            "file_path": file_path,
+                            "file_name": file_name,
+                            "poll": poll_data,
+                            "likes": 0,
+                            "liked_users": [],
+                            "comments": []
+                        })
+                        st.session_state.poll_option_count = 2
+                        st.session_state.show_lounge_write = False
+                        save_data(db)
+                        st.success("게시물이 등록되었습니다!")
                         st.rerun()
-                
-                for i in range(st.session_state.poll_option_count):
-                    opt_val = st.text_input(f"투표 항목 {i+1}", key=f"poll_opt_input_{i}", placeholder=f"항목 {i+1} 입력")
-                    if opt_val:
-                        poll_options.append(opt_val.strip())
-
-            if st.button("게시물 등록하기", type="primary", use_container_width=True):
-                if post_text or uploaded_file or doc_file or use_poll:
-                    media_path = None
-                    media_type = None
-                    if uploaded_file is not None:
-                        file_name = f"{int(datetime.now().timestamp())}_{uploaded_file.name}"
-                        media_path = os.path.join(UPLOAD_DIR, file_name)
-                        with open(media_path, "wb") as f:
-                            f.write(uploaded_file.getbuffer())
-                        media_type = "image"
-                    
-                    file_path = None
-                    file_name = None
-                    if doc_file is not None:
-                        file_name = doc_file.name
-                        file_path = os.path.join(UPLOAD_DIR, f"doc_{int(datetime.now().timestamp())}_{file_name}")
-                        with open(file_path, "wb") as f:
-                            f.write(doc_file.getbuffer())
-
-                    poll_data = None
-                    if use_poll and poll_question and len(poll_options) >= 2:
-                        poll_data = {
-                            "question": poll_question,
-                            "options": {opt: [] for opt in poll_options}
-                        }
-                    
-                    feed_posts.insert(0, {
-                        "id": int(datetime.now().timestamp()),
-                        "author": current_user,
-                        "nickname": user_info.get("nickname", current_user),
-                        "profile_img": user_info.get("profile_img", None),
-                        "date": datetime.now().strftime("%Y-%m-%d %H:%M"),
-                        "content": post_text,
-                        "media_path": media_path,
-                        "media_type": media_type,
-                        "file_path": file_path,
-                        "file_name": file_name,
-                        "poll": poll_data,
-                        "likes": 0,
-                        "liked_users": [],
-                        "comments": []
-                    })
-                    st.session_state.poll_option_count = 2
-                    save_data(db)
-                    st.success("게시물이 등록되었습니다!")
-                    st.rerun()
+                st.markdown("---")
 
         if not feed_posts:
             st.info("아직 등록된 게시물이 없습니다. 첫 소식을 공유해 보세요!")
@@ -638,22 +669,50 @@ else:
                     </div>
                     """, unsafe_allow_html=True)
 
+                # 투표 UI (복수 선택 설정 및 데드라인 검증)
                 poll = post.get("poll")
                 if poll:
+                    deadline_str = poll.get("deadline", "")
+                    now_str_val = datetime.now().strftime("%Y-%m-%d %H:%M")
+                    is_closed = deadline_str and (now_str_val > deadline_str)
+                    allow_multi = poll.get("allow_multiple", False)
+
                     st.markdown(f"**📊 [투표] {poll['question']}**")
-                    total_votes = sum(len(v) for v in poll["options"].values())
+                    if deadline_str:
+                        st.caption(f"⏰ 마감 기한: {deadline_str}까지 {'(투표 마감됨 🔒)' if is_closed else ''}")
+                    if allow_multi:
+                        st.caption("ℹ️ 복수 선택 가능 (최대 3개)")
+
+                    my_voted_options = [opt for opt, voters in poll["options"].items() if current_user in voters]
+
                     for opt, voters in poll["options"].items():
                         voted_here = current_user in voters
                         btn_label = f"✓ {opt} ({len(voters)}표)" if voted_here else f"{opt} ({len(voters)}표)"
-                        if st.button(btn_label, key=f"poll_{post['id']}_{opt}", use_container_width=True):
-                            for o_key, o_list in poll["options"].items():
-                                if current_user in o_list:
-                                    o_list.remove(current_user)
-                            if not voted_here:
-                                voters.append(current_user)
-                            save_data(db)
-                            st.rerun()
-                    st.caption(f"총 투표 참여 인원: {total_votes}명")
+                        
+                        if is_closed:
+                            st.button(btn_label, key=f"poll_closed_{post['id']}_{opt}", disabled=True, use_container_width=True)
+                        else:
+                            if st.button(btn_label, key=f"poll_{post['id']}_{opt}", use_container_width=True):
+                                if voted_here:
+                                    voters.remove(current_user)
+                                    save_data(db)
+                                    st.rerun()
+                                else:
+                                    if not allow_multi:
+                                        for o_key, o_list in poll["options"].items():
+                                            if current_user in o_list:
+                                                o_list.remove(current_user)
+                                        voters.append(current_user)
+                                    else:
+                                        if len(my_voted_options) >= 3:
+                                            st.warning("⚠️ 최대 3개까지만 선택할 수 있습니다!")
+                                        else:
+                                            voters.append(current_user)
+                                    save_data(db)
+                                    st.rerun()
+                    
+                    total_voters = len(set([user for v_list in poll["options"].values() for user in v_list]))
+                    st.caption(f"참여 인원: {total_voters}명")
 
                 st.markdown("</div>", unsafe_allow_html=True)
                     
@@ -695,7 +754,7 @@ else:
                         save_data(db)
                         st.rerun()
 
-    # 3. ⛳ 티타임 조편성 (수동 복사 지원 - 자동 공지 등록 취소)
+    # 3. ⛳ 티타임 조편성 (수동 복사 지원)
     elif menu == "티타임 조편성":
         st.subheader("⛳ 필드 월례회 티타임 조편성")
         if not is_admin:
@@ -1031,7 +1090,7 @@ else:
         st.subheader("👑 명예의 전당 및 회원별 기록실")
         st.caption("클럽 회원들의 개인별 라운딩 스코어 이력, 평균 타수 및 출석 현황을 확인합니다.")
         
-        approved_members = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
+        approved_members = [k for k, v in member_db.items() if v.get("status", "approved"] == "approved"]
         selected_member_name = st.selectbox("🔍 조회할 회원 선택", approved_members)
         
         if selected_member_name:
