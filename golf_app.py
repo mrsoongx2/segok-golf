@@ -397,24 +397,24 @@ total_unread_alerts = unread_notices_count + unread_lounge_count
 
 alert_badge_label = f"🔔 INBOX ({total_unread_alerts})" if total_unread_alerts > 0 else "🔔 INBOX"
 
-# --- 상단 고정 헤더 ---
-col_h1, col_h2 = st.columns([1, 1])
+# --- 상단 고정 헤더 (좌측: 로고 + INBOX, 우측: 회원 이름 및 뱃지) ---
+col_h1, col_h2 = st.columns([1.2, 1])
 with col_h1:
-    if st.button("⛳ SEGOK GOLF", key="logo_home_btn"):
-        set_menu("HOME")
-        st.rerun()
-with col_h2:
-    header_cols = st.columns([1.5, 1])
-    with header_cols[0]:
-        st.markdown(f"""
-        <div style="text-align: right; padding-top: 6px; font-size: 0.85rem; white-space: nowrap;">
-            <b>{display_nickname}</b>님 {admin_badge}
-        </div>
-        """, unsafe_allow_html=True)
-    with header_cols[1]:
-        if st.button(alert_badge_label, key="header_inbox_btn"):
+    left_header_cols = st.columns([1, 1])
+    with left_header_cols[0]:
+        if st.button("⛳ SEGOK GOLF", key="logo_home_btn", use_container_width=True):
+            set_menu("HOME")
+            st.rerun()
+    with left_header_cols[1]:
+        if st.button(alert_badge_label, key="header_inbox_btn", use_container_width=True):
             set_menu("알림 센터")
             st.rerun()
+with col_h2:
+    st.markdown(f"""
+    <div style="text-align: right; padding-top: 8px; font-size: 0.9rem; white-space: nowrap;">
+        <b>{display_nickname}</b>님 {admin_badge}
+    </div>
+    """, unsafe_allow_html=True)
 
 st.markdown("<hr style='margin: 6px 0 12px 0; border-top: 1px solid #E2E8F0;'>", unsafe_allow_html=True)
 
@@ -1313,7 +1313,7 @@ else:
                     
                     if st.button("지망 사항 저장", key=f"save_pref_{pref_member}"):
                         val1 = "" if p1 == "선택 안 함" else p1
-                        val2 = "" if p2 == "선택 안 함" else val2
+                        val2 = "" if p2 == "선택 안 함" else p2
                         val3 = "" if p3 == "선택 안 함" else p3
                         st.session_state.match_preferences[pref_member] = [val1, val2, val3]
                         st.success(f"🎉 {pref_member}님의 동반 희망 지망이 저장되었습니다!")
