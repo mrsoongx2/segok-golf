@@ -132,8 +132,7 @@ def recalculate_all_stats(db_obj):
             
         m_info["attendance"] = round((m_info["rounds_played"] / total_r_count) * 100)
 
-if 'db_data' not in st.session_state:
-    st.session_state.db_data = load_data()
+st.session_state.db_data = load_data()
 
 db = st.session_state.db_data
 member_db = db.get("member_db", {})
@@ -185,10 +184,8 @@ st.markdown("""
     
     .band-card { background-color: #FFFFFF; border-radius: 10px; border: 1px solid #E0E0E0; max-width: 100%; margin: 0 auto 16px auto; box-shadow: 0 1px 4px rgba(0,0,0,0.02); overflow: hidden; }
     .band-header { display: flex; align-items: center; padding: 12px 14px; border-bottom: 1px solid #F0F0F0; background-color: #FAFAFA; }
-    .band-body { padding: 14px; font-size: 0.85rem; color: #262626; line-height: 1.5; }
+    .band-body { padding: 14px; font-size: 0.88rem; color: #262626; line-height: 1.5; word-break: break-all; user-select: text; }
     
-    .kakao-notice-box { background-color: #F8F9FA; border-left: 4px solid #1B3B2B; padding: 12px 15px; border-radius: 6px; font-size: 0.82rem !important; font-family: monospace, sans-serif !important; color: #222222 !important; line-height: 1.5 !important; white-space: pre-wrap; word-break: break-all; margin-top: 8px; }
-
     .team-box { background-color: #1B3B2B; color: #FFFFFF; padding: 14px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #C5A059; font-size: 0.85rem; }
     .team-box h3 { color: #E5C585 !important; font-family: 'Playfair Display', serif; font-size: 1rem; margin-bottom: 6px; border-bottom: 1px solid #325843; padding-bottom: 4px; }
     
@@ -400,14 +397,14 @@ if st.session_state.current_menu == "HOME":
             st.markdown("""
             <div class="menu-card">
                 <h3>⛳ 티타임 조편성</h3>
-                <p>맞춤형 조편성 및 공지 자동등록</p>
+                <p>맞춤형 조편성 및 수동 복사 지원</p>
             </div>
             """, unsafe_allow_html=True)
             if st.button("조편성 실행", use_container_width=True, key="go_match"):
                 set_menu("티타임 조편성")
                 st.rerun()
         with ac2:
-            pending_cnt = len([k for k, v in member_db.items() if v.get("status", "approved") == "pending"])
+            pending_cnt = len([k for k, v in member_db.items() if v.get("status") == "pending"])
             badge_txt = f" (대기 {pending_cnt})" if pending_cnt > 0 else ""
             st.markdown(f"""
             <div class="menu-card">
@@ -457,14 +454,14 @@ else:
     
     menu = st.session_state.current_menu
 
-    # 1. 📢 클럽 공지사항
+    # 1. 📢 클럽 공지사항 (복사하기 쉽도록 standard text/code block 사용)
     if menu == "클럽 공지사항":
         if notices:
             user_info["last_notice_seen"] = notices[0]["date"]
             save_data(db)
             
         st.subheader("📢 클럽 공지사항")
-        st.caption("세곡 골프클럽의 주요 소식과 조편성 안내 사항을 확인하세요.")
+        st.caption("세곡 골프클럽의 주요 소식과 안내 사항을 확인하세요.")
         
         if is_admin:
             with st.expander("✍️ [운영진] 새 공지사항 등록하기"):
@@ -496,11 +493,11 @@ else:
                             <span style="color:#8E8E8E; font-size:0.7rem;">{notice['date']}</span>
                         </div>
                     </div>
-                    <div class="band-body">
-                        <div class="kakao-notice-box">{notice['content']}</div>
-                    </div>
                 </div>
                 """, unsafe_allow_html=True)
+                
+                # 쉽게 복사할 수 있도록 st.code 사용 (우측 상단에 복사 버튼 제공됨)
+                st.code(notice['content'], language="text")
                 
                 if is_admin:
                     del_key = f"del_notice_{notice['id']}"
@@ -637,7 +634,7 @@ else:
                 if post.get('content'):
                     st.markdown(f"""
                     <div class="band-body">
-                        <p style="margin:0; color:#262626; word-break:break-all; white-space: pre-wrap;">{post['content']}</p>
+                        <p style="margin:0; color:#262626; word-break:break-all; white-space: pre-wrap; user-select: text;">{post['content']}</p>
                     </div>
                     """, unsafe_allow_html=True)
 
@@ -698,7 +695,7 @@ else:
                         save_data(db)
                         st.rerun()
 
-    # 3. ⛳ 티타임 조편성 (확정 시 클럽 공지사항으로 자동 등록)
+    # 3. ⛳ 티타임 조편성 (수동 복사 지원 - 자동 공지 등록 취소)
     elif menu == "티타임 조편성":
         st.subheader("⛳ 필드 월례회 티타임 조편성")
         if not is_admin:
@@ -802,53 +799,40 @@ else:
                     team_html = f"<div class='team-box'><h3>⛳ {idx+1}조 ({t_time})</h3><div style='font-size:0.8rem; color:#E5C585; margin-bottom:6px;'>🏟️ {c_info}</div>" + "<br>".join([f"• <b>{m}</b> ({member_db.get(m, {}).get('handicap', 0)})" for m in team]) + "</div>"
                     st.markdown(team_html, unsafe_allow_html=True)
                 
-                st.subheader("📱 카카오톡 공지문 미리보기")
+                st.subheader("📱 카카오톡 공지문 복사 (아래 복사 버튼 클릭)")
                 st.code(notice_text, language="text")
                 
-                if st.button("💾 최종 확정 및 클럽 공지사항 자동 등록", use_container_width=True):
-                    already_posted = any(date_str in n.get("content", "") and "조편성 공식 안내" in n.get("content", "") for n in notices)
+                if st.button("💾 조편성 저장 및 경기 결과 카드 생성", use_container_width=True):
+                    for team in teams:
+                        for i in range(len(team)):
+                            for j in range(i + 1, len(team)):
+                                m1, m2 = team[i], team[j]
+                                if m1 in pair_history and m2 in pair_history[m1]:
+                                    pair_history[m1][m2] += 1
+                                    pair_history[m2][m1] += 1
+                                    
+                    now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
+                    match_logs.insert(0, {
+                        "id": len(match_logs) + 1,
+                        "date": now_str,
+                        "event_type": "필드 월례회",
+                        "teams": teams
+                    })
                     
-                    if already_posted:
-                        st.warning("⚠️ 이미 해당 날짜의 조편성 공지가 클럽 공지사항에 등록되어 있습니다! (중복 등록 방지됨)")
-                    else:
-                        for team in teams:
-                            for i in range(len(team)):
-                                for j in range(i + 1, len(team)):
-                                    m1, m2 = team[i], team[j]
-                                    if m1 in pair_history and m2 in pair_history[m1]:
-                                        pair_history[m1][m2] += 1
-                                        pair_history[m2][m1] += 1
-                                        
-                        now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
-                        match_logs.insert(0, {
-                            "id": len(match_logs) + 1,
-                            "date": now_str,
-                            "event_type": "필드 월례회",
-                            "teams": teams
-                        })
-                        
-                        round_entry = {
-                            "id": int(datetime.now().timestamp()),
-                            "title": f"{r_date_input.month}월 정기 필드 월례회 ({golf_location or '필드'})",
-                            "date": date_str,
-                            "type": "필드 월례회",
-                            "teams": teams,
-                            "scores": {},
-                            "completed": False,
-                            "awards": {"medalist": "-", "longist": "-", "nearest": "-"}
-                        }
-                        rounds_data.insert(0, round_entry)
-                        
-                        # 클럽 공지사항에 자동 등록 (카카오톡 박스 스타일 적용)
-                        notices.insert(0, {
-                            "id": int(datetime.now().timestamp()),
-                            "date": now_str,
-                            "title": f"[{date_str}] 필드 월례회 조편성 안내",
-                            "content": notice_text
-                        })
-                        
-                        save_data(db)
-                        st.success("🎉 조편성 확정 및 [클럽 공지사항]과 [경기 결과] 메뉴에 성공적으로 자동 등록되었습니다!")
+                    round_entry = {
+                        "id": int(datetime.now().timestamp()),
+                        "title": f"{r_date_input.month}월 정기 필드 월례회 ({golf_location or '필드'})",
+                        "date": date_str,
+                        "type": "필드 월례회",
+                        "teams": teams,
+                        "scores": {},
+                        "completed": False,
+                        "awards": {"medalist": "-", "longist": "-", "nearest": "-"}
+                    }
+                    rounds_data.insert(0, round_entry)
+                    
+                    save_data(db)
+                    st.success("🎉 조편성이 저장되었으며, [경기 결과] 메뉴에 성적 입력 카드가 생성되었습니다! (위 코드 박스의 복사 버튼을 눌러 카카오톡에 공유하세요)")
 
     # 4. 🏆 경기 결과 및 랭킹
     elif menu == "경기 결과 및 랭킹":
@@ -1149,7 +1133,7 @@ else:
         if is_admin:
             st.divider()
             st.subheader("👑 [운영진 전용] 신입회원 가입 승인 센터")
-            pending_members = [k for k, v in member_db.items() if v.get("status", "pending") == "pending"]
+            pending_members = [k for k, v in member_db.items() if v.get("status") == "pending"]
             
             if not pending_members:
                 st.info("현재 가입 승인 대기 중인 회원이 없습니다.")
