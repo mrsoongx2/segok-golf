@@ -8,7 +8,7 @@ import base64
 from datetime import datetime, time
 
 st.set_page_config(
-    page_title="Segok Golf Club", 
+    page_title="SEGOK GOLF CLUB", 
     page_icon="⛳", 
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -171,48 +171,121 @@ def set_menu(menu_name):
 
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,600&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
     
-    .stApp { background-color: #FAFAFA !important; font-family: 'Noto Sans KR', sans-serif; color: #262626; font-size: 0.9rem; }
+    .stApp { background-color: #F4F6F4 !important; font-family: 'Noto Sans KR', sans-serif; color: #1E2923; font-size: 0.9rem; }
     
-    .compact-header { background-color: #FFFFFF; padding: 10px 20px; border-bottom: 1px solid #DBDBDB; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+    /* 상단 헤더 스타일 */
+    .compact-header { background-color: #FFFFFF; padding: 12px 20px; border-bottom: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.01); }
     
-    .logo-hero { text-align: center; padding: 30px 15px 20px 15px; background: linear-gradient(135deg, #1B3B2B 0%, #2C523D 100%); border-radius: 14px; color: #FFFFFF; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(27,59,43,0.12); }
-    .logo-hero h1 { font-family: 'Playfair Display', serif; font-size: 2rem; margin: 6px 0 2px 0; color: #F8F5F0; }
-    .logo-hero p { color: #D4B475; font-size: 0.7rem; letter-spacing: 3px; text-transform: uppercase; font-weight: 600; margin: 0; }
+    /* 트렌디하고 세련된 히어로 배너 (그라데이션 및 입체감 강화) */
+    .logo-hero { 
+        text-align: center; 
+        padding: 45px 20px; 
+        background: linear-gradient(135deg, #0F2E1B 0%, #1B4D33 50%, #123822 100%); 
+        border-radius: 16px; 
+        color: #FFFFFF; 
+        margin-bottom: 25px; 
+        box-shadow: 0 8px 24px rgba(15,46,27,0.18); 
+        border: 1px solid rgba(212,180,117,0.3);
+    }
+    .logo-hero h1 { 
+        font-family: 'Montserrat', sans-serif; 
+        font-size: 2.3rem; 
+        font-weight: 800; 
+        letter-spacing: 2px; 
+        margin: 10px 0 6px 0; 
+        color: #F8F5F0; 
+        text-transform: uppercase;
+    }
+    .logo-hero p { 
+        color: #D4B475; 
+        font-size: 0.75rem; 
+        letter-spacing: 5px; 
+        text-transform: uppercase; 
+        font-weight: 600; 
+        margin: 0; 
+        font-family: 'Montserrat', sans-serif;
+    }
     
-    .menu-card { background-color: #FFFFFF; border-radius: 10px; border: 1px solid #DBDBDB; padding: 16px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02); transition: all 0.2s ease; margin-bottom: 12px; position: relative; }
-    .menu-card h3 { font-size: 1rem; margin-bottom: 4px; color: #1B3B2B; }
-    .menu-card p { color: #666; font-size: 0.78rem; margin-bottom: 10px; line-height: 1.3; }
+    /* 세련된 메뉴 카드 디자인 (시인성 극대화) */
+    .menu-card { 
+        background-color: #FFFFFF; 
+        border-radius: 12px; 
+        border: 1px solid #E2E8F0; 
+        padding: 20px 16px; 
+        text-align: center; 
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03); 
+        transition: all 0.25s ease; 
+        margin-bottom: 15px; 
+        position: relative; 
+    }
+    .menu-card:hover { 
+        transform: translateY(-3px); 
+        box-shadow: 0 8px 20px rgba(27,77,51,0.1); 
+        border-color: #1B4D33; 
+    }
+    .menu-card h3 { 
+        font-family: 'Montserrat', sans-serif;
+        font-size: 1.05rem; 
+        font-weight: 700;
+        margin-bottom: 6px; 
+        color: #0F2E1B; 
+        text-transform: uppercase;
+    }
+    .menu-card p { 
+        color: #64748B; 
+        font-size: 0.8rem; 
+        margin-bottom: 14px; 
+        line-height: 1.4; 
+    }
     
-    .band-card { background-color: #FFFFFF; border-radius: 10px; border: 1px solid #E0E0E0; max-width: 100%; margin: 0 auto 16px auto; box-shadow: 0 1px 4px rgba(0,0,0,0.02); overflow: hidden; }
-    .band-header { display: flex; align-items: center; padding: 12px 14px; border-bottom: 1px solid #F0F0F0; background-color: #FAFAFA; }
-    .band-body { padding: 14px; font-size: 0.88rem; color: #262626; line-height: 1.5; }
+    /* 밴드 피드 카드 스타일 */
+    .band-card { background-color: #FFFFFF; border-radius: 12px; border: 1px solid #E2E8F0; max-width: 100%; margin: 0 auto 18px auto; box-shadow: 0 2px 6px rgba(0,0,0,0.03); overflow: hidden; }
+    .band-header { display: flex; align-items: center; padding: 14px 16px; border-bottom: 1px solid #F1F5F9; background-color: #FAFAFA; }
+    .band-body { padding: 16px; font-size: 0.9rem; color: #1E2923; line-height: 1.6; }
     
-    .kakao-notice-box { background-color: #F8F9FA; border-left: 4px solid #1B3B2B; padding: 12px 15px; border-radius: 6px; font-size: 0.82rem !important; font-family: monospace, sans-serif !important; color: #222222 !important; line-height: 1.5 !important; white-space: pre-wrap; word-break: break-all; margin-top: 8px; }
+    /* 카카오톡 공지 스타일 박스 */
+    .kakao-notice-box { background-color: #F8FAFC; border-left: 4px solid #1B4D33; padding: 14px 18px; border-radius: 8px; font-size: 0.85rem !important; font-family: monospace, sans-serif !important; color: #0F172A !important; line-height: 1.6 !important; white-space: pre-wrap; word-break: break-all; margin-top: 10px; }
 
-    .team-box { background-color: #1B3B2B; color: #FFFFFF; padding: 14px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #C5A059; font-size: 0.85rem; }
-    .team-box h3 { color: #E5C585 !important; font-family: 'Playfair Display', serif; font-size: 1rem; margin-bottom: 6px; border-bottom: 1px solid #325843; padding-bottom: 4px; }
+    .team-box { background-color: #0F2E1B; color: #FFFFFF; padding: 16px; border-radius: 12px; margin-bottom: 14px; border: 1px solid #D4B475; font-size: 0.88rem; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    .team-box h3 { color: #E5C585 !important; font-family: 'Montserrat', sans-serif; font-size: 1.05rem; margin-bottom: 8px; border-bottom: 1px solid #235C3D; padding-bottom: 6px; }
     
-    .badge-admin { background-color: #1B3B2B; color: #FFFFFF; padding: 2px 6px; border-radius: 8px; font-size: 0.65rem; font-weight: 600; border: 1px solid #C5A059; }
-    .badge-user { background-color: #EFEFEF; color: #262626; padding: 2px 6px; border-radius: 8px; font-size: 0.65rem; font-weight: 600; }
-    .badge-hc { background-color: #FDF8F0; color: #B38F4E; padding: 2px 6px; border-radius: 8px; font-size: 0.65rem; font-weight: 700; border: 1px solid #E5DEC3; }
-    .profile-avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; border: 1.5px solid #C5A059; margin-right: 10px; }
+    .badge-admin { background-color: #0F2E1B; color: #FFFFFF; padding: 3px 8px; border-radius: 6px; font-size: 0.68rem; font-weight: 700; border: 1px solid #D4B475; font-family: 'Montserrat', sans-serif; }
+    .badge-user { background-color: #E2E8F0; color: #334155; padding: 3px 8px; border-radius: 6px; font-size: 0.68rem; font-weight: 700; font-family: 'Montserrat', sans-serif; }
+    .badge-hc { background-color: #FEF3C7; color: #92400E; padding: 3px 8px; border-radius: 6px; font-size: 0.68rem; font-weight: 800; border: 1px solid #FDE68A; font-family: 'Montserrat', sans-serif; }
+    .profile-avatar { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 2px solid #D4B475; margin-right: 12px; }
     
-    .new-badge { background-color: #2E7D32; color: #FFFFFF; padding: 2px 5px; border-radius: 8px; font-size: 0.6rem; font-weight: 700; vertical-align: middle; margin-left: 4px; }
+    .new-badge { background-color: #16A34A; color: #FFFFFF; padding: 2px 6px; border-radius: 6px; font-size: 0.65rem; font-weight: 800; vertical-align: middle; margin-left: 6px; font-family: 'Montserrat', sans-serif; }
     
-    .stButton>button { background-color: #1B3B2B !important; color: #FFFFFF !important; border-radius: 6px !important; border: none !important; font-weight: 600 !important; width: 100% !important; padding: 6px 10px !important; font-size: 0.85rem !important; }
-    .stButton>button:hover { background-color: #27523C !important; }
+    /* 모던하고 트렌디한 버튼 스타일 */
+    .stButton>button { 
+        background: linear-gradient(135deg, #1B4D33 0%, #0F2E1B 100%) !important; 
+        color: #FFFFFF !important; 
+        border-radius: 8px !important; 
+        border: none !important; 
+        font-weight: 700 !important; 
+        width: 100% !important; 
+        padding: 8px 14px !important; 
+        font-size: 0.88rem !important; 
+        box-shadow: 0 4px 10px rgba(27,77,51,0.2);
+        transition: all 0.2s ease;
+        font-family: 'Montserrat', 'Noto Sans KR', sans-serif;
+    }
+    .stButton>button:hover { 
+        background: linear-gradient(135deg, #235C3D 100%, #164027 100%) !important; 
+        box-shadow: 0 6px 15px rgba(27,77,51,0.3);
+    }
     </style>
 """, unsafe_allow_html=True)
 
 # --- LOGIN & SIGNUP ---
 if not st.session_state.get('logged_in_user'):
     st.markdown("""
-    <div style="text-align: center; padding: 35px 15px 20px 15px;">
-        <div style="font-size: 2.5rem;">⛳</div>
-        <h1 style="font-family: 'Playfair Display', serif; color: #1B3B2B; margin: 8px 0 0 0; font-size: 2rem;">Segok Golf Club</h1>
-        <p style="color: #8E8E8E; font-size: 0.75rem; letter-spacing: 3px; text-transform: uppercase;">PREMIUM GOLF SOCIETY</p>
+    <div style="text-align: center; padding: 40px 20px 25px 20px;">
+        <div style="font-size: 3rem;">⛳</div>
+        <h1 style="font-family: 'Montserrat', sans-serif; color: #0F2E1B; margin: 8px 0 0 0; font-size: 2.2rem; font-weight: 800; letter-spacing: 1px;">SEGOK GOLF CLUB</h1>
+        <p style="color: #64748B; font-size: 0.75rem; letter-spacing: 4px; text-transform: uppercase; font-weight: 700; font-family: 'Montserrat', sans-serif;">PREMIUM GOLF SOCIETY & COMMUNITY</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -291,7 +364,7 @@ user_info = member_db.get(current_user, {
 
 is_admin = user_info.get('is_admin', False)
 display_nickname = user_info.get('nickname', current_user)
-admin_badge = '<span class="badge-admin">👑 운영진</span>' if is_admin else '<span class="badge-user">👤 정회원</span>'
+admin_badge = '<span class="badge-admin">👑 OPERATOR</span>' if is_admin else '<span class="badge-user">👤 MEMBER</span>'
 
 last_n = user_info.get("last_notice_seen", "")
 latest_notice_date = notices[0]["date"] if notices else ""
@@ -301,17 +374,16 @@ last_l = user_info.get("last_lounge_seen", "")
 latest_lounge_date = feed_posts[0]["date"] if feed_posts else ""
 has_new_lounge = latest_lounge_date > last_l if latest_lounge_date else False
 
-# 미확인 알림 개수 계산
 unread_notices_count = len([n for n in notices if n["date"] > last_n]) if last_n else len(notices)
 unread_lounge_count = len([p for p in feed_posts if p["date"] > last_l]) if last_l else len(feed_posts)
 total_unread_alerts = unread_notices_count + unread_lounge_count
 
-alert_badge_label = f"🔔 알림 센터 ({total_unread_alerts})" if total_unread_alerts > 0 else "🔔 알림 센터"
+alert_badge_label = f"🔔 INBOX ({total_unread_alerts})" if total_unread_alerts > 0 else "🔔 INBOX"
 
 # --- 상단 고정 헤더 ---
 col_h1, col_h2 = st.columns([2, 3])
 with col_h1:
-    if st.button("⛳ Segok Golf Club", key="logo_home_btn"):
+    if st.button("⛳ SEGOK GOLF CLUB", key="logo_home_btn"):
         set_menu("HOME")
         st.rerun()
 with col_h2:
@@ -321,17 +393,17 @@ with col_h2:
     <div style="display: flex; justify-content: flex-end; align-items: center; gap: 8px; padding-top: 6px; font-size: 0.82rem;">
         <span><b>{display_nickname}</b>님 {admin_badge}</span>
         <span class="badge-hc">HC {hc_val}</span>
-        <span class="badge-user">참석 {att_val}%</span>
+        <span class="badge-user">ATT {att_val}%</span>
     </div>
     """, unsafe_allow_html=True)
 
-st.markdown("<hr style='margin: 8px 0 15px 0; border-top: 1px solid #DBDBDB;'>", unsafe_allow_html=True)
+st.markdown("<hr style='margin: 8px 0 15px 0; border-top: 1px solid #E2E8F0;'>", unsafe_allow_html=True)
 
 if st.session_state.current_menu == "HOME":
     st.markdown("""
     <div class="logo-hero">
-        <div style="font-size: 2.5rem; margin-bottom: 4px;">🏆</div>
-        <h1>Segok Golf Club</h1>
+        <div style="font-size: 3rem; margin-bottom: 6px;">⛳</div>
+        <h1>SEGOK GOLF CLUB</h1>
         <p>PREMIUM GOLF SOCIETY & COMMUNITY</p>
     </div>
     """, unsafe_allow_html=True)
@@ -342,7 +414,7 @@ if st.session_state.current_menu == "HOME":
         notice_badge = '<span class="new-badge">NEW</span>' if has_new_notice else ''
         st.markdown(f"""
         <div class="menu-card">
-            <h3>📢 공지사항{notice_badge}</h3>
+            <h3>📢 NOTICE{notice_badge}</h3>
             <p>클럽 소식 및 조편성 안내</p>
         </div>
         """, unsafe_allow_html=True)
@@ -353,7 +425,7 @@ if st.session_state.current_menu == "HOME":
         lounge_badge = '<span class="new-badge">NEW</span>' if has_new_lounge else ''
         st.markdown(f"""
         <div class="menu-card" style="margin-top: 15px;">
-            <h3>💬 클럽 라운지{lounge_badge}</h3>
+            <h3>💬 LOUNGE{lounge_badge}</h3>
             <p>자유 소통, 투표 및 파일 공유</p>
         </div>
         """, unsafe_allow_html=True)
@@ -363,18 +435,18 @@ if st.session_state.current_menu == "HOME":
 
         st.markdown(f"""
         <div class="menu-card" style="margin-top: 15px;">
-            <h3>🔔 알림 센터</h3>
-            <p>미확인 소식 및 댓글 모아보기</p>
+            <h3>📁 ARCHIVE</h3>
+            <p>지난 날짜별 조편성 기록 확인</p>
         </div>
         """, unsafe_allow_html=True)
-        if st.button(alert_badge_label, use_container_width=True, key="go_alerts"):
-            set_menu("알림 센터")
+        if st.button("아카이브 입장", use_container_width=True, key="go_archive"):
+            set_menu("역대 조편성 아카이브")
             st.rerun()
 
     with c2:
         st.markdown("""
         <div class="menu-card">
-            <h3>🏆 경기 결과 & 랭킹</h3>
+            <h3>🏆 RESULTS & RANKING</h3>
             <p>역대 스코어 및 공식 시상</p>
         </div>
         """, unsafe_allow_html=True)
@@ -384,7 +456,7 @@ if st.session_state.current_menu == "HOME":
             
         st.markdown("""
         <div class="menu-card" style="margin-top: 15px;">
-            <h3>👑 명예의 전당</h3>
+            <h3>👑 HALL OF FAME</h3>
             <p>회원별 평균타수 및 출석 현황</p>
         </div>
         """, unsafe_allow_html=True)
@@ -394,7 +466,7 @@ if st.session_state.current_menu == "HOME":
 
         st.markdown("""
         <div class="menu-card" style="margin-top: 15px;">
-            <h3>👤 마이페이지</h3>
+            <h3>👤 MY PAGE</h3>
             <p>프로필, 로그아웃 및 클럽 탈퇴</p>
         </div>
         """, unsafe_allow_html=True)
@@ -408,7 +480,7 @@ if st.session_state.current_menu == "HOME":
         with ac1:
             st.markdown("""
             <div class="menu-card">
-                <h3>⛳ 티타임 조편성</h3>
+                <h3>⛳ TEE-OFF MATCH</h3>
                 <p>맞춤형 조편성 및 수동 복사 지원</p>
             </div>
             """, unsafe_allow_html=True)
@@ -420,7 +492,7 @@ if st.session_state.current_menu == "HOME":
             badge_txt = f" (대기 {pending_cnt})" if pending_cnt > 0 else ""
             st.markdown(f"""
             <div class="menu-card">
-                <h3>👥 회원 리스트{badge_txt}</h3>
+                <h3>👥 MEMBER LIST{badge_txt}</h3>
                 <p>정회원 관리 및 가입 승인</p>
             </div>
             """, unsafe_allow_html=True)
@@ -429,51 +501,50 @@ if st.session_state.current_menu == "HOME":
                 st.rerun()
 
 else:
-    notice_label = f"📢 클럽 공지사항 {'🟢' if has_new_notice else ''}"
-    lounge_label = f"💬 클럽 라운지 {'🟢' if has_new_lounge else ''}"
+    notice_label = f"📢 공지사항 (NOTICE) {'🟢' if has_new_notice else ''}"
+    lounge_label = f"💬 클럽 라운지 (LOUNGE) {'🟢' if has_new_lounge else ''}"
     
-    menu_list = ["메인 홈", notice_label, lounge_label, alert_badge_label, "🏆 경기 결과 및 랭킹", "👑 명예의 전당", "📁 역대 조편성 아카이브", "👤 마이페이지"]
+    menu_list = ["메인 홈", notice_label, lounge_label, alert_badge_label, "🏆 경기 결과 및 랭킹 (RESULTS)", "👑 명예의 전당 (HALL OF FAME)", "📁 조편성 아카이브 (ARCHIVE)", "👤 마이페이지 (MY PAGE)"]
     if is_admin:
-        menu_list.insert(3, "⛳ 티타임 조편성")
-        menu_list.append("👥 회원 리스트")
+        menu_list.insert(3, "⛳ 티타임 조편성 (MATCH)")
+        menu_list.append("👥 회원 리스트 (MEMBERS)")
         
     current_label_map = {
         "HOME": "메인 홈",
         "클럽 공지사항": notice_label,
         "클럽 라운지": lounge_label,
         "알림 센터": alert_badge_label,
-        "티타임 조편성": "⛳ 티타임 조편성",
-        "경기 결과 및 랭킹": "🏆 경기 결과 및 랭킹",
-        "명예의 전당": "👑 명예의 전당",
-        "역대 조편성 아카이브": "📁 역대 조편성 아카이브",
-        "회원 리스트": "👥 회원 리스트",
-        "마이페이지": "👤 마이페이지"
+        "티타임 조편성": "⛳ 티타임 조편성 (MATCH)",
+        "경기 결과 및 랭킹": "🏆 경기 결과 및 랭킹 (RESULTS)",
+        "명예의 전당": "👑 명예의 전당 (HALL OF FAME)",
+        "역대 조편성 아카이브": "📁 조편성 아카이브 (ARCHIVE)",
+        "회원 리스트": "👥 회원 리스트 (MEMBERS)",
+        "마이페이지": "👤 마이페이지 (MY PAGE)"
     }
     reverse_map = {v: k for k, v in current_label_map.items()}
     curr_label = current_label_map.get(st.session_state.current_menu, notice_label)
 
     nav_c1, _ = st.columns([1, 0.01])
     with nav_c1:
-        selected_nav = st.selectbox("📌 빠른 메뉴 이동", menu_list, index=menu_list.index(curr_label) if curr_label in menu_list else 0)
+        selected_nav = st.selectbox("📌 QUICK MENU", menu_list, index=menu_list.index(curr_label) if curr_label in menu_list else 0)
         target_menu = reverse_map.get(selected_nav, "HOME")
         if "공지사항" in selected_nav: target_menu = "클럽 공지사항"
         elif "라운지" in selected_nav: target_menu = "클럽 라운지"
-        elif "알림 센터" in selected_nav: target_menu = "알림 센터"
+        elif "INBOX" in selected_nav or "알림" in selected_nav: target_menu = "알림 센터"
         
         if target_menu != st.session_state.current_menu:
             set_menu(target_menu)
             st.rerun()
 
-    st.markdown("<hr style='margin: 12px 0 15px 0; border-top: 1px solid #DBDBDB;'>", unsafe_allow_html=True)
+    st.markdown("<hr style='margin: 12px 0 15px 0; border-top: 1px solid #E2E8F0;'>", unsafe_allow_html=True)
     
     menu = st.session_state.current_menu
 
     # 1. 🔔 알림 센터 (인박스)
     if menu == "알림 센터":
-        st.subheader("🔔 알림 센터 (Inbox)")
+        st.subheader("🔔 INBOX (알림 센터)")
         st.caption("읽지 않은 공지사항, 라운지 새 글 및 내 게시물에 달린 댓글을 모아봅니다.")
 
-        # 모두 읽음 처리 버튼
         if st.button("✔️ 모든 알림 읽음 처리", type="primary", use_container_width=True):
             if notices:
                 user_info["last_notice_seen"] = notices[0]["date"]
@@ -485,7 +556,6 @@ else:
 
         st.markdown("---")
 
-        # 1-1. 미확인 공지사항
         st.markdown("##### 📢 미확인 공지사항")
         unread_notices = [n for n in notices if n["date"] > last_n] if last_n else notices
         if not unread_notices:
@@ -502,7 +572,6 @@ else:
                     set_menu("클럽 공지사항")
                     st.rerun()
 
-        # 1-2. 미확인 라운지 피드
         st.markdown("##### 💬 미확인 클럽 라운지 소식")
         unread_posts = [p for p in feed_posts if p["date"] > last_l] if last_l else feed_posts
         if not unread_posts:
@@ -520,7 +589,6 @@ else:
                     set_menu("클럽 라운지")
                     st.rerun()
 
-        # 1-3. 내 게시물에 달린 댓글
         st.markdown("##### 💬 내 게시물에 달린 댓글")
         my_posts = [p for p in feed_posts if p.get("author") == current_user]
         my_comments_found = False
@@ -544,11 +612,11 @@ else:
             user_info["last_notice_seen"] = notices[0]["date"]
             save_data(db)
             
-        st.subheader("📢 클럽 공지사항")
+        st.subheader("📢 NOTICE (클럽 공지사항)")
         st.caption("세곡 골프클럽의 주요 소식과 안내 사항을 확인하세요.")
         
         if is_admin:
-            with st.expander("✍️ [운영진] 새 공지사항 등록하기"):
+            with st.expander("✍️ [OPERATOR] 새 공지사항 등록하기"):
                 n_title = st.text_input("공지 제목")
                 n_content = st.text_area("공지 내용 (카톡 복사본 붙여넣기 적합)")
                 if st.button("공지 발행", type="primary", use_container_width=True):
@@ -573,8 +641,8 @@ else:
                 <div class="band-card">
                     <div class="band-header">
                         <div>
-                            <strong style="color:#1B3B2B; font-size:0.9rem;">📌 {notice['title']}</strong><br>
-                            <span style="color:#8E8E8E; font-size:0.7rem;">{notice['date']}</span>
+                            <strong style="color:#0F2E1B; font-size:0.95rem;">📌 {notice['title']}</strong><br>
+                            <span style="color:#64748B; font-size:0.75rem;">{notice['date']}</span>
                         </div>
                     </div>
                 </div>
@@ -601,7 +669,7 @@ else:
             user_info["last_lounge_seen"] = feed_posts[0]["date"]
             save_data(db)
             
-        st.subheader("💬 클럽 라운지")
+        st.subheader("💬 LOUNGE (클럽 라운지)")
         
         if 'show_lounge_write' not in st.session_state:
             st.session_state.show_lounge_write = False
@@ -646,7 +714,7 @@ else:
                     poll_deadline = datetime.combine(d_date, d_time).strftime("%Y-%m-%d %H:%M")
 
                     if 'poll_option_count' not in st.session_state:
-                        st.session_state.poll_option_count = 3  # 기본 3개 항목
+                        st.session_state.poll_option_count = 3
                     
                     col_cnt1, col_cnt2 = st.columns([3, 1])
                     with col_cnt2:
@@ -730,8 +798,8 @@ else:
                     <div class="band-header">
                         {avatar_html}
                         <div>
-                            <strong style="color:#262626; font-size:0.9rem;">{p_nickname}</strong><br>
-                            <span style="color:#8E8E8E; font-size:0.7rem;">{post['date']}</span>
+                            <strong style="color:#1E2923; font-size:0.9rem;">{p_nickname}</strong><br>
+                            <span style="color:#64748B; font-size:0.7rem;">{post['date']}</span>
                         </div>
                     </div>
                 """, unsafe_allow_html=True)
@@ -749,11 +817,10 @@ else:
                 if post.get('content'):
                     st.markdown(f"""
                     <div class="band-body">
-                        <p style="margin:0; color:#262626; word-break:break-all; white-space: pre-wrap; user-select: text;">{post['content']}</p>
+                        <p style="margin:0; color:#1E2923; word-break:break-all; white-space: pre-wrap; user-select: text;">{post['content']}</p>
                     </div>
                     """, unsafe_allow_html=True)
 
-                # 투표 UI (익명/실명, 복수 선택, 마감 기한 및 최종 결과 표시)
                 poll = post.get("poll")
                 if poll:
                     deadline_str = poll.get("deadline", "")
@@ -800,7 +867,6 @@ else:
                                     save_data(db)
                                     st.rerun()
 
-                        # 실명 투표인 경우 누가 투표했는지 이름 표시
                         if not is_anon and voters:
                             voter_names = [member_db.get(u, {}).get("nickname", u) for u in voters]
                             st.caption(f"ㄴ 투표자: {', '.join(voter_names)}")
@@ -848,9 +914,9 @@ else:
                         save_data(db)
                         st.rerun()
 
-    # 4. ⛳ 티타임 조편성
+    # 3. ⛳ 티타임 조편성
     elif menu == "티타임 조편성":
-        st.subheader("⛳ 필드 월례회 티타임 조편성")
+        st.subheader("⛳ TEE-OFF MATCH (티타임 조편성)")
         if not is_admin:
             st.error("⛔ 조편성 기능은 운영진 전용 메뉴입니다.")
         else:
@@ -989,7 +1055,7 @@ else:
 
     # 4. 🏆 경기 결과 및 랭킹
     elif menu == "경기 결과 및 랭킹":
-        st.subheader("🏆 경기 결과 및 랭킹")
+        st.subheader("🏆 RESULTS & RANKING (경기 결과 및 랭킹)")
         
         field_rounds = [r for r in rounds_data if "필드" in r.get("type", "")]
         
@@ -1008,14 +1074,14 @@ else:
             
             st.markdown(f"""
             <div class="css-card" style="margin-top: 15px;">
-                <h3 style="color:#1B3B2B; margin-top:0; font-size:1.1rem;">🚩 {r['date']} | {r['title']} [{status_tag}]</h3>
+                <h3 style="color:#0F2E1B; margin-top:0; font-size:1.1rem;">🚩 {r['date']} | {r['title']} [{status_tag}]</h3>
             </div>
             """, unsafe_allow_html=True)
             
             if is_done:
                 st.markdown(f"""
                 <div class="css-card">
-                    <h4 style="color:#A88B58; margin-bottom:8px; font-size:1rem;">🏆 공식 시상 내역</h4>
+                    <h4 style="color:#92400E; margin-bottom:8px; font-size:1rem;">🏆 공식 시상 내역</h4>
                     <p style="margin:4px 0;">🥇 <b>메달리스트:</b> {r['awards']['medalist']}</p>
                     <p style="margin:4px 0;">💣 <b>롱기스트:</b> {r['awards']['longist']}</p>
                     <p style="margin:4px 0;">🎯 <b>니어리스트:</b> {r['awards']['nearest']}</p>
@@ -1112,7 +1178,7 @@ else:
 
         # --- 누적 통계 & 랭킹 ---
         st.divider()
-        st.subheader("📊 클럽 누적 통계 & 랭킹")
+        st.subheader("📊 누적 통계 및 랭킹")
         
         completed_r = [r for r in field_rounds if r.get("completed")]
         
@@ -1181,10 +1247,10 @@ else:
 
     # 5. 👑 명예의 전당
     elif menu == "명예의 전당":
-        st.subheader("👑 명예의 전당 및 회원별 기록실")
+        st.subheader("👑 HALL OF FAME (명예의 전당)")
         st.caption("클럽 회원들의 개인별 라운딩 스코어 이력, 평균 타수 및 출석 현황을 확인합니다.")
         
-        approved_members = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
+        approved_members = [k for k, v in member_db.items() if v.get("status", "approved"] == "approved"]
         selected_member_name = st.selectbox("🔍 조회할 회원 선택", approved_members)
         
         if selected_member_name:
@@ -1198,7 +1264,7 @@ else:
             avg_sc = round(sum(m_history) / len(m_history), 1) if m_history else 0
             
             st.markdown(f"""
-            <div class="css-card" style="background: linear-gradient(135deg, #1B3B2B 0%, #2C523D 100%); color: #FFFFFF; padding: 18px; border-radius: 12px;">
+            <div class="css-card" style="background: linear-gradient(135deg, #0F2E1B 0%, #1B4D33 100%); color: #FFFFFF; padding: 18px; border-radius: 12px; border: 1px solid #D4B475;">
                 <h3 style="margin:0 0 8px 0; color: #E5C585; font-size:1.1rem;">👤 {selected_member_name} ({m_nick}) 회원님</h3>
                 <div style="font-size: 0.85rem; line-height: 1.6;">
                     🎯 <b>핸디캡:</b> {m_hc} | 📈 <b>평균 스코어:</b> {avg_sc}타<br>
@@ -1241,7 +1307,7 @@ else:
 
     # 6. 📁 역대 조편성 아카이브
     elif menu == "역대 조편성 아카이브":
-        st.subheader("📁 역대 조편성 아카이브")
+        st.subheader("📁 ARCHIVE (조편성 아카이브)")
         if not match_logs:
             st.warning("아직 저장된 조편성 이력이 없습니다.")
         else:
@@ -1271,7 +1337,7 @@ else:
 
     # 7. 👥 회원 리스트
     elif menu.startswith("회원 리스트") or menu.startswith("회원 명부"):
-        st.subheader("👥 클럽 회원 리스트")
+        st.subheader("👥 MEMBER LIST (클럽 회원 리스트)")
         
         df_data = [{
             "성함": k, 
@@ -1285,7 +1351,7 @@ else:
         
         if is_admin:
             st.divider()
-            st.subheader("👑 [운영진 전용] 신입회원 가입 승인 센터")
+            st.subheader("👑 [OPERATOR] 신입회원 가입 승인 센터")
             pending_members = [k for k, v in member_db.items() if v.get("status") == "pending"]
             
             if not pending_members:
@@ -1303,7 +1369,7 @@ else:
                             st.rerun()
 
             st.divider()
-            st.subheader("🚫 [운영진 전용] 회원 강퇴 관리")
+            st.subheader("🚫 [OPERATOR] 회원 강퇴 관리")
             expel_candidates = [k for k in member_db.keys() if k != current_user and member_db[k].get("status", "approved") == "approved"]
             if expel_candidates:
                 target_expel = st.selectbox("강퇴할 회원 선택", expel_candidates, key="target_expel")
@@ -1320,7 +1386,7 @@ else:
 
     # 8. 👤 마이페이지
     elif menu == "마이페이지":
-        st.subheader("👤 마이페이지 & 프로필 설정")
+        st.subheader("👤 MY PAGE (마이페이지)")
         st.info("💡 회원 성함, 닉네임, 비밀번호, 프로필 사진 변경 및 클럽 탈퇴를 관리할 수 있습니다.")
         
         with st.form("edit_profile_form"):
