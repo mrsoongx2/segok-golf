@@ -450,7 +450,7 @@ if st.session_state.current_menu == "HOME":
         st.markdown(f"""
         <div class="menu-card-box">
             <h3>💬 CLUB LOUNGE{lounge_badge}</h3>
-            <p>자유 소통, 투표 및 파일 공유</p>
+            <p>자유 소통 및 파일 공유</p>
         </div>
         """, unsafe_allow_html=True)
         if st.button("클럽 라운지 입장", use_container_width=True, key="go_lounge"):
@@ -878,7 +878,7 @@ else:
                                     st.success("수정되었습니다!")
                                     st.rerun()
 
-    # 3. 💬 클럽 라운지 (Form 적용으로 글만 입력해도 100% 정상 등록)
+    # 3. 💬 클럽 라운지 (텍스트 단독 등록 가능, 투표 선택사항)
     elif menu == "클럽 라운지":
         if feed_posts:
             user_info["last_lounge_seen"] = feed_posts[0]["date"]
@@ -899,29 +899,18 @@ else:
         if st.session_state.show_lounge_write:
             with st.form("lounge_post_form"):
                 st.markdown("##### 📝 새 게시물 작성")
-                post_text = st.text_area("내용 입력", placeholder="라운딩 후기, 모임 소식 등을 자유롭게 남겨보세요...")
+                post_text = st.text_area("내용 입력", placeholder="라운딩 후기, 소식 등을 자유롭게 남겨보세요...")
                 
                 col_u1, col_u2 = st.columns(2)
                 with col_u1:
                     uploaded_file = st.file_uploader("이미지 첨부 (선택)", type=["jpg", "png", "jpeg"], key="lounge_img_up")
                 with col_u2:
                     doc_file = st.file_uploader("문서/엑셀 파일 첨부 (선택)", type=["xlsx", "xls", "pdf", "txt", "csv"], key="lounge_doc_up")
-                
-                use_poll = st.checkbox("📊 투표 생성하기", key="lounge_use_poll")
-                poll_question = st.text_input("투표 주제", placeholder="예: 다음 모임 장소 추천", key="lounge_poll_q")
-                allow_multiple = st.checkbox("복수 선택 허용 (최대 3개까지 선택 가능)", key="lounge_poll_multi")
-                is_anonymous = st.checkbox("익명 투표", key="lounge_poll_anon")
-                
-                col_d1, col_d2 = st.columns(2)
-                with col_d1:
-                    d_date = st.date_input("마감 날짜", value=datetime.now().date(), key="lounge_poll_date")
-                with col_d2:
-                    d_time = st.time_input("마감 시간", value=time(23, 59), key="lounge_poll_time")
 
                 form_submitted = st.form_submit_button("게시물 등록하기", use_container_width=True)
 
                 if form_submitted:
-                    if (post_text and post_text.strip() != "") or uploaded_file is not None or doc_file is not None or (use_poll and poll_question):
+                    if (post_text and post_text.strip() != "") or uploaded_file is not None or doc_file is not None:
                         media_path = None
                         media_type = None
                         if uploaded_file is not None:
@@ -938,17 +927,6 @@ else:
                             file_path = os.path.join(UPLOAD_DIR, f"doc_{int(datetime.now().timestamp())}_{file_name}")
                             with open(file_path, "wb") as f:
                                 f.write(doc_file.getbuffer())
-
-                        poll_deadline = datetime.combine(d_date, d_time).strftime("%Y-%m-%d %H:%M")
-                        poll_data = None
-                        if use_poll and poll_question:
-                            poll_data = {
-                                "question": poll_question,
-                                "deadline": poll_deadline,
-                                "allow_multiple": allow_multiple,
-                                "is_anonymous": is_anonymous,
-                                "options": {"찬성/참석": [], "반대/불참": [], "기권/미정": []}
-                            }
                         
                         feed_posts.insert(0, {
                             "id": int(datetime.now().timestamp()),
@@ -961,7 +939,7 @@ else:
                             "media_type": media_type,
                             "file_path": file_path,
                             "file_name": file_name,
-                            "poll": poll_data,
+                            "poll": None,
                             "likes": 0,
                             "liked_users": [],
                             "comments": []
@@ -971,7 +949,7 @@ else:
                         st.success("등록되었습니다!")
                         st.rerun()
                     else:
-                        st.warning("내용, 이미지, 첨부파일 또는 투표 중 하나 이상을 입력해 주세요.")
+                        st.warning("내용, 이미지 또는 첨부파일 중 하나 이상을 입력해 주세요.")
 
         if not feed_posts:
             st.info("아직 등록된 게시물이 없습니다. 첫 소식을 공유해 보세요!")
@@ -1015,59 +993,6 @@ else:
                     </div>
                     """, unsafe_allow_html=True)
 
-                poll = post.get("poll")
-                if poll:
-                    deadline_str = poll.get("deadline", "")
-                    now_str_val = datetime.now().strftime("%Y-%m-%d %H:%M")
-                    is_closed = deadline_str and (now_str_val > deadline_str)
-                    allow_multi = poll.get("allow_multiple", False)
-                    is_anon = poll.get("is_anonymous", False)
-
-                    header_title = "🏁 [투표 최종 결과]" if is_closed else "📊 [투표]"
-                    st.markdown(f"**{header_title} {poll['question']}**")
-                    
-                    if deadline_str:
-                        st.caption(f"⏰ 마감 기한: {deadline_str}까지 {'(투표 마감됨 🔒)' if is_closed else ''}")
-                    
-                    mode_txt = "익명 투표" if is_anon else "실명 투표"
-                    multi_txt = "복수 선택(최대 3개)" if allow_multi else "단일 선택"
-                    st.caption(f"ℹ️ {mode_txt} | {multi_txt}")
-
-                    my_voted_options = [opt for opt, voters in poll["options"].items() if current_user in voters]
-
-                    for opt, voters in poll["options"].items():
-                        voted_here = current_user in voters
-                        btn_label = f"✓ {opt} ({len(voters)}표)" if voted_here else f"{opt} ({len(voters)}표)"
-                        
-                        if is_closed:
-                            st.button(btn_label, key=f"poll_closed_{post['id']}_{opt}", disabled=True, use_container_width=True)
-                        else:
-                            if st.button(btn_label, key=f"poll_{post['id']}_{opt}", use_container_width=True):
-                                if voted_here:
-                                    voters.remove(current_user)
-                                    save_data(db)
-                                    st.rerun()
-                                else:
-                                    if not allow_multi:
-                                        for o_key, o_list in poll["options"].items():
-                                            if current_user in o_list:
-                                                o_list.remove(current_user)
-                                        voters.append(current_user)
-                                    else:
-                                        if len(my_voted_options) >= 3:
-                                            st.warning("⚠️ 최대 3개까지만 선택할 수 있습니다!")
-                                        else:
-                                            voters.append(current_user)
-                                    save_data(db)
-                                    st.rerun()
-
-                        if not is_anon and voters:
-                            voter_names = [member_db.get(u, {}).get("nickname", u) for u in voters]
-                            st.caption(f"ㄴ 투표자: {', '.join(voter_names)}")
-                    
-                    total_voters = len(set([user for v_list in poll["options"].values() for user in v_list]))
-                    st.caption(f"총 참여 인원: {total_voters}명")
-
                 st.markdown("</div>", unsafe_allow_html=True)
                     
                 c_lk, c_edit, c_del = st.columns([1, 1, 1])
@@ -1107,33 +1032,6 @@ else:
                                 rm_file = st.checkbox("기존 파일 삭제", key=f"edit_rm_file_{post['id']}")
                             new_file_up = st.file_uploader("새 파일 교체", type=["xlsx", "xls", "pdf", "txt", "csv"], key=f"edit_new_file_{post['id']}")
 
-                            st.markdown("##### 📊 투표 설정 변경")
-                            existing_p = post.get("poll")
-                            edit_has_poll = st.checkbox("투표 포함/수정", value=(existing_p is not None), key=f"edit_has_poll_{post['id']}")
-                            
-                            e_q = ""
-                            e_multi = False
-                            e_anon = False
-                            e_deadline = ""
-                            
-                            if edit_has_poll:
-                                e_q = st.text_input("투표 주제", value=existing_p["question"] if existing_p else "", key=f"edit_eq_{post['id']}")
-                                e_multi = st.checkbox("복수 선택 허용 (최대 3개)", value=existing_p.get("allow_multiple", False) if existing_p else False, key=f"edit_emulti_{post['id']}")
-                                e_anon = st.checkbox("익명 투표", value=existing_p.get("is_anonymous", False) if existing_p else False, key=f"edit_eanon_{post['id']}")
-                                
-                                prev_dl = existing_p.get("deadline", "") if existing_p else ""
-                                try:
-                                    dt_p = datetime.strptime(prev_dl, "%Y-%m-%d %H:%M") if prev_dl else datetime.now()
-                                except:
-                                    dt_p = datetime.now()
-                                
-                                c_d1, c_d2 = st.columns(2)
-                                with c_d1:
-                                    ed_date = st.date_input("마감 날짜", value=dt_p.date(), key=f"edit_ed_{post['id']}")
-                                with c_d2:
-                                    ed_time = st.time_input("마감 시간", value=dt_p.time(), key=f"edit_et_{post['id']}")
-                                e_deadline = datetime.combine(ed_date, ed_time).strftime("%Y-%m-%d %H:%M")
-
                             if st.button("수정 저장", key=f"btn_save_post_{post['id']}", use_container_width=True):
                                 post['content'] = edit_post_text if edit_post_text else ""
                                 
@@ -1170,18 +1068,6 @@ else:
                                         f.write(new_file_up.getbuffer())
                                     post["file_path"] = f_path
                                     post["file_name"] = f_name
-
-                                if edit_has_poll and e_q:
-                                    old_opts = existing_p["options"] if (existing_p and "options" in existing_p) else {"찬성/참석": [], "반대/불참": [], "기권/미정": []}
-                                    post["poll"] = {
-                                        "question": e_q,
-                                        "deadline": e_deadline,
-                                        "allow_multiple": e_multi,
-                                        "is_anonymous": e_anon,
-                                        "options": old_opts
-                                    }
-                                else:
-                                    post["poll"] = None
 
                                 save_data(db)
                                 st.success("수정되었습니다!")
