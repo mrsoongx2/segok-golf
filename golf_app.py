@@ -301,6 +301,13 @@ last_l = user_info.get("last_lounge_seen", "")
 latest_lounge_date = feed_posts[0]["date"] if feed_posts else ""
 has_new_lounge = latest_lounge_date > last_l if latest_lounge_date else False
 
+# 미확인 알림 개수 계산
+unread_notices_count = len([n for n in notices if n["date"] > last_n]) if last_n else len(notices)
+unread_lounge_count = len([p for p in feed_posts if p["date"] > last_l]) if last_l else len(feed_posts)
+total_unread_alerts = unread_notices_count + unread_lounge_count
+
+alert_badge_label = f"🔔 알림 센터 ({total_unread_alerts})" if total_unread_alerts > 0 else "🔔 알림 센터"
+
 # --- 상단 고정 헤더 ---
 col_h1, col_h2 = st.columns([2, 3])
 with col_h1:
@@ -347,7 +354,7 @@ if st.session_state.current_menu == "HOME":
         st.markdown(f"""
         <div class="menu-card" style="margin-top: 15px;">
             <h3>💬 클럽 라운지{lounge_badge}</h3>
-            <p>자유 소통, 실명/익명 투표 및 공유</p>
+            <p>자유 소통, 투표 및 파일 공유</p>
         </div>
         """, unsafe_allow_html=True)
         if st.button("클럽 라운지 입장", use_container_width=True, key="go_lounge"):
@@ -356,12 +363,12 @@ if st.session_state.current_menu == "HOME":
 
         st.markdown(f"""
         <div class="menu-card" style="margin-top: 15px;">
-            <h3>📁 조편성 아카이브</h3>
-            <p>지난 날짜별 조편성 기록 확인</p>
+            <h3>🔔 알림 센터</h3>
+            <p>미확인 소식 및 댓글 모아보기</p>
         </div>
         """, unsafe_allow_html=True)
-        if st.button("아카이브 입장", use_container_width=True, key="go_archive"):
-            set_menu("역대 조편성 아카이브")
+        if st.button(alert_badge_label, use_container_width=True, key="go_alerts"):
+            set_menu("알림 센터")
             st.rerun()
 
     with c2:
@@ -425,7 +432,7 @@ else:
     notice_label = f"📢 클럽 공지사항 {'🟢' if has_new_notice else ''}"
     lounge_label = f"💬 클럽 라운지 {'🟢' if has_new_lounge else ''}"
     
-    menu_list = ["메인 홈", notice_label, lounge_label, "🏆 경기 결과 및 랭킹", "👑 명예의 전당", "📁 역대 조편성 아카이브", "👤 마이페이지"]
+    menu_list = ["메인 홈", notice_label, lounge_label, alert_badge_label, "🏆 경기 결과 및 랭킹", "👑 명예의 전당", "📁 역대 조편성 아카이브", "👤 마이페이지"]
     if is_admin:
         menu_list.insert(3, "⛳ 티타임 조편성")
         menu_list.append("👥 회원 리스트")
@@ -434,6 +441,7 @@ else:
         "HOME": "메인 홈",
         "클럽 공지사항": notice_label,
         "클럽 라운지": lounge_label,
+        "알림 센터": alert_badge_label,
         "티타임 조편성": "⛳ 티타임 조편성",
         "경기 결과 및 랭킹": "🏆 경기 결과 및 랭킹",
         "명예의 전당": "👑 명예의 전당",
@@ -450,6 +458,7 @@ else:
         target_menu = reverse_map.get(selected_nav, "HOME")
         if "공지사항" in selected_nav: target_menu = "클럽 공지사항"
         elif "라운지" in selected_nav: target_menu = "클럽 라운지"
+        elif "알림 센터" in selected_nav: target_menu = "알림 센터"
         
         if target_menu != st.session_state.current_menu:
             set_menu(target_menu)
@@ -459,8 +468,78 @@ else:
     
     menu = st.session_state.current_menu
 
-    # 1. 📢 클럽 공지사항
-    if menu == "클럽 공지사항":
+    # 1. 🔔 알림 센터 (인박스)
+    if menu == "알림 센터":
+        st.subheader("🔔 알림 센터 (Inbox)")
+        st.caption("읽지 않은 공지사항, 라운지 새 글 및 내 게시물에 달린 댓글을 모아봅니다.")
+
+        # 모두 읽음 처리 버튼
+        if st.button("✔️ 모든 알림 읽음 처리", type="primary", use_container_width=True):
+            if notices:
+                user_info["last_notice_seen"] = notices[0]["date"]
+            if feed_posts:
+                user_info["last_lounge_seen"] = feed_posts[0]["date"]
+            save_data(db)
+            st.success("모든 알림을 읽음 처리했습니다!")
+            st.rerun()
+
+        st.markdown("---")
+
+        # 1-1. 미확인 공지사항
+        st.markdown("##### 📢 미확인 공지사항")
+        unread_notices = [n for n in notices if n["date"] > last_n] if last_n else notices
+        if not unread_notices:
+            st.info("새로운 공지사항이 없습니다.")
+        else:
+            for n in unread_notices:
+                st.markdown(f"""
+                <div class="band-card" style="padding:12px;">
+                    <strong>📌 {n['title']}</strong> <span style="font-size:0.75rem; color:#888;">({n['date']})</span>
+                    <div style="font-size:0.85rem; color:#444; margin-top:4px;">{n['content'][:50]}...</div>
+                </div>
+                """, unsafe_allow_html=True)
+                if st.button("공지사항으로 이동", key=f"go_n_{n['id']}"):
+                    set_menu("클럽 공지사항")
+                    st.rerun()
+
+        # 1-2. 미확인 라운지 피드
+        st.markdown("##### 💬 미확인 클럽 라운지 소식")
+        unread_posts = [p for p in feed_posts if p["date"] > last_l] if last_l else feed_posts
+        if not unread_posts:
+            st.info("새로운 라운지 소식이 없습니다.")
+        else:
+            for p in unread_posts:
+                nick = member_db.get(p.get("author"), {}).get("nickname", p.get("author"))
+                st.markdown(f"""
+                <div class="band-card" style="padding:12px;">
+                    <strong>💬 {nick}님의 새 글</strong> <span style="font-size:0.75rem; color:#888;">({p['date']})</span>
+                    <div style="font-size:0.85rem; color:#444; margin-top:4px;">{p['content'][:50]}...</div>
+                </div>
+                """, unsafe_allow_html=True)
+                if st.button("라운지로 이동", key=f"go_p_{p['id']}"):
+                    set_menu("클럽 라운지")
+                    st.rerun()
+
+        # 1-3. 내 게시물에 달린 댓글
+        st.markdown("##### 💬 내 게시물에 달린 댓글")
+        my_posts = [p for p in feed_posts if p.get("author") == current_user]
+        my_comments_found = False
+        for p in my_posts:
+            comments = p.get("comments", [])
+            if comments:
+                my_comments_found = True
+                for c in comments:
+                    c_nick = member_db.get(c.get('author'), {}).get('nickname', c.get('author'))
+                    st.markdown(f"""
+                    <div class="band-card" style="padding:10px; font-size:0.85rem;">
+                        내 글 ➔ <b>{c_nick}</b>님의 댓글: "{c['text']}"
+                    </div>
+                    """, unsafe_allow_html=True)
+        if not my_comments_found:
+            st.info("내 게시물에 달린 댓글이 없습니다.")
+
+    # 2. 📢 클럽 공지사항
+    elif menu == "클럽 공지사항":
         if notices:
             user_info["last_notice_seen"] = notices[0]["date"]
             save_data(db)
@@ -516,7 +595,7 @@ else:
                                 st.success("공지사항이 삭제되었습니다.")
                                 st.rerun()
 
-    # 2. 💬 클럽 라운지 (글쓰기 토글 + 항목 추가 투표 + 익명/실명 + 복수 선택 최대 3개 + 데드라인)
+    # 3. 💬 클럽 라운지
     elif menu == "클럽 라운지":
         if feed_posts:
             user_info["last_lounge_seen"] = feed_posts[0]["date"]
@@ -567,7 +646,7 @@ else:
                     poll_deadline = datetime.combine(d_date, d_time).strftime("%Y-%m-%d %H:%M")
 
                     if 'poll_option_count' not in st.session_state:
-                        st.session_state.poll_option_count = 3  # 기본 3개 항목 (1번, 2번, 3번 투표)
+                        st.session_state.poll_option_count = 3  # 기본 3개 항목
                     
                     col_cnt1, col_cnt2 = st.columns([3, 1])
                     with col_cnt2:
@@ -674,7 +753,7 @@ else:
                     </div>
                     """, unsafe_allow_html=True)
 
-                # 투표 UI (익명/실명, 마감 기한 및 최종 결과 표시)
+                # 투표 UI (익명/실명, 복수 선택, 마감 기한 및 최종 결과 표시)
                 poll = post.get("poll")
                 if poll:
                     deadline_str = poll.get("deadline", "")
@@ -769,7 +848,7 @@ else:
                         save_data(db)
                         st.rerun()
 
-    # 3. ⛳ 티타임 조편성
+    # 4. ⛳ 티타임 조편성
     elif menu == "티타임 조편성":
         st.subheader("⛳ 필드 월례회 티타임 조편성")
         if not is_admin:
