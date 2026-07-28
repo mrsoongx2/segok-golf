@@ -275,6 +275,7 @@ st.markdown("""
     
     .badge-admin { background-color: #0F2E1B; color: #FFFFFF; padding: 2px 6px; border-radius: 6px; font-size: 0.65rem; font-weight: 700; border: 1px solid #D4B475; font-family: 'Montserrat', sans-serif; }
     .badge-user { background-color: #E2E8F0; color: #334155; padding: 2px 6px; border-radius: 6px; font-size: 0.65rem; font-weight: 700; font-family: 'Montserrat', sans-serif; }
+    .badge-hc { background-color: #FEF3C7; color: #92400E; padding: 2px 6px; border-radius: 6px; font-size: 0.65rem; font-weight: 800; border: 1px solid #FDE68A; font-family: 'Montserrat', sans-serif; }
     
     .new-badge { background-color: #16A34A; color: #FFFFFF; padding: 2px 5px; border-radius: 6px; font-size: 0.6rem; font-weight: 800; vertical-align: middle; margin-left: 4px; font-family: 'Montserrat', sans-serif; }
     
@@ -382,6 +383,7 @@ user_info = member_db.get(current_user, {
 is_admin = user_info.get('is_admin', False)
 display_nickname = user_info.get('nickname', current_user)
 admin_badge = '<span class="badge-admin">👑 OP</span>' if is_admin else '<span class="badge-user">👤 MEM</span>'
+hc_val = user_info.get('handicap', 0)
 
 last_n = user_info.get("last_notice_seen", "")
 latest_notice_date = notices[0]["date"] if notices else ""
@@ -397,8 +399,8 @@ total_unread_alerts = unread_notices_count + unread_lounge_count
 
 alert_badge_label = f"🔔 INBOX ({total_unread_alerts})" if total_unread_alerts > 0 else "🔔 INBOX"
 
-# --- 상단 고정 헤더 (좌측: 로고 + INBOX, 우측: 회원 이름 및 뱃지) ---
-col_h1, col_h2 = st.columns([1.2, 1])
+# --- 상단 고정 헤더 (좌측: 로고 + INBOX, 우측: 회원 이름, HC, 뱃지) ---
+col_h1, col_h2 = st.columns([1.2, 1.2])
 with col_h1:
     left_header_cols = st.columns([1, 1])
     with left_header_cols[0]:
@@ -411,8 +413,8 @@ with col_h1:
             st.rerun()
 with col_h2:
     st.markdown(f"""
-    <div style="text-align: right; padding-top: 8px; font-size: 0.9rem; white-space: nowrap;">
-        <b>{display_nickname}</b>님 {admin_badge}
+    <div style="text-align: right; padding-top: 8px; font-size: 0.88rem; white-space: nowrap;">
+        <b>{display_nickname}</b>님 <span class="badge-hc">HC {hc_val}</span> {admin_badge}
     </div>
     """, unsafe_allow_html=True)
 
