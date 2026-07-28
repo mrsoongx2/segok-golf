@@ -186,8 +186,6 @@ st.markdown("""
     .band-header { display: flex; align-items: center; padding: 12px 14px; border-bottom: 1px solid #F0F0F0; background-color: #FAFAFA; }
     .band-body { padding: 14px; font-size: 0.88rem; color: #262626; line-height: 1.5; }
     
-    .kakao-notice-box { background-color: #F8F9FA; border-left: 4px solid #1B3B2B; padding: 12px 15px; border-radius: 6px; font-size: 0.82rem !important; font-family: monospace, sans-serif !important; color: #222222 !important; line-height: 1.5 !important; white-space: pre-wrap; word-break: break-all; margin-top: 8px; }
-
     .team-box { background-color: #1B3B2B; color: #FFFFFF; padding: 14px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #C5A059; font-size: 0.85rem; }
     .team-box h3 { color: #E5C585 !important; font-family: 'Playfair Display', serif; font-size: 1rem; margin-bottom: 6px; border-bottom: 1px solid #325843; padding-bottom: 4px; }
     
@@ -513,7 +511,7 @@ else:
                                 st.success("공지사항이 삭제되었습니다.")
                                 st.rerun()
 
-    # 2. 💬 클럽 라운지 (글쓰기 버튼 토글 + 동적 항목 추가 버튼식 투표 + 복수 선택 설정 + 데드라인)
+    # 2. 💬 클럽 라운지 (글쓰기 토글 + 항목 추가 투표 + 복수 선택 최대 3개 + 데드라인)
     elif menu == "클럽 라운지":
         if feed_posts:
             user_info["last_lounge_seen"] = feed_posts[0]["date"]
@@ -521,7 +519,6 @@ else:
             
         st.subheader("💬 클럽 라운지")
         
-        # 글쓰기 버튼을 눌러야만 보이도록 토글 상태 관리
         if 'show_lounge_write' not in st.session_state:
             st.session_state.show_lounge_write = False
 
@@ -563,7 +560,7 @@ else:
                     poll_deadline = datetime.combine(d_date, d_time).strftime("%Y-%m-%d %H:%M")
 
                     if 'poll_option_count' not in st.session_state:
-                        st.session_state.poll_option_count = 2
+                        st.session_state.poll_option_count = 3  # 기본 3개 항목
                     
                     col_cnt1, col_cnt2 = st.columns([3, 1])
                     with col_cnt2:
@@ -572,59 +569,59 @@ else:
                             st.rerun()
                     
                     for i in range(st.session_state.poll_option_count):
-                        opt_val = st.text_input(f"투표 항목 {i+1}", key=f"poll_opt_input_{i}", placeholder=f"항목 {i+1} 입력")
+                        opt_val = st.text_input(f"투표 항목 {i+1}", key=f"poll_opt_input_{i}", placeholder=f"투표 항목 {i+1}")
                         if opt_val:
                             poll_options.append(opt_val.strip())
 
-                if st.button("게시물 등록하기", type="primary", use_container_width=True, key="lounge_submit_btn"):
-                    if post_text or uploaded_file or doc_file or use_poll:
-                        media_path = None
-                        media_type = None
-                        if uploaded_file is not None:
-                            file_name = f"{int(datetime.now().timestamp())}_{uploaded_file.name}"
-                            media_path = os.path.join(UPLOAD_DIR, file_name)
-                            with open(media_path, "wb") as f:
-                                f.write(uploaded_file.getbuffer())
-                            media_type = "image"
-                        
-                        file_path = None
-                        file_name = None
-                        if doc_file is not None:
-                            file_name = doc_file.name
-                            file_path = os.path.join(UPLOAD_DIR, f"doc_{int(datetime.now().timestamp())}_{file_name}")
-                            with open(file_path, "wb") as f:
-                                f.write(doc_file.getbuffer())
+            if st.button("게시물 등록하기", type="primary", use_container_width=True, key="lounge_submit_btn"):
+                if post_text or uploaded_file or doc_file or use_poll:
+                    media_path = None
+                    media_type = None
+                    if uploaded_file is not None:
+                        file_name = f"{int(datetime.now().timestamp())}_{uploaded_file.name}"
+                        media_path = os.path.join(UPLOAD_DIR, file_name)
+                        with open(media_path, "wb") as f:
+                            f.write(uploaded_file.getbuffer())
+                        media_type = "image"
+                    
+                    file_path = None
+                    file_name = None
+                    if doc_file is not None:
+                        file_name = doc_file.name
+                        file_path = os.path.join(UPLOAD_DIR, f"doc_{int(datetime.now().timestamp())}_{file_name}")
+                        with open(file_path, "wb") as f:
+                            f.write(doc_file.getbuffer())
 
-                        poll_data = None
-                        if use_poll and poll_question and len(poll_options) >= 2:
-                            poll_data = {
-                                "question": poll_question,
-                                "deadline": poll_deadline,
-                                "allow_multiple": allow_multiple,
-                                "options": {opt: [] for opt in poll_options}
-                            }
-                        
-                        feed_posts.insert(0, {
-                            "id": int(datetime.now().timestamp()),
-                            "author": current_user,
-                            "nickname": user_info.get("nickname", current_user),
-                            "profile_img": user_info.get("profile_img", None),
-                            "date": datetime.now().strftime("%Y-%m-%d %H:%M"),
-                            "content": post_text,
-                            "media_path": media_path,
-                            "media_type": media_type,
-                            "file_path": file_path,
-                            "file_name": file_name,
-                            "poll": poll_data,
-                            "likes": 0,
-                            "liked_users": [],
-                            "comments": []
-                        })
-                        st.session_state.poll_option_count = 2
-                        st.session_state.show_lounge_write = False
-                        save_data(db)
-                        st.success("게시물이 등록되었습니다!")
-                        st.rerun()
+                    poll_data = None
+                    if use_poll and poll_question and len(poll_options) >= 2:
+                        poll_data = {
+                            "question": poll_question,
+                            "deadline": poll_deadline,
+                            "allow_multiple": allow_multiple,
+                            "options": {opt: [] for opt in poll_options}
+                        }
+                    
+                    feed_posts.insert(0, {
+                        "id": int(datetime.now().timestamp()),
+                        "author": current_user,
+                        "nickname": user_info.get("nickname", current_user),
+                        "profile_img": user_info.get("profile_img", None),
+                        "date": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                        "content": post_text,
+                        "media_path": media_path,
+                        "media_type": media_type,
+                        "file_path": file_path,
+                        "file_name": file_name,
+                        "poll": poll_data,
+                        "likes": 0,
+                        "liked_users": [],
+                        "comments": []
+                    })
+                    st.session_state.poll_option_count = 3
+                    st.session_state.show_lounge_write = False
+                    save_data(db)
+                    st.success("게시물이 등록되었습니다!")
+                    st.rerun()
                 st.markdown("---")
 
         if not feed_posts:
@@ -669,7 +666,7 @@ else:
                     </div>
                     """, unsafe_allow_html=True)
 
-                # 투표 UI (복수 선택 설정 및 데드라인 검증)
+                # 투표 UI (복수 선택 및 데드라인)
                 poll = post.get("poll")
                 if poll:
                     deadline_str = poll.get("deadline", "")
@@ -754,7 +751,7 @@ else:
                         save_data(db)
                         st.rerun()
 
-    # 3. ⛳ 티타임 조편성 (수동 복사 지원)
+    # 3. ⛳ 티타임 조편성
     elif menu == "티타임 조편성":
         st.subheader("⛳ 필드 월례회 티타임 조편성")
         if not is_admin:
@@ -1090,7 +1087,7 @@ else:
         st.subheader("👑 명예의 전당 및 회원별 기록실")
         st.caption("클럽 회원들의 개인별 라운딩 스코어 이력, 평균 타수 및 출석 현황을 확인합니다.")
         
-        approved_members = [k for k, v in member_db.items() if v.get("status", "approved"] == "approved"]
+        approved_members = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
         selected_member_name = st.selectbox("🔍 조회할 회원 선택", approved_members)
         
         if selected_member_name:
