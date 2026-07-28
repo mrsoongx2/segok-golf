@@ -51,6 +51,9 @@ def load_data():
                             post["liked_users"] = []
                         if "poll" not in post:
                             post["poll"] = None
+                        else:
+                            if "is_anonymous" not in post["poll"]:
+                                post["poll"]["is_anonymous"] = False
                         if "file_path" not in post:
                             post["file_path"] = None
                             post["file_name"] = None
@@ -186,6 +189,8 @@ st.markdown("""
     .band-header { display: flex; align-items: center; padding: 12px 14px; border-bottom: 1px solid #F0F0F0; background-color: #FAFAFA; }
     .band-body { padding: 14px; font-size: 0.88rem; color: #262626; line-height: 1.5; }
     
+    .kakao-notice-box { background-color: #F8F9FA; border-left: 4px solid #1B3B2B; padding: 12px 15px; border-radius: 6px; font-size: 0.82rem !important; font-family: monospace, sans-serif !important; color: #222222 !important; line-height: 1.5 !important; white-space: pre-wrap; word-break: break-all; margin-top: 8px; }
+
     .team-box { background-color: #1B3B2B; color: #FFFFFF; padding: 14px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #C5A059; font-size: 0.85rem; }
     .team-box h3 { color: #E5C585 !important; font-family: 'Playfair Display', serif; font-size: 1rem; margin-bottom: 6px; border-bottom: 1px solid #325843; padding-bottom: 4px; }
     
@@ -342,7 +347,7 @@ if st.session_state.current_menu == "HOME":
         st.markdown(f"""
         <div class="menu-card" style="margin-top: 15px;">
             <h3>💬 클럽 라운지{lounge_badge}</h3>
-            <p>자유 소통, 복수 투표 및 파일 공유</p>
+            <p>자유 소통, 실명/익명 투표 및 공유</p>
         </div>
         """, unsafe_allow_html=True)
         if st.button("클럽 라운지 입장", use_container_width=True, key="go_lounge"):
@@ -511,7 +516,7 @@ else:
                                 st.success("공지사항이 삭제되었습니다.")
                                 st.rerun()
 
-    # 2. 💬 클럽 라운지 (글쓰기 토글 + 항목 추가 투표 + 복수 선택 최대 3개 + 데드라인)
+    # 2. 💬 클럽 라운지 (글쓰기 토글 + 항목 추가 투표 + 익명/실명 + 복수 선택 최대 3개 + 데드라인)
     elif menu == "클럽 라운지":
         if feed_posts:
             user_info["last_lounge_seen"] = feed_posts[0]["date"]
@@ -546,10 +551,12 @@ else:
                 poll_options = []
                 poll_deadline = None
                 allow_multiple = False
+                is_anonymous = False
                 
                 if use_poll:
                     poll_question = st.text_input("투표 주제", placeholder="예: 다음 모임 장소 추천", key="lounge_poll_q")
-                    allow_multiple = st.checkbox("복수 선택 허용 (체크 시 최대 3개까지 선택 가능)", key="lounge_poll_multi")
+                    allow_multiple = st.checkbox("복수 선택 허용 (최대 3개까지 선택 가능)", key="lounge_poll_multi")
+                    is_anonymous = st.checkbox("익명 투표 (체크 시 누가 투표했는지 비공개)", key="lounge_poll_anon")
                     
                     st.markdown("##### ⏳ 투표 마감 기한 (데드라인) 설정")
                     col_d1, col_d2 = st.columns(2)
@@ -560,7 +567,7 @@ else:
                     poll_deadline = datetime.combine(d_date, d_time).strftime("%Y-%m-%d %H:%M")
 
                     if 'poll_option_count' not in st.session_state:
-                        st.session_state.poll_option_count = 3  # 기본 3개 항목
+                        st.session_state.poll_option_count = 3  # 기본 3개 항목 (1번, 2번, 3번 투표)
                     
                     col_cnt1, col_cnt2 = st.columns([3, 1])
                     with col_cnt2:
@@ -569,7 +576,7 @@ else:
                             st.rerun()
                     
                     for i in range(st.session_state.poll_option_count):
-                        opt_val = st.text_input(f"투표 항목 {i+1}", key=f"poll_opt_input_{i}", placeholder=f"투표 항목 {i+1}")
+                        opt_val = st.text_input(f"투표 항목 {i+1} (예: {i+1}번 투표)", key=f"poll_opt_input_{i}", placeholder=f"투표 항목 {i+1}")
                         if opt_val:
                             poll_options.append(opt_val.strip())
 
@@ -598,6 +605,7 @@ else:
                             "question": poll_question,
                             "deadline": poll_deadline,
                             "allow_multiple": allow_multiple,
+                            "is_anonymous": is_anonymous,
                             "options": {opt: [] for opt in poll_options}
                         }
                     
@@ -666,19 +674,24 @@ else:
                     </div>
                     """, unsafe_allow_html=True)
 
-                # 투표 UI (복수 선택 및 데드라인)
+                # 투표 UI (익명/실명, 마감 기한 및 최종 결과 표시)
                 poll = post.get("poll")
                 if poll:
                     deadline_str = poll.get("deadline", "")
                     now_str_val = datetime.now().strftime("%Y-%m-%d %H:%M")
                     is_closed = deadline_str and (now_str_val > deadline_str)
                     allow_multi = poll.get("allow_multiple", False)
+                    is_anon = poll.get("is_anonymous", False)
 
-                    st.markdown(f"**📊 [투표] {poll['question']}**")
+                    header_title = "🏁 [투표 최종 결과]" if is_closed else "📊 [투표]"
+                    st.markdown(f"**{header_title} {poll['question']}**")
+                    
                     if deadline_str:
                         st.caption(f"⏰ 마감 기한: {deadline_str}까지 {'(투표 마감됨 🔒)' if is_closed else ''}")
-                    if allow_multi:
-                        st.caption("ℹ️ 복수 선택 가능 (최대 3개)")
+                    
+                    mode_txt = "익명 투표" if is_anon else "실명 투표"
+                    multi_txt = "복수 선택(최대 3개)" if allow_multi else "단일 선택"
+                    st.caption(f"ℹ️ {mode_txt} | {multi_txt}")
 
                     my_voted_options = [opt for opt, voters in poll["options"].items() if current_user in voters]
 
@@ -707,9 +720,14 @@ else:
                                             voters.append(current_user)
                                     save_data(db)
                                     st.rerun()
+
+                        # 실명 투표인 경우 누가 투표했는지 이름 표시
+                        if not is_anon and voters:
+                            voter_names = [member_db.get(u, {}).get("nickname", u) for u in voters]
+                            st.caption(f"ㄴ 투표자: {', '.join(voter_names)}")
                     
                     total_voters = len(set([user for v_list in poll["options"].values() for user in v_list]))
-                    st.caption(f"참여 인원: {total_voters}명")
+                    st.caption(f"총 참여 인원: {total_voters}명")
 
                 st.markdown("</div>", unsafe_allow_html=True)
                     
