@@ -195,6 +195,12 @@ st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
     
+    /* Streamlit 기본 워터마크(Hosted with Streamlit), 상단 메뉴, 푸터 숨기기 */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    .stDeployButton {display:none;}
+    
     .stApp { background-color: #F4F6F4 !important; font-family: 'Noto Sans KR', sans-serif; color: #1E2923; font-size: 0.9rem; }
     
     h2 { font-size: 1.15rem !important; font-weight: 700 !important; color: #0F2E1B !important; margin-bottom: 0.5rem !important; }
@@ -314,6 +320,7 @@ if not st.session_state.get('logged_in_user'):
         
         with tab1:
             st.caption("초기 비밀번호는 '1234' 입니다.")
+            approved_members = [k for k, v in member_db.items() if v.get("status", "approved"] == "approved"] # Wait, let's keep it safe.
             approved_members = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
             login_name = st.selectbox("회원 성함 선택", ["선택하세요"] + approved_members)
             login_pw = st.text_input("비밀번호 입력", type="password")
@@ -638,7 +645,7 @@ else:
         if not my_comments_found:
             st.info("내 게시물에 달린 댓글이 없습니다.")
 
-    # 2. 📅 연간 일정 (SCHEDULE) - 멋진 카드 타임라인 형태로 업그레이드
+    # 2. 📅 연간 일정 (SCHEDULE) - 카드 타임라인 형태로 업그레이드
     elif menu == "연간 일정":
         st.subheader("📅 ANNUAL SCHEDULE (세곡 골프 클럽 연간 일정)")
         st.caption("시즌 Yr.26-27 (2026. 8. 1 ~ 2027. 7. 31) 주요 클럽 월례회 및 행사 일정")
