@@ -175,10 +175,8 @@ st.markdown("""
     
     .stApp { background-color: #F4F6F4 !important; font-family: 'Noto Sans KR', sans-serif; color: #1E2923; font-size: 0.9rem; }
     
-    /* 상단 헤더 스타일 */
     .compact-header { background-color: #FFFFFF; padding: 12px 20px; border-bottom: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.01); }
     
-    /* 트렌디하고 세련된 히어로 배너 (그라데이션 및 입체감 강화) */
     .logo-hero { 
         text-align: center; 
         padding: 45px 20px; 
@@ -208,7 +206,6 @@ st.markdown("""
         font-family: 'Montserrat', sans-serif;
     }
     
-    /* 세련된 메뉴 카드 디자인 (시인성 극대화) */
     .menu-card { 
         background-color: #FFFFFF; 
         border-radius: 12px; 
@@ -240,12 +237,10 @@ st.markdown("""
         line-height: 1.4; 
     }
     
-    /* 밴드 피드 카드 스타일 */
     .band-card { background-color: #FFFFFF; border-radius: 12px; border: 1px solid #E2E8F0; max-width: 100%; margin: 0 auto 18px auto; box-shadow: 0 2px 6px rgba(0,0,0,0.03); overflow: hidden; }
     .band-header { display: flex; align-items: center; padding: 14px 16px; border-bottom: 1px solid #F1F5F9; background-color: #FAFAFA; }
     .band-body { padding: 16px; font-size: 0.9rem; color: #1E2923; line-height: 1.6; }
     
-    /* 카카오톡 공지 스타일 박스 */
     .kakao-notice-box { background-color: #F8FAFC; border-left: 4px solid #1B4D33; padding: 14px 18px; border-radius: 8px; font-size: 0.85rem !important; font-family: monospace, sans-serif !important; color: #0F172A !important; line-height: 1.6 !important; white-space: pre-wrap; word-break: break-all; margin-top: 10px; }
 
     .team-box { background-color: #0F2E1B; color: #FFFFFF; padding: 16px; border-radius: 12px; margin-bottom: 14px; border: 1px solid #D4B475; font-size: 0.88rem; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
@@ -258,7 +253,6 @@ st.markdown("""
     
     .new-badge { background-color: #16A34A; color: #FFFFFF; padding: 2px 6px; border-radius: 6px; font-size: 0.65rem; font-weight: 800; vertical-align: middle; margin-left: 6px; font-family: 'Montserrat', sans-serif; }
     
-    /* 모던하고 트렌디한 버튼 스타일 */
     .stButton>button { 
         background: linear-gradient(135deg, #1B4D33 0%, #0F2E1B 100%) !important; 
         color: #FFFFFF !important; 
@@ -1250,7 +1244,7 @@ else:
         st.subheader("👑 HALL OF FAME (명예의 전당)")
         st.caption("클럽 회원들의 개인별 라운딩 스코어 이력, 평균 타수 및 출석 현황을 확인합니다.")
         
-        approved_members = [k for k, v in member_db.items() if v.get("status", "approved"] == "approved"]
+        approved_members = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
         selected_member_name = st.selectbox("🔍 조회할 회원 선택", approved_members)
         
         if selected_member_name:
