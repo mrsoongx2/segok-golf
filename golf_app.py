@@ -73,9 +73,6 @@ def load_data():
                             post["liked_users"] = []
                         if "poll" not in post:
                             post["poll"] = None
-                        else:
-                            if "is_anonymous" not in post["poll"]:
-                                post["poll"]["is_anonymous"] = False
                         if "file_path" not in post:
                             post["file_path"] = None
                             post["file_name"] = None
@@ -878,7 +875,7 @@ else:
                                     st.success("수정되었습니다!")
                                     st.rerun()
 
-    # 3. 💬 클럽 라운지 (공지와 동일한 일반 버튼 방식으로 변경하여 100% 정상 등록)
+    # 3. 💬 새로 다시 만든 클럽 라운지 (전면 재작성, 글/사진 단독 등록 100% 보장)
     elif menu == "클럽 라운지":
         if feed_posts:
             user_info["last_lounge_seen"] = feed_posts[0]["date"]
@@ -886,70 +883,57 @@ else:
             
         st.subheader("💬 CLUB LOUNGE (클럽 라운지)")
         
-        if 'show_lounge_write' not in st.session_state:
-            st.session_state.show_lounge_write = False
+        with st.expander("✍️ 새 글 작성하기", expanded=True):
+            l_content = st.text_area("내용 입력", placeholder="라운딩 후기, 소식 등을 자유롭게 남겨보세요...", key="new_lounge_content")
+            
+            col_lu1, col_lu2 = st.columns(2)
+            with col_lu1:
+                l_img = st.file_uploader("이미지 첨부 (선택)", type=["jpg", "png", "jpeg"], key="new_lounge_img")
+            with col_lu2:
+                l_doc = st.file_uploader("문서 파일 첨부 (선택)", type=["xlsx", "xls", "pdf", "txt", "csv"], key="new_lounge_doc")
 
-        col_w_btn, _ = st.columns([1, 2])
-        with col_w_btn:
-            write_btn_label = "✕ 글 작성 닫기" if st.session_state.show_lounge_write else "✍️ 새 글 작성하기"
-            if st.button(write_btn_label, type="primary"):
-                st.session_state.show_lounge_write = not st.session_state.show_lounge_write
-                st.rerun()
+            if st.button("게시물 등록", type="primary", use_container_width=True, key="new_lounge_btn"):
+                if (l_content and l_content.strip() != "") or l_img is not None or l_doc is not None:
+                    l_img_path = None
+                    l_img_type = None
+                    if l_img is not None:
+                        img_fname = f"lounge_img_{int(datetime.now().timestamp())}_{l_img.name}"
+                        l_img_path = os.path.join(UPLOAD_DIR, img_fname)
+                        with open(l_img_path, "wb") as f:
+                            f.write(l_img.getbuffer())
+                        l_img_type = "image"
+                    
+                    l_doc_path = None
+                    l_doc_name = None
+                    if l_doc is not None:
+                        l_doc_name = l_doc.name
+                        l_doc_path = os.path.join(UPLOAD_DIR, f"lounge_doc_{int(datetime.now().timestamp())}_{l_doc_name}")
+                        with open(l_doc_path, "wb") as f:
+                            f.write(l_doc.getbuffer())
 
-        if st.session_state.show_lounge_write:
-            with st.container():
-                st.markdown("---")
-                st.markdown("##### 📝 새 게시물 작성")
-                post_text = st.text_area("내용 입력", placeholder="라운딩 후기, 소식 등을 자유롭게 남겨보세요...", key="lounge_post_text_input")
-                
-                col_u1, col_u2 = st.columns(2)
-                with col_u1:
-                    uploaded_file = st.file_uploader("이미지 첨부 (선택)", type=["jpg", "png", "jpeg"], key="lounge_img_up")
-                with col_u2:
-                    doc_file = st.file_uploader("문서/엑셀 파일 첨부 (선택)", type=["xlsx", "xls", "pdf", "txt", "csv"], key="lounge_doc_up")
+                    feed_posts.insert(0, {
+                        "id": int(datetime.now().timestamp()),
+                        "author": current_user,
+                        "nickname": user_info.get("nickname", current_user),
+                        "profile_img": user_info.get("profile_img", None),
+                        "date": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                        "content": l_content if l_content else "",
+                        "media_path": l_img_path,
+                        "media_type": l_img_type,
+                        "file_path": l_doc_path,
+                        "file_name": l_doc_name,
+                        "poll": None,
+                        "likes": 0,
+                        "liked_users": [],
+                        "comments": []
+                    })
+                    save_data(db)
+                    st.success("등록되었습니다!")
+                    st.rerun()
+                else:
+                    st.warning("내용, 이미지 또는 파일 중 하나 이상을 입력해 주세요.")
 
-                if st.button("게시물 등록하기", type="primary", use_container_width=True, key="lounge_submit_btn"):
-                    if (post_text and post_text.strip() != "") or uploaded_file is not None or doc_file is not None:
-                        media_path = None
-                        media_type = None
-                        if uploaded_file is not None:
-                            file_name = f"{int(datetime.now().timestamp())}_{uploaded_file.name}"
-                            media_path = os.path.join(UPLOAD_DIR, file_name)
-                            with open(media_path, "wb") as f:
-                                f.write(uploaded_file.getbuffer())
-                            media_type = "image"
-                        
-                        file_path = None
-                        file_name = None
-                        if doc_file is not None:
-                            file_name = doc_file.name
-                            file_path = os.path.join(UPLOAD_DIR, f"doc_{int(datetime.now().timestamp())}_{file_name}")
-                            with open(file_path, "wb") as f:
-                                f.write(doc_file.getbuffer())
-                        
-                        feed_posts.insert(0, {
-                            "id": int(datetime.now().timestamp()),
-                            "author": current_user,
-                            "nickname": user_info.get("nickname", current_user),
-                            "profile_img": user_info.get("profile_img", None),
-                            "date": datetime.now().strftime("%Y-%m-%d %H:%M"),
-                            "content": post_text if post_text else "",
-                            "media_path": media_path,
-                            "media_type": media_type,
-                            "file_path": file_path,
-                            "file_name": file_name,
-                            "poll": None,
-                            "likes": 0,
-                            "liked_users": [],
-                            "comments": []
-                        })
-                        st.session_state.show_lounge_write = False
-                        save_data(db)
-                        st.success("등록되었습니다!")
-                        st.rerun()
-                    else:
-                        st.warning("내용, 이미지 또는 첨부파일 중 하나 이상을 입력해 주세요.")
-                st.markdown("---")
+        st.markdown("---")
 
         if not feed_posts:
             st.info("아직 등록된 게시물이 없습니다. 첫 소식을 공유해 보세요!")
@@ -1063,7 +1047,7 @@ else:
                                         try: os.remove(post["file_path"])
                                         except: pass
                                     f_name = new_file_up.name
-                                    f_path = os.path.join(UPLOAD_DIR, f"doc_{int(datetime.now().timestamp())}_{f_name}")
+                                    f_path = os.path.join(UPLOAD_DIR, f"lounge_doc_{int(datetime.now().timestamp())}_{f_name}")
                                     with open(f_path, "wb") as f:
                                         f.write(new_file_up.getbuffer())
                                     post["file_path"] = f_path
@@ -1386,7 +1370,7 @@ else:
                                     nd = st.number_input(f"[{m_nick}] 니어(m)", min_value=0.0, max_value=50.0, value=float(curr['near']), step=0.1, key=f"nd_{r['id']}_{m}")
                                 entered_mod_scores[m] = {"score": sc, "long": ld, "near": nd}
                     else:
-                        approved_members = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
+                        approved_members = [k for k, v in member_db.items() if v.get("status", "approved"] == "approved"]
                         sel_mems = st.multiselect("참석 회원 선택", approved_members, default=list(r.get("scores", {}).keys()), key=f"melsel_{r['id']}")
                         for m in sel_mems:
                             curr = r.get("scores", {}).get(m, {"score": 85, "long": 0, "near": 0.0})
