@@ -229,7 +229,6 @@ st.markdown("""
         font-family: 'Montserrat', sans-serif;
     }
     
-    /* 완벽하게 동일한 높이와 크기를 가지는 프리미엄 메뉴 카드 */
     .menu-card-box { 
         background-color: #FFFFFF; 
         border-radius: 12px; 
@@ -1271,13 +1270,13 @@ else:
                         save_data(db)
                         st.rerun()
 
-    # 3. ⛳ 티타임 조편성 (부부 옵션, 직전 라운드 제외, 성별 위주, 1~3지망 지망 반영)
+    # 3. ⛳ 티타임 조편성 (고급 조건: 부부 분리/무관, 직전 라운드 제외, 성별 맞춤, 1~3지망 가중치 반영)
     elif menu == "티타임 조편성":
         st.subheader("⛳ TEE-OFF MATCH (티타임 조편성)")
         if not is_admin:
             st.error("⛔ 조편성 기능은 운영진 전용 메뉴입니다.")
         else:
-            st.success("👑 **운영자 권한 완료** | 고급 조편성 조건(부부 배정, 직전 라운드 제외, 지망 멤버, 성비 맞춤)을 설정합니다.")
+            st.success("👑 **운영자 권한 완료** | 부부 동반 옵션, 직전 라운드 제외, 1~3지망 희망 멤버, 성비 맞춤 조건으로 최적화합니다.")
             
             st.markdown("##### 📌 기본 라운드 정보 입력")
             col_t1, col_t2 = st.columns(2)
@@ -1298,7 +1297,6 @@ else:
             default_selected = approved_names[:16] if len(approved_names) >= 16 else approved_names
             selected_attendees = st.multiselect("오늘 참석자 선택", approved_names, default=default_selected)
 
-            # 1, 2, 3지망 동반 희망 멤버 설정 섹션
             with st.expander("💌 회원별 동반 희망 멤버 (1, 2, 3지망) 설정"):
                 if 'match_preferences' not in st.session_state:
                     st.session_state.match_preferences = {}
@@ -1320,7 +1318,7 @@ else:
                         st.session_state.match_preferences[pref_member] = [val1, val2, val3]
                         st.success(f"🎉 {pref_member}님의 동반 희망 지망이 저장되었습니다!")
 
-            def generate_teams_smart_advanced(attendees, pair_hist, mem_db, couple_rule, exclude_recent, gender_rule, preferences, team_sz=4, iterations=1200):
+            def generate_teams_smart_advanced(attendees, pair_hist, mem_db, couple_rule, exclude_recent, gender_rule, preferences, team_sz=4, iterations=1500):
                 if not attendees:
                     return []
                 
@@ -1351,21 +1349,18 @@ else:
                     score = 0
                     
                     for t in teams:
-                        # 1. 부부 분리 규칙
                         if "분리" in couple_rule:
                             for i in range(len(t)):
                                 for j in range(i+1, len(t)):
                                     if couple_map.get(t[i]) == t[j]:
-                                        score += 100000
+                                        score += 150000
                         
-                        # 2. 직전 라운드 페어 제외
                         if exclude_recent:
                             for i in range(len(t)):
                                 for j in range(i+1, len(t)):
                                     if tuple(sorted([t[i], t[j]])) in recent_pairs:
-                                        score += 5000
+                                        score += 2000
 
-                        # 3. 성별 맞춤 규칙
                         females_in_team = sum(1 for m in t if m in FEMALE_SET)
                         males_in_team = len(t) - females_in_team
                         if "동성" in gender_rule:
@@ -1375,20 +1370,19 @@ else:
                             ideal_f = team_sz / 2
                             score += abs(females_in_team - ideal_f) * 1500
 
-                        # 4. 과거 동반 중복 방지
                         for i in range(len(t)):
                             for j in range(i+1, len(t)):
                                 score += (pair_hist.get(t[i], {}).get(t[j], 0) ** 2) * 10
 
-                    # 5. 1, 2, 3지망 선호도 반영
+                    # 1, 2, 3지망 선호도 반영 (강력한 가중치 부여로 1명만 설정해도 반드시 함께 배치되도록 유도)
+                    pref_weights = [100000, 50000, 25000]
                     for u, choices in preferences.items():
                         if u in attendees:
                             u_team = next((t for t in teams if u in t), [])
                             for rank, target in enumerate(choices):
                                 if target and target in attendees:
-                                    penalty_weight = [4000, 2000, 1000][rank]
                                     if target not in u_team:
-                                        score += penalty_weight
+                                        score += pref_weights[rank]
 
                     if score < min_score:
                         min_score = score
@@ -1400,7 +1394,7 @@ else:
                 user_prefs = st.session_state.get('match_preferences', {})
                 teams = generate_teams_smart_advanced(selected_attendees, pair_history, member_db, couple_rule, exclude_recent, gender_rule, user_prefs)
                 st.session_state.generated_teams = teams
-                st.success("🎉 고급 조건이 반영된 최적의 조편성이 완료되었습니다!")
+                st.success("🎉 희망 지망 및 고급 조건이 강력 반영된 조편성이 완료되었습니다!")
 
             if 'generated_teams' in st.session_state and st.session_state.generated_teams:
                 teams = st.session_state.generated_teams
@@ -1784,7 +1778,7 @@ else:
             "핸디캡": v.get('handicap', 0), 
             "참석률": f"{v.get('attendance', 0)}%", 
             "참석": f"{v.get('rounds_played', 0)}회"
-        } for k, v in member_db.items() if v.get("status", "approved") == "approved"]
+        } for k, v in member_db.items() if v.get("status", "approved"] == "approved"]
         
         st.table(pd.DataFrame(df_data))
         
