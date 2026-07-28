@@ -187,7 +187,6 @@ st.markdown("""
     
     .stApp { background-color: #F4F6F4 !important; font-family: 'Noto Sans KR', sans-serif; color: #1E2923; font-size: 0.9rem; }
     
-    /* 모바일 및 데스크톱 공통 상단 헤더 강제 가로 정렬 (줄바꿈 방지) */
     [data-testid="stHorizontalBlock"] {
         display: flex !important;
         flex-direction: row !important;
@@ -273,7 +272,6 @@ st.markdown("""
     
     .new-badge { background-color: #16A34A; color: #FFFFFF; padding: 2px 5px; border-radius: 6px; font-size: 0.6rem; font-weight: 800; vertical-align: middle; margin-left: 4px; font-family: 'Montserrat', sans-serif; }
     
-    /* 모바일 맞춤형 버튼 디자인 */
     .stButton>button { 
         background: linear-gradient(135deg, #1B4D33 0%, #0F2E1B 100%) !important; 
         color: #FFFFFF !important; 
@@ -393,7 +391,7 @@ total_unread_alerts = unread_notices_count + unread_lounge_count
 
 alert_badge_label = f"🔔 INBOX ({total_unread_alerts})" if total_unread_alerts > 0 else "🔔 INBOX"
 
-# --- 상단 고정 헤더 (모바일 가로 밸런스 최적화) ---
+# --- 상단 고정 헤더 ---
 col_h1, col_h2, col_h3 = st.columns([1.3, 2.0, 1.2])
 with col_h1:
     if st.button("⛳ GOLF", key="logo_home_btn"):
@@ -603,7 +601,7 @@ else:
                     st.rerun()
 
         st.markdown("##### 💬 내 게시물에 달린 댓글")
-        my_posts = [p for p in feed_posts if p.get("author"] == current_user]
+        my_posts = [p for p in feed_posts if p.get("author") == current_user]
         my_comments_found = False
         for p in my_posts:
             comments = p.get("comments", [])
@@ -1273,7 +1271,7 @@ else:
 
             balance_rule = st.radio("조편성 방식", ["과거 동반 중복 방지 (기본)", "핸디캡 균등 배정 (고수+초보 믹스)"])
             
-            approved_names = [k for k, v in member_db.items() if v.get("status", "approved"] == "approved"]
+            approved_names = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
             default_selected = approved_names[:16] if len(approved_names) >= 16 else approved_names
             selected_attendees = st.multiselect("오늘 참석자 선택", approved_names, default=default_selected)
             
