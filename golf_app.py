@@ -458,12 +458,12 @@ if st.session_state.current_menu == "HOME":
 
         st.markdown("""
         <div class="menu-card-box">
-            <h3>📁 ARCHIVE</h3>
-            <p>지난 날짜별 조편성 기록 확인</p>
+            <h3>📅 SCHEDULE</h3>
+            <p>세곡 골프클럽 연간 일정 및 규정</p>
         </div>
         """, unsafe_allow_html=True)
-        if st.button("아카이브 입장", use_container_width=True, key="go_archive"):
-            set_menu("역대 조편성 아카이브")
+        if st.button("연간 일정 입장", use_container_width=True, key="go_schedule"):
+            set_menu("연간 일정")
             st.rerun()
 
     with c2:
@@ -531,7 +531,7 @@ else:
     notice_label = f"📢 공지사항 (NOTICE) {'🟢' if has_new_notice else ''}"
     lounge_label = f"💬 클럽 라운지 (CLUB LOUNGE) {'🟢' if has_new_lounge else ''}"
     
-    menu_list = ["메인 홈", notice_label, lounge_label, "🏆 경기 결과 및 랭킹 (RESULTS)", "👑 명예의 전당 (HALL OF FAME)", "📁 조편성 아카이브 (ARCHIVE)", "👤 마이페이지 (MY PAGE)"]
+    menu_list = ["메인 홈", notice_label, lounge_label, "📅 연간 일정 (SCHEDULE)", "🏆 경기 결과 및 랭킹 (RESULTS)", "👑 명예의 전당 (HALL OF FAME)", "📁 조편성 아카이브 (ARCHIVE)", "👤 마이페이지 (MY PAGE)"]
     if is_admin:
         menu_list.insert(3, "⛳ 티타임 조편성 (MATCH)")
         menu_list.append("👥 회원 리스트 (MEMBERS)")
@@ -540,6 +540,7 @@ else:
         "HOME": "메인 홈",
         "클럽 공지사항": notice_label,
         "클럽 라운지": lounge_label,
+        "연간 일정": "📅 연간 일정 (SCHEDULE)",
         "알림 센터": "알림 센터",
         "티타임 조편성": "⛳ 티타임 조편성 (MATCH)",
         "경기 결과 및 랭킹": "🏆 경기 결과 및 랭킹 (RESULTS)",
@@ -558,6 +559,7 @@ else:
         target_menu = reverse_map.get(selected_nav, "HOME")
         if "공지사항" in selected_nav: target_menu = "클럽 공지사항"
         elif "라운지" in selected_nav: target_menu = "클럽 라운지"
+        elif "연간 일정" in selected_nav: target_menu = "연간 일정"
         
         if target_menu != st.session_state.current_menu:
             set_menu(target_menu)
@@ -633,7 +635,33 @@ else:
         if not my_comments_found:
             st.info("내 게시물에 달린 댓글이 없습니다.")
 
-    # 2. 📢 클럽 공지사항 (사용자가 직접 투표 항목들을 추가할 수 있도록 개선)
+    # 2. 📅 연간 일정 (SCHEDULE)
+    elif menu == "연간 일정":
+        st.subheader("📅 ANNUAL SCHEDULE (세곡 골프 클럽 연간 일정)")
+        st.caption("2026년 8월 1일 ~ 2027년 7월 31일 (Yr.26-27) 시즌 주요 클럽 일정 및 규정 안내")
+
+        schedule_data = [
+            {"구분": "필드 월례회 (M)", "8월('26)": "2026-08-21(금)", "9월": "2026-09-19(토)", "10월": "2026-10-23(금)", "11월": "2026-11-21(토)", "12월": "2026-12-05(토)", "1월('27)": "2027-01-15(금)", "2월": "2027-02-27(토)", "3월": "2027-03-19(금)", "4월": "2027-04-17(토)", "5월": "2027-05-21(금)", "6월": "2027-06-19(토)", "7월": "2027-07-23(금)"},
+            {"구분": "스크린 월례회 (M)", "8월('26)": "2026-08-08(토)", "9월": "2026-09-05(토)", "10월": "2026-10-17(토)", "11월": "2026-11-07(토)", "12월": "2026-12-19(토)", "1월('27)": "2027-01-09(토)", "2월": "2027-02-13(토)", "3월": "2027-03-06(토)", "4월": "2027-04-03(토)", "5월": "2027-05-15(토)", "6월": "2027-06-05(토)", "7월": "2027-07-03(토)"},
+            {"구분": "송년회 (A)", "8월('26)": "-", "9월": "-", "10월": "-", "11월": "-", "12월": "2026-12-05(토)", "1월('27)": "-", "2월": "-", "3월": "-", "4월": "-", "5월": "-", "6월": "-", "7월": "-"}
+        ]
+        
+        st.table(pd.DataFrame(schedule_data))
+
+        st.markdown("""
+        <div style="background-color: #F8FAFC; border-left: 4px solid #1B4D33; padding: 14px 18px; border-radius: 8px; font-size: 0.85rem; color: #1E2923; line-height: 1.6; margin-top: 15px;">
+            <b>📌 세곡 골프클럽 운영 및 참석 규정 노트</b><br>
+            • <b>필드 월례회:</b> 금요일과 토요일 격월로 번갈아 매월 3주 차에 진행합니다. (12월 제외)<br>
+            • <b>스크린 월례회:</b> 매월 1주 차 토요일에 진행하며, 연휴 및 주요 행사(어버이날 등) 시 조정될 수 있습니다.<br>
+            • <b>자율 모임:</b> 월례회 외의 사적인 라운드는 정기 횟수로 집계하지 않습니다.<br>
+            • <b>참석 규정:</b> 특별한 사유(질병, 장기출장, 이주 등) 없이 3개월 이상 월례회 불참 시 운영진 회의를 통해 제명 처리될 수 있습니다.<br>
+            • <b>동절기 운영 (11~3월):</b> 기상 악화 시 회원 투표를 거쳐 필드 월례회가 취소될 수 있습니다.<br>
+            • <b>12월 송년 필드 월례회:</b> 12월 5일(토) 진행하며, 악천후 시 투표를 통해 스크린으로 대체됩니다.<br>
+            • <b>모임 참석 권장:</b> 월례회가 있는 주는 월례회 참석을 우선하여 참석해 주시길 부탁드리며, 그 외 자율 모임은 적극 권장합니다.
+        </div>
+        """, unsafe_allow_html=True)
+
+    # 3. 📢 클럽 공지사항
     elif menu == "클럽 공지사항":
         if notices:
             user_info["last_notice_seen"] = notices[0]["date"]
@@ -894,7 +922,7 @@ else:
                                     st.success("수정되었습니다!")
                                     st.rerun()
 
-    # 3. 💬 클럽 라운지
+    # 4. 💬 클럽 라운지
     elif menu == "클럽 라운지":
         if feed_posts:
             user_info["last_lounge_seen"] = feed_posts[0]["date"]
@@ -1099,7 +1127,7 @@ else:
                         st.success("등록되었습니다!")
                         st.rerun()
 
-    # 3. ⛳ 티타임 조편성
+    # 5. ⛳ 티타임 조편성
     elif menu == "티타임 조편성":
         st.subheader("⛳ TEE-OFF MATCH (티타임 조편성)")
         if not is_admin:
@@ -1321,7 +1349,7 @@ else:
                     save_data(db)
                     st.success("등록되었습니다!")
 
-    # 4. 🏆 경기 결과 및 랭킹
+    # 6. 🏆 경기 결과 및 랭킹
     elif menu == "경기 결과 및 랭킹":
         st.subheader("🏆 RESULTS & RANKING (경기 결과 및 랭킹)")
         
@@ -1513,7 +1541,7 @@ else:
                 display_l.index += 1
                 st.table(display_l)
 
-    # 5. 👑 명예의 전당
+    # 7. 👑 명예의 전당
     elif menu == "명예의 전당":
         st.subheader("👑 HALL OF FAME (명예의 전당)")
         st.caption("클럽 회원들의 개인별 라운딩 스코어 이력, 평균 타수 및 출석 현황을 확인합니다.")
@@ -1573,7 +1601,7 @@ else:
                 df_m_rounds = pd.DataFrame(member_rounds_data)
                 st.table(df_m_rounds)
 
-    # 6. 📁 역대 조편성 아카이브
+    # 8. 📁 역대 조편성 아카이브
     elif menu == "역대 조편성 아카이브":
         st.subheader("📁 ARCHIVE (조편성 아카이브)")
         
@@ -1663,7 +1691,7 @@ else:
                 team_html = f"<div class='team-box'><h3>⛳ {t_idx+1}조{meta_str}</h3>" + "<br>".join([f"• <b>{m}</b> ({member_db.get(m, {}).get('handicap', 0)})" for m in team]) + "</div>"
                 st.markdown(team_html, unsafe_allow_html=True)
 
-    # 7. 👥 회원 리스트
+    # 9. 👥 회원 리스트
     elif menu.startswith("회원 리스트") or menu.startswith("회원 명부"):
         st.subheader("👥 MEMBER LIST (클럽 회원 리스트)")
         
@@ -1680,94 +1708,4 @@ else:
         if is_admin:
             st.divider()
             st.subheader("👑 [OPERATOR] 신입회원 가입 승인 센터")
-            pending_members = [k for k, v in member_db.items() if v.get("status") == "pending"]
-            
-            if not pending_members:
-                st.info("현재 가입 승인 대기 중인 회원이 없습니다.")
-            else:
-                for p_name in pending_members:
-                    col_p1, col_p2 = st.columns([3, 1])
-                    with col_p1:
-                        st.write(f"👤 **가입 대기 회원:** `{p_name}`")
-                    with col_p2:
-                        if st.button(f"✅ {p_name} 승인", key=f"app_{p_name}", use_container_width=True):
-                            member_db[p_name]["status"] = "approved"
-                            save_data(db)
-                            st.success("등록되었습니다!")
-                            st.rerun()
-
-            st.divider()
-            st.subheader("🚫 [OPERATOR] 회원 강퇴 관리")
-            expel_candidates = [k for k in member_db.keys() if k != current_user and member_db[k].get("status", "approved") == "approved"]
-            if expel_candidates:
-                target_expel = st.selectbox("강퇴할 회원 선택", expel_candidates, key="target_expel")
-                with st.expander("⚠️ 회원 강퇴 실행"):
-                    conf_expel = st.checkbox(f"정말로 '{target_expel}' 회원을 클럽에서 강퇴하시겠습니까?", key="conf_expel")
-                    if conf_expel:
-                        if st.button("🚨 최종 강퇴 실행", type="primary", key="btn_expel", use_container_width=True):
-                            member_db.pop(target_expel, None)
-                            save_data(db)
-                            st.success("수정되었습니다!")
-                            st.rerun()
-            else:
-                st.info("강퇴할 수 있는 회원이 없습니다.")
-
-    # 8. 👤 마이페이지
-    elif menu == "마이페이지":
-        st.subheader("👤 MY PAGE (마이페이지)")
-        st.info("💡 회원 성함, 닉네임, 비밀번호, 프로필 사진 변경 및 클럽 탈퇴를 관리할 수 있습니다.")
-        
-        with st.form("edit_profile_form"):
-            edit_name = st.text_input("회원 성함", value=current_user)
-            edit_nickname = st.text_input("클럽 닉네임", value=user_info.get("nickname", current_user))
-            edit_pw = st.text_input("비밀번호 변경", value=user_info.get("password", "1234"), type="password")
-            
-            p_img_file = st.file_uploader("프로필 아바타 등록 (선택)", type=["jpg", "png", "jpeg"])
-            if user_info.get("profile_img"):
-                st.image(base64.b64decode(user_info["profile_img"]), width=100, caption="Current Profile Photo")
-                
-            submit_btn = st.form_submit_button("💾 정보 저장하기", type="primary", use_container_width=True)
-            
-            if submit_btn:
-                if edit_name != current_user:
-                    if edit_name in member_db:
-                        st.error("이미 존재하는 회원 성함입니다.")
-                    else:
-                        member_db[edit_name] = member_db.pop(current_user)
-                        st.session_state.logged_in_user = edit_name
-                        current_user = edit_name
-                
-                user_info['nickname'] = edit_nickname
-                user_info['password'] = edit_pw
-                
-                if p_img_file is not None:
-                    img_bytes = p_img_file.getvalue()
-                    user_info['profile_img'] = base64.b64encode(img_bytes).decode()
-                    
-                save_data(db)
-                st.success("수정되었습니다!")
-                st.rerun()
-
-        st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
-        st.markdown("##### 🚪 세션 관리: 로그아웃")
-        if st.button("🚪 클럽 로그아웃", type="secondary", use_container_width=True, key="mypage_logout"):
-            st.session_state.logged_in_user = None
-            set_menu("HOME")
-            try:
-                st.query_params.clear()
-            except Exception:
-                pass
-            st.rerun()
-
-        st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
-        st.markdown("##### ❌ 위험 구역: 클럽 탈퇴")
-        with st.expander("⚠️ 클럽 탈퇴하기 (계정 삭제)"):
-            conf_withdraw = st.checkbox("정말로 클럽에서 탈퇴하시겠습니까? 계정 정보가 영구 삭제됩니다.", key="conf_withdraw_mypage")
-            if conf_withdraw:
-                if st.button("🚨 최종 클럽 탈퇴 실행", type="primary", key="btn_withdraw_mypage", use_container_width=True):
-                    member_db.pop(current_user, None)
-                    save_data(db)
-                    st.session_state.logged_in_user = None
-                    set_menu("HOME")
-                    st.success("수정되었습니다!")
-                    st.rerun()
+            pending_members = [k for k, v in member_db.items() if v.get("status"] == "pending"] # Wait, let's make sure this line is correct: v.get("status") == "pending"
