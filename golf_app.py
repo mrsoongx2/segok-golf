@@ -200,7 +200,6 @@ st.markdown("""
     
     .stApp { background-color: #F4F6F4 !important; font-family: 'Noto Sans KR', sans-serif; color: #1E2923; font-size: 0.9rem; }
     
-    /* 모바일 가독성을 위해 상단 타이틀/Subheader 글자 크기를 컴팩트하게 축소 */
     h2 { font-size: 1.15rem !important; font-weight: 700 !important; color: #0F2E1B !important; margin-bottom: 0.5rem !important; }
     h3 { font-size: 1.05rem !important; font-weight: 700 !important; color: #0F2E1B !important; }
     
@@ -333,7 +332,7 @@ if not st.session_state.get('logged_in_user'):
                             st.query_params["u"] = login_name
                         except Exception:
                             pass
-                        st.success(f"{login_name}님 환영합니다!")
+                        st.success("등록되었습니다!")
                         st.rerun()
                     else:
                         st.error("비밀번호가 올바르지 않습니다.")
@@ -1302,9 +1301,9 @@ else:
             with col_op2:
                 gender_rule = st.radio("성별 맞춤 옵션", ["기본 (핸디캡 균등)", "동성 위주 배치", "성비 맞춤 위주 (남녀 균등)"])
 
-            approved_names = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
-            default_selected = approved_names[:16] if len(approved_names) >= 16 else approved_names
-            selected_attendees = st.multiselect("오늘 참석자 선택", approved_names, default=default_selected)
+            approved_members = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
+            default_selected = approved_members[:16] if len(approved_members) >= 16 else approved_members
+            selected_attendees = st.multiselect("오늘 참석자 선택", approved_members, default=default_selected)
 
             with st.expander("💌 회원별 동반 희망 멤버 (1, 2, 3지망) 설정"):
                 if 'match_preferences' not in st.session_state:
@@ -1698,7 +1697,7 @@ else:
         st.subheader("👑 HALL OF FAME (명예의 전당)")
         st.caption("클럽 회원들의 개인별 라운딩 스코어 이력, 평균 타수 및 출석 현황을 확인합니다.")
         
-        approved_members = [k for k, v in member_db.items() if v.get("status", "approved"] == "approved"]
+        approved_members = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
         selected_member_name = st.selectbox("🔍 조회할 회원 선택", approved_members)
         
         if selected_member_name:
