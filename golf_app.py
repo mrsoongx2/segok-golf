@@ -1115,7 +1115,6 @@ else:
                             e_multi = False
                             e_anon = False
                             e_deadline = ""
-                            e_opts_list = []
                             
                             if edit_has_poll:
                                 e_q = st.text_input("투표 주제", value=existing_p["question"] if existing_p else "", key=f"edit_eq_{post['id']}")
@@ -1173,7 +1172,7 @@ else:
                                     post["file_name"] = f_name
 
                                 if edit_has_poll and e_q:
-                                    old_opts = existing_p["options"] if (existing_p and "options" in existing_p) else {"참석": [], "불참": [], "미정": []}
+                                    old_opts = existing_p["options"] if (existing_p and "options" in existing_p) else {"찬성/참석": [], "반대/불참": [], "기권/미정": []}
                                     post["poll"] = {
                                         "question": e_q,
                                         "deadline": e_deadline,
@@ -1695,7 +1694,7 @@ else:
             m_loc = st.text_input("골프장 장소", value="남서울CC", key="manual_archive_loc")
             
             st.markdown("##### ⛳ 조별 구성원 입력 (최대 4개 조)")
-            approved_members = [k for k, v in member_db.items() if v.get("status", "approved"] == "approved"]
+            approved_members = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
             
             m_teams = []
             m_tee_times = []
@@ -1705,7 +1704,7 @@ else:
                 st.markdown(f"**{j_idx+1}조 구성**")
                 mc1, mc2, mc3 = st.columns([2, 1, 1])
                 with mc1:
-                    j_members = st.multiselect(f"{j_idx+1}조 멤버 선택", approved_members, key=f"manual_team_{j_idx}")
+                    j_members = st.multiselect(f"{j_idx+1}조 멤버 선택", approved_names, key=f"manual_team_{j_idx}")
                 with mc2:
                     j_time = st.text_input(f"{j_idx+1}조 시간", value=f"08:{(j_idx*8):02d}", key=f"manual_time_{j_idx}")
                 with mc3:
