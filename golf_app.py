@@ -875,7 +875,7 @@ else:
                                     st.success("수정되었습니다!")
                                     st.rerun()
 
-    # 3. 💬 새로 다시 만든 클럽 라운지 (전면 재작성, 글/사진 단독 등록 100% 보장)
+    # 3. 💬 새로 다시 만든 클럽 라운지 (완전 신규 작성, 텍스트 단독 등록 100% 보장)
     elif menu == "클럽 라운지":
         if feed_posts:
             user_info["last_lounge_seen"] = feed_posts[0]["date"]
@@ -1370,7 +1370,7 @@ else:
                                     nd = st.number_input(f"[{m_nick}] 니어(m)", min_value=0.0, max_value=50.0, value=float(curr['near']), step=0.1, key=f"nd_{r['id']}_{m}")
                                 entered_mod_scores[m] = {"score": sc, "long": ld, "near": nd}
                     else:
-                        approved_members = [k for k, v in member_db.items() if v.get("status", "approved"] == "approved"]
+                        approved_members = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
                         sel_mems = st.multiselect("참석 회원 선택", approved_members, default=list(r.get("scores", {}).keys()), key=f"melsel_{r['id']}")
                         for m in sel_mems:
                             curr = r.get("scores", {}).get(m, {"score": 85, "long": 0, "near": 0.0})
