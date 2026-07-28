@@ -33,6 +33,7 @@ DEFAULT_MEMBERS = [
 def load_data():
     if os.path.exists(DB_FILE):
         try:
+            # 캐시 무시하고 최신 파일 읽기 위해 mtime 확인 또는 직접 읽기
             with open(DB_FILE, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 if isinstance(data, dict) and "member_db" in data:
@@ -132,8 +133,8 @@ def recalculate_all_stats(db_obj):
             
         m_info["attendance"] = round((m_info["rounds_played"] / total_r_count) * 100)
 
-if 'db_data' not in st.session_state:
-    st.session_state.db_data = load_data()
+# 매번 새로고침 시 최신 DB 불러오기
+st.session_state.db_data = load_data()
 
 db = st.session_state.db_data
 member_db = db.get("member_db", {})
@@ -183,12 +184,11 @@ st.markdown("""
     .menu-card h3 { font-size: 1rem; margin-bottom: 4px; color: #1B3B2B; }
     .menu-card p { color: #666; font-size: 0.78rem; margin-bottom: 10px; line-height: 1.3; }
     
-    /* 밴드 스타일 피드 및 카카오톡 공지 스타일 클래스 */
     .band-card { background-color: #FFFFFF; border-radius: 10px; border: 1px solid #E0E0E0; max-width: 100%; margin: 0 auto 16px auto; box-shadow: 0 1px 4px rgba(0,0,0,0.02); overflow: hidden; }
     .band-header { display: flex; align-items: center; padding: 12px 14px; border-bottom: 1px solid #F0F0F0; background-color: #FAFAFA; }
-    .band-body { padding: 14px; font-size: 0.85rem; color: #262626; line-height: 1.5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+    .band-body { padding: 14px; font-size: 0.85rem; color: #262626; line-height: 1.5; }
     
-    /* 카카오톡 붙여넣기 스타일 (폰트 크기 작고 정돈된 형태) */
+    /* 카카오톡 붙여넣기 스타일 (항상 작고 정돈된 고정폭 폰트 유지) */
     .kakao-notice-box { background-color: #F8F9FA; border-left: 4px solid #1B3B2B; padding: 12px 15px; border-radius: 6px; font-size: 0.82rem; font-family: monospace, sans-serif; color: #222222; line-height: 1.5; white-space: pre-wrap; word-break: break-all; margin-top: 8px; }
 
     .team-box { background-color: #1B3B2B; color: #FFFFFF; padding: 14px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #C5A059; font-size: 0.85rem; }
@@ -459,7 +459,7 @@ else:
     
     menu = st.session_state.current_menu
 
-    # 1. 📢 클럽 공지사항 (카카오톡 붙여넣기 스타일 적용 - 작고 정돈된 글씨체)
+    # 1. 📢 클럽 공지사항 (카카오톡 스타일 적용으로 항상 작고 깔끔하게 출력)
     if menu == "클럽 공지사항":
         if notices:
             user_info["last_notice_seen"] = notices[0]["date"]
@@ -517,7 +517,7 @@ else:
                                 st.success("공지사항이 삭제되었습니다.")
                                 st.rerun()
 
-    # 2. 💬 클럽 라운지 (밴드 형식)
+    # 2. 💬 클럽 라운지
     elif menu == "클럽 라운지":
         if feed_posts:
             user_info["last_lounge_seen"] = feed_posts[0]["date"]
@@ -828,7 +828,7 @@ else:
                         }
                         rounds_data.insert(0, round_entry)
                         
-                        # 클럽 공지사항에 자동 등록
+                        # 클럽 공지사항에 자동 등록 (카카오톡 박스 스타일 적용)
                         notices.insert(0, {
                             "id": int(datetime.now().timestamp()),
                             "date": now_str,
