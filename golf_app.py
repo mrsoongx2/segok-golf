@@ -16,6 +16,7 @@ st.set_page_config(
 
 DB_FILE = "club_data.json"
 UPLOAD_DIR = "uploads"
+LOGO_FILE = "logo.png"
 
 if not os.path.exists(UPLOAD_DIR):
     os.makedirs(UPLOAD_DIR)
@@ -213,7 +214,7 @@ def set_menu(menu_name):
 
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Montserrat:wght@400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
     
     #MainMenu {visibility: hidden;}
     header {visibility: hidden;}
@@ -226,57 +227,21 @@ st.markdown("""
     h2 { font-size: 1.15rem !important; font-weight: 700 !important; color: #0F2E1B !important; margin-bottom: 0.5rem !important; }
     h3 { font-size: 1.05rem !important; font-weight: 700 !important; color: #0F2E1B !important; }
     
-    /* 두 번째 스타일 클래식 엠블럼 배너 */
-    .classic-emblem-box {
-        background: #143825;
-        border-radius: 18px;
-        padding: 32px 20px;
-        text-align: center;
-        color: #FFFFFF;
-        box-shadow: 0 10px 30px rgba(20,56,37,0.22);
-        border: 2px solid #285E43;
-        margin-bottom: 20px;
-    }
-    .ce-top-row {
+    /* 실제 업로드된 로고 이미지 스타일 (반응형 중앙정렬) */
+    .logo-container {
         display: flex;
         justify-content: center;
         align-items: center;
-        gap: 25px;
-        font-family: 'Montserrat', sans-serif;
-        font-size: 0.72rem;
-        font-weight: 600;
-        letter-spacing: 3px;
-        color: #A2C1AF;
-        margin-bottom: 6px;
-        text-transform: uppercase;
+        margin-bottom: 20px;
+        padding: 10px;
+        background: transparent;
     }
-    .ce-tee-icon {
-        font-size: 1.5rem;
-        line-height: 1;
-    }
-    .ce-title {
-        font-family: 'Playfair Display', serif;
-        font-size: 2.1rem;
-        font-weight: 700;
-        letter-spacing: 3px;
-        color: #FFFFFF;
-        margin: 4px 0 8px 0;
-        text-transform: uppercase;
-    }
-    .ce-bottom-row {
-        font-family: 'Montserrat', sans-serif;
-        font-size: 0.68rem;
-        font-weight: 600;
-        letter-spacing: 5px;
-        color: #A2C1AF;
-        text-transform: uppercase;
-        margin-top: 4px;
-    }
-    .ce-clubs {
-        font-size: 1.1rem;
-        letter-spacing: 8px;
-        margin-top: 4px;
-        color: #D4B475;
+    .logo-container img {
+        max-width: 280px;
+        width: 100%;
+        height: auto;
+        border-radius: 12px;
+        filter: drop-shadow(0 6px 16px rgba(0,0,0,0.12));
     }
     
     .menu-card-box { 
@@ -348,16 +313,29 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# 로고 이미지 Base64 인코딩 함수
+def get_image_base64(path):
+    if os.path.exists(path):
+        with open(path, "rb") as f:
+            return base64.b64encode(f.read()).decode("utf-8")
+    return None
+
+logo_b64 = get_image_base64(LOGO_FILE)
+
 # --- LOGIN & SIGNUP ---
 if not st.session_state.get('logged_in_user'):
-    st.markdown("""
-    <div style="text-align: center; padding: 35px 15px 20px 15px;">
-        <div style="background: #143825; border: 1px solid #285E43; border-radius: 50%; width: 50px; height: 50px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-bottom: 6px;">⛳</div>
-        <div style="font-family: 'Montserrat', sans-serif; font-size: 0.58rem; letter-spacing: 3px; color: #143825; font-weight: 700; margin-bottom: 2px;">ESTD 2025</div>
-        <h1 style="font-family: 'Playfair Display', serif; color: #0F2E1B; margin: 0 0 2px 0; font-size: 1.5rem; font-weight: 700; letter-spacing: 1px;">SEGOK GOLF CLUB</h1>
-        <p style="color: #64748B; font-size: 0.58rem; letter-spacing: 3px; text-transform: uppercase; font-weight: 600; font-family: 'Montserrat', sans-serif;">GOLF CLUB SOCIETY</p>
-    </div>
-    """, unsafe_allow_html=True)
+    if logo_b64:
+        st.markdown(f"""
+        <div style="text-align: center; padding: 25px 15px 10px 15px;">
+            <img src="data:image/png;base64,{logo_b64}" style="max-width: 200px; width: 100%; height: auto; margin-bottom: 10px; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.1));">
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+        <div style="text-align: center; padding: 35px 15px 20px 15px;">
+            <h1 style="font-family: 'Montserrat', sans-serif; color: #0F2E1B; margin: 0; font-size: 1.6rem; font-weight: 700;">SEGOK GOLF COMMUNITY</h1>
+        </div>
+        """, unsafe_allow_html=True)
     
     col_login, _ = st.columns([1, 0.01])
     with col_login:
@@ -473,19 +451,19 @@ with col_h2:
 st.markdown("<hr style='margin: 6px 0 12px 0; border-top: 1px solid #E2E8F0;'>", unsafe_allow_html=True)
 
 if st.session_state.current_menu == "HOME":
-    # 두 번째 스타일 클래식 엠블럼 메인 배너
-    st.markdown("""
-    <div class="classic-emblem-box">
-        <div class="ce-top-row">
-            <span>ESTD 2025</span>
-            <span class="ce-tee-icon">⛳</span>
-            <span>2026</span>
+    # 업로드된 실제 로고 이미지 메인 배너 적용
+    if logo_b64:
+        st.markdown(f"""
+        <div class="logo-container">
+            <img src="data:image/png;base64,{logo_b64}">
         </div>
-        <div class="ce-title">SEGOK GOLF CLUB</div>
-        <div class="ce-clubs">🏌️‍♂️ ⚲ 🏌️‍♀️</div>
-        <div class="ce-bottom-row">PREMIUM SOCIETY & COMMUNITY</div>
-    </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+        <div class="logo-container">
+            <h1 style="color: #0F2E1B; font-size: 1.8rem; text-align: center;">SEGOK GOLF COMMUNITY</h1>
+        </div>
+        """, unsafe_allow_html=True)
     
     c1, c2 = st.columns(2)
     
@@ -1294,7 +1272,7 @@ else:
                     if st.button("지망 사항 저장", key=f"save_pref_{pref_member}"):
                         val1 = "" if p1 == "선택 안 함" else p1
                         val2 = "" if p2 == "선택 안 함" else p2
-                        val3 = "" if p3 == "선택 안 함" else val3
+                        val3 = "" if p3 == "선택 안 함" else p3
                         st.session_state.match_preferences[pref_member] = [val1, val2, val3]
                         st.success("수정되었습니다!")
 
