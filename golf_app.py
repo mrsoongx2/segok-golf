@@ -213,7 +213,7 @@ def set_menu(menu_name):
 
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
     
     #MainMenu {visibility: hidden;}
     header {visibility: hidden;}
@@ -226,33 +226,49 @@ st.markdown("""
     h2 { font-size: 1.15rem !important; font-weight: 700 !important; color: #0F2E1B !important; margin-bottom: 0.5rem !important; }
     h3 { font-size: 1.05rem !important; font-weight: 700 !important; color: #0F2E1B !important; }
     
+    /* 세련되고 심플한 하이엔드 골프 클럽 로고 배너 */
     .logo-hero { 
         text-align: center; 
-        padding: 35px 15px; 
-        background: linear-gradient(135deg, #0F2E1B 0%, #1B4D33 50%, #123822 100%); 
-        border-radius: 16px; 
+        padding: 42px 20px; 
+        background: linear-gradient(135deg, #0A1F14 0%, #123524 50%, #0F2E1B 100%); 
+        border-radius: 18px; 
         color: #FFFFFF; 
         margin-bottom: 20px; 
-        box-shadow: 0 8px 24px rgba(15,46,27,0.18); 
-        border: 1px solid rgba(212,180,117,0.3);
+        box-shadow: 0 10px 30px rgba(15,46,27,0.22); 
+        border: 1px solid rgba(212,180,117,0.35);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    .logo-symbol {
+        font-size: 1.6rem;
+        color: #D4B475;
+        margin-bottom: 8px;
+        letter-spacing: 4px;
     }
     .logo-hero h1 { 
         font-family: 'Montserrat', sans-serif; 
-        font-size: 1.8rem; 
-        font-weight: 800; 
-        letter-spacing: 2px; 
-        margin: 6px 0 4px 0; 
+        font-size: 1.7rem; 
+        font-weight: 700; 
+        letter-spacing: 4px; 
+        margin: 0 0 6px 0; 
         color: #F8F5F0; 
         text-transform: uppercase;
+        text-align: center;
+        width: 100%;
     }
     .logo-hero p { 
-        color: #D4B475; 
-        font-size: 0.65rem; 
-        letter-spacing: 3px; 
+        color: #C5A059; 
+        font-size: 0.62rem; 
+        letter-spacing: 4px; 
         text-transform: uppercase; 
-        font-weight: 600; 
+        font-weight: 500; 
         margin: 0; 
         font-family: 'Montserrat', sans-serif;
+        text-align: center;
+        width: 100%;
+        opacity: 0.9;
     }
     
     .menu-card-box { 
@@ -328,9 +344,9 @@ st.markdown("""
 if not st.session_state.get('logged_in_user'):
     st.markdown("""
     <div style="text-align: center; padding: 35px 15px 20px 15px;">
-        <div style="font-size: 2.8rem;">⛳</div>
-        <h1 style="font-family: 'Montserrat', sans-serif; color: #0F2E1B; margin: 6px 0 0 0; font-size: 1.8rem; font-weight: 800; letter-spacing: 1px;">SEGOK GOLF CLUB</h1>
-        <p style="color: #64748B; font-size: 0.7rem; letter-spacing: 3px; text-transform: uppercase; font-weight: 700; font-family: 'Montserrat', sans-serif;">PREMIUM GOLF SOCIETY</p>
+        <div style="font-size: 2.2rem; color: #D4B475; letter-spacing: 6px; margin-bottom: 4px;">✦ ⛳ ✦</div>
+        <h1 style="font-family: 'Montserrat', sans-serif; color: #0F2E1B; margin: 6px 0 0 0; font-size: 1.7rem; font-weight: 700; letter-spacing: 2px;">SEGOK GOLF CLUB</h1>
+        <p style="color: #64748B; font-size: 0.62rem; letter-spacing: 4px; text-transform: uppercase; font-weight: 600; font-family: 'Montserrat', sans-serif;">PREMIUM GOLF SOCIETY</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -448,9 +464,10 @@ with col_h2:
 st.markdown("<hr style='margin: 6px 0 12px 0; border-top: 1px solid #E2E8F0;'>", unsafe_allow_html=True)
 
 if st.session_state.current_menu == "HOME":
+    # 리디자인된 세련되고 심플한 하이엔드 로고 배너
     st.markdown("""
     <div class="logo-hero">
-        <div style="font-size: 2.5rem; margin-bottom: 4px;">⛳</div>
+        <div class="logo-symbol">⛳</div>
         <h1>SEGOK GOLF CLUB</h1>
         <p>PREMIUM GOLF SOCIETY & COMMUNITY</p>
     </div>
@@ -664,7 +681,7 @@ else:
         if not my_comments_found:
             st.info("내 게시물에 달린 댓글이 없습니다.")
 
-    # 2. 📅 연간 일정 (SCHEDULE) - 모바일 최적화 2줄 배치 및 운영진 수정/등록 기능 추가
+    # 2. 📅 연간 일정 (SCHEDULE)
     elif menu == "연간 일정":
         st.subheader("📅 ANNUAL SCHEDULE (세곡 골프 클럽 연간 일정)")
         st.caption("시즌 Yr.26-27 (2026. 8. 1 ~ 2027. 7. 31) 주요 클럽 월례회 및 행사 일정")
@@ -698,7 +715,6 @@ else:
         for s_idx, s in enumerate(annual_schedules):
             etc_badge = f"<span style='background:#FEF3C7; color:#92400E; padding:2px 8px; border-radius:6px; font-size:0.75rem; font-weight:700; margin-left:8px;'>{s['etc']}</span>" if s.get('etc') else ""
             
-            # 모바일에서 한 줄이 길어지지 않도록 필드와 스크린 일정을 세로(두 줄)로 배치
             st.markdown(f"""
             <div class="schedule-card">
                 <h4 style="margin-bottom: 6px;">🗓️ {s['month']} {etc_badge}</h4>
@@ -1442,13 +1458,12 @@ else:
                     save_data(db)
                     st.success("등록되었습니다!")
 
-    # 6. 🏆 경기 결과 및 랭킹
+    # 6. 🏆 경기 결과 및 랭킹 (연도별 드롭박스 포함)
     elif menu == "경기 결과 및 랭킹":
         st.subheader("🏆 RESULTS & RANKING (경기 결과 및 랭킹)")
         
         field_rounds = [r for r in rounds_data if "필드" in r.get("type", "")]
         
-        # --- 연단위 필터링 추가 ---
         all_years = sorted(list(set([r['date'][:4] for r in field_rounds if 'date' in r and len(r['date']) >= 4])), reverse=True)
         current_year_str = str(datetime.now().year)
         if current_year_str not in all_years:
@@ -1575,7 +1590,7 @@ else:
                             st.success("수정되었습니다!")
                             st.rerun()
 
-        # --- 누적 통계 & 랭킹 (선택된 연도 기준) ---
+        # --- 누적 통계 & 랭킹 ---
         st.divider()
         st.subheader(f"📊 {selected_year}년도 누적 통계 및 랭킹")
         
@@ -1644,12 +1659,11 @@ else:
                 display_l.index += 1
                 st.table(display_l)
 
-    # 7. 👑 명예의 전당 (연단위 드롭박스 추가)
+    # 7. 👑 명예의 전당 (연단위 드롭박스 포함)
     elif menu == "명예의 전당":
         st.subheader("👑 HALL OF FAME (명예의 전당)")
         st.caption("클럽 회원들의 연도별 라운딩 스코어 이력, 평균 타수 및 출석 현황을 확인합니다.")
         
-        # --- 연단위 필터링 추가 ---
         field_rounds_all = [r for r in rounds_data if "필드" in r.get("type", "")]
         all_hof_years = sorted(list(set([r['date'][:4] for r in field_rounds_all if 'date' in r and len(r['date']) >= 4])), reverse=True)
         current_year_str = str(datetime.now().year)
