@@ -1263,7 +1263,7 @@ else:
                     
                     if st.button("지망 사항 저장", key=f"save_pref_{pref_member}"):
                         val1 = "" if p1 == "선택 안 함" else p1
-                        val2 = "" if p2 == "선택 안 함" else val2
+                        val2 = "" if p2 == "선택 안 함" else p2
                         val3 = "" if p3 == "선택 안 함" else val3
                         st.session_state.match_preferences[pref_member] = [val1, val2, val3]
                         st.success("수정되었습니다!")
@@ -1448,15 +1448,25 @@ else:
         
         field_rounds = [r for r in rounds_data if "필드" in r.get("type", "")]
         
-        if not field_rounds:
-            st.info("등록된 필드 경기 결과가 없습니다. 운영진이 필드 조편성을 확정하면 입력 카드가 생성됩니다.")
+        # --- 연단위 필터링 추가 ---
+        all_years = sorted(list(set([r['date'][:4] for r in field_rounds if 'date' in r and len(r['date']) >= 4])), reverse=True)
+        current_year_str = str(datetime.now().year)
+        if current_year_str not in all_years:
+            all_years.insert(0, current_year_str)
+            
+        selected_year = st.selectbox("📅 조회 연도 선택", all_years, index=0 if current_year_str in all_years else 0)
+        
+        year_field_rounds = [r for r in field_rounds if r.get('date', '').startswith(selected_year)]
+        
+        if not year_field_rounds:
+            st.info(f"{selected_year}년도에 등록된 필드 경기 결과가 없습니다.")
         else:
             selected_round_title = st.selectbox(
                 "조회할 라운드 선택", 
-                [f"{r['date']} | {r['title']} ({'입력 완료' if r.get('completed') else '입력 대기'})" for r in field_rounds]
+                [f"{r['date']} | {r['title']} ({'입력 완료' if r.get('completed') else '입력 대기'})" for r in year_field_rounds]
             )
-            selected_r_idx = [f"{r['date']} | {r['title']} ({'입력 완료' if r.get('completed') else '입력 대기'})" for r in field_rounds].index(selected_round_title)
-            r = field_rounds[selected_r_idx]
+            selected_r_idx = [f"{r['date']} | {r['title']} ({'입력 완료' if r.get('completed') else '입력 대기'})" for r in year_field_rounds].index(selected_round_title)
+            r = year_field_rounds[selected_r_idx]
             
             is_done = r.get("completed", False)
             status_tag = "✅ 성적 입력 완료" if is_done else "⌛ 성적 입력 대기 중"
@@ -1565,21 +1575,21 @@ else:
                             st.success("수정되었습니다!")
                             st.rerun()
 
-        # --- 누적 통계 & 랭킹 ---
+        # --- 누적 통계 & 랭킹 (선택된 연도 기준) ---
         st.divider()
-        st.subheader("📊 누적 통계 및 랭킹")
+        st.subheader(f"📊 {selected_year}년도 누적 통계 및 랭킹")
         
-        completed_r = [r for r in field_rounds if r.get("completed")]
+        completed_r_year = [r for r in year_field_rounds if r.get("completed")]
         
-        if not completed_r:
-            st.warning("아직 완료된 필드 라운드가 없습니다.")
+        if not completed_r_year:
+            st.warning(f"{selected_year}년도에 완료된 필드 라운드가 없습니다.")
         else:
             medalist_records = []
             longist_records = []
             nearest_records = []
             attendance_counts = {}
 
-            for r in completed_r:
+            for r in completed_r_year:
                 r_info_str = f"{r['date']} ({r['title']})"
                 awards = r.get("awards", {})
                 raw_m = awards.get("raw_medalist")
@@ -1634,10 +1644,19 @@ else:
                 display_l.index += 1
                 st.table(display_l)
 
-    # 7. 👑 명예의 전당
+    # 7. 👑 명예의 전당 (연단위 드롭박스 추가)
     elif menu == "명예의 전당":
         st.subheader("👑 HALL OF FAME (명예의 전당)")
-        st.caption("클럽 회원들의 개인별 라운딩 스코어 이력, 평균 타수 및 출석 현황을 확인합니다.")
+        st.caption("클럽 회원들의 연도별 라운딩 스코어 이력, 평균 타수 및 출석 현황을 확인합니다.")
+        
+        # --- 연단위 필터링 추가 ---
+        field_rounds_all = [r for r in rounds_data if "필드" in r.get("type", "")]
+        all_hof_years = sorted(list(set([r['date'][:4] for r in field_rounds_all if 'date' in r and len(r['date']) >= 4])), reverse=True)
+        current_year_str = str(datetime.now().year)
+        if current_year_str not in all_hof_years:
+            all_hof_years.insert(0, current_year_str)
+            
+        selected_hof_year = st.selectbox("📅 조회 연도 선택", all_hof_years, index=0 if current_year_str in all_hof_years else 0, key="hof_year_select")
         
         approved_members = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
         selected_member_name = st.selectbox("🔍 조회할 회원 선택", approved_members)
@@ -1645,31 +1664,39 @@ else:
         if selected_member_name:
             m_info = member_db.get(selected_member_name, {})
             m_nick = m_info.get("nickname", selected_member_name)
-            m_hc = m_info.get("handicap", 0)
-            m_att = m_info.get("attendance", 0)
-            m_rounds_cnt = m_info.get("rounds_played", 0)
-            m_history = m_info.get("score_history", [])
             
-            avg_sc = round(sum(m_history) / len(m_history), 1) if m_history else 0
+            year_completed_rounds = [r for r in field_rounds_all if r.get('date', '').startswith(selected_hof_year) and r.get("completed")]
+            total_year_rounds_cnt = len(year_completed_rounds)
             
+            year_scores = []
+            year_attended_cnt = 0
+            for r in year_completed_rounds:
+                scores_dict = r.get("scores", {})
+                if selected_member_name in scores_dict:
+                    year_attended_cnt += 1
+                    year_scores.append(scores_dict[selected_member_name]["score"])
+                    
+            year_avg_sc = round(sum(year_scores) / len(year_scores), 1) if year_scores else 0
+            year_att_rate = round((year_attended_cnt / total_year_rounds_cnt) * 100) if total_year_rounds_cnt > 0 else 0
+            year_hc = round(year_avg_sc - 72) if year_scores else 0
+
             st.markdown(f"""
             <div class="css-card" style="background: linear-gradient(135deg, #0F2E1B 0%, #1B4D33 100%); color: #FFFFFF; padding: 18px; border-radius: 12px; border: 1px solid #D4B475;">
-                <h3 style="margin:0 0 8px 0; color: #E5C585; font-size:1.1rem;">👤 {selected_member_name} ({m_nick}) 회원님</h3>
+                <h3 style="margin:0 0 8px 0; color: #E5C585; font-size:1.1rem;">👤 {selected_member_name} ({m_nick}) 회원님 [{selected_hof_year}년]</h3>
                 <div style="font-size: 0.85rem; line-height: 1.6;">
-                    🎯 <b>핸디캡:</b> {m_hc} | 📈 <b>평균 스코어:</b> {avg_sc}타<br>
-                    ⛳ <b>총 참석:</b> {m_rounds_cnt}회 | 📅 <b>참석률:</b> {m_att}%
+                    🎯 <b>{selected_hof_year}년 핸디캡:</b> {year_hc} | 📈 <b>평균 스코어:</b> {year_avg_sc}타<br>
+                    ⛳ <b>총 참석:</b> {year_attended_cnt}회 / {total_year_rounds_cnt}라운드 | 📅 <b>참석률:</b> {year_att_rate}%
                 </div>
             </div>
             """, unsafe_allow_html=True)
             
-            st.markdown("##### 🏌️‍♂️ 라운드별 상세 스코어 및 출석 내역")
-            field_rounds = [r for r in rounds_data if "필드" in r.get("type", "") and r.get("completed")]
+            st.markdown(f"##### 🏌️‍♂️ {selected_hof_year}년도 라운드별 상세 스코어 및 출석 내역")
             
-            if not field_rounds:
-                st.info("등록된 완료된 필드 라운드가 없습니다.")
+            if not year_completed_rounds:
+                st.info(f"{selected_hof_year}년도에 완료된 필드 라운드가 없습니다.")
             else:
                 member_rounds_data = []
-                for r in field_rounds:
+                for r in year_completed_rounds:
                     scores_dict = r.get("scores", {})
                     if selected_member_name in scores_dict:
                         p_data = scores_dict[selected_member_name]
