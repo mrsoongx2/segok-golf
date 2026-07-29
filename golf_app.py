@@ -1252,7 +1252,7 @@ else:
             with col_op2:
                 gender_rule = st.radio("성별 맞춤 옵션", ["기본 (핸디캡 균등)", "동성 위주 배치", "성비 맞춤 위주 (남녀 균등)"])
 
-            approved_members = [k for k, v in member_db.items() if v.get("status", "approved"] == "approved"] # Wait, let's keep it safe.
+            approved_members = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"] # Wait, let's keep it safe.
             approved_members = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
             default_selected = approved_members[:16] if len(approved_members) >= 16 else approved_members
             selected_attendees = st.multiselect("오늘 참석자 선택", approved_members, default=default_selected)
