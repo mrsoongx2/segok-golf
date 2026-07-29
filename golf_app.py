@@ -222,38 +222,43 @@ st.markdown("""
     .stDeployButton {display: none !important;}
     div[data-testid="stStatusWidget"] {visibility: hidden;}
     
-    .stApp { background-color: #F4F6F4 !important; font-family: 'Noto Sans KR', sans-serif; color: #1E2923; font-size: 0.9rem; }
+    /* 깔끔하고 모던한 일체형 배경 색상 (누런 끼 제거, 고급스러운 화이트&그린 톤) */
+    .stApp { background-color: #F8FAF8 !important; font-family: 'Noto Sans KR', sans-serif; color: #1E2923; font-size: 0.9rem; }
     
     h2 { font-size: 1.15rem !important; font-weight: 700 !important; color: #0F2E1B !important; margin-bottom: 0.5rem !important; }
     h3 { font-size: 1.05rem !important; font-weight: 700 !important; color: #0F2E1B !important; }
     
-    /* 실제 업로드된 로고 이미지 스타일 (반응형 중앙정렬) */
-    .logo-container {
+    /* 로고 이미지가 주변과 완벽히 어우러지는 프리미엄 배너 카드 */
+    .logo-card {
+        background: linear-gradient(135deg, #0F2E1B 0%, #1B4D33 100%);
+        border-radius: 16px;
+        padding: 25px 15px;
+        text-align: center;
+        margin-bottom: 24px;
+        box-shadow: 0 8px 24px rgba(15,46,27,0.15);
+        border: 1px solid rgba(212,180,117,0.3);
         display: flex;
         justify-content: center;
         align-items: center;
-        margin-bottom: 20px;
-        padding: 10px;
-        background: transparent;
     }
-    .logo-container img {
-        max-width: 280px;
+    .logo-card img {
+        max-width: 260px;
         width: 100%;
         height: auto;
-        border-radius: 12px;
-        filter: drop-shadow(0 6px 16px rgba(0,0,0,0.12));
+        border-radius: 10px;
+        filter: drop-shadow(0 4px 12px rgba(0,0,0,0.2));
     }
     
     .menu-card-box { 
         background-color: #FFFFFF; 
         border-radius: 12px; 
         border: 1px solid #E2E8F0; 
-        padding: 18px 14px; 
+        padding: 16px 12px; 
         text-align: center; 
-        box-shadow: 0 4px 12px rgba(0,0,0,0.03); 
+        box-shadow: 0 4px 12px rgba(0,0,0,0.02); 
         transition: all 0.25s ease; 
         margin-bottom: 8px;
-        height: 100px;
+        height: 95px;
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -266,7 +271,7 @@ st.markdown("""
     }
     .menu-card-box h3 { 
         font-family: 'Montserrat', sans-serif;
-        font-size: 0.92rem; 
+        font-size: 0.9rem; 
         font-weight: 700;
         margin-bottom: 4px; 
         color: #0F2E1B; 
@@ -274,7 +279,7 @@ st.markdown("""
     }
     .menu-card-box p { 
         color: #64748B; 
-        font-size: 0.72rem; 
+        font-size: 0.7rem; 
         margin: 0; 
         line-height: 1.2; 
     }
@@ -326,8 +331,8 @@ logo_b64 = get_image_base64(LOGO_FILE)
 if not st.session_state.get('logged_in_user'):
     if logo_b64:
         st.markdown(f"""
-        <div style="text-align: center; padding: 25px 15px 10px 15px;">
-            <img src="data:image/png;base64,{logo_b64}" style="max-width: 200px; width: 100%; height: auto; margin-bottom: 10px; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.1));">
+        <div style="text-align: center; padding: 30px 15px 15px 15px;">
+            <img src="data:image/png;base64,{logo_b64}" style="max-width: 220px; width: 100%; height: auto; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
         </div>
         """, unsafe_allow_html=True)
     else:
@@ -451,17 +456,17 @@ with col_h2:
 st.markdown("<hr style='margin: 6px 0 12px 0; border-top: 1px solid #E2E8F0;'>", unsafe_allow_html=True)
 
 if st.session_state.current_menu == "HOME":
-    # 업로드된 실제 로고 이미지 메인 배너 적용
+    # 로고 이미지가 주변과 어우러지는 프리미엄 그린 배너 카드 적용
     if logo_b64:
         st.markdown(f"""
-        <div class="logo-container">
+        <div class="logo-card">
             <img src="data:image/png;base64,{logo_b64}">
         </div>
         """, unsafe_allow_html=True)
     else:
         st.markdown("""
-        <div class="logo-container">
-            <h1 style="color: #0F2E1B; font-size: 1.8rem; text-align: center;">SEGOK GOLF COMMUNITY</h1>
+        <div class="logo-card">
+            <h1 style="color: #FFFFFF; font-size: 1.6rem; text-align: center; margin: 0;">SEGOK GOLF COMMUNITY</h1>
         </div>
         """, unsafe_allow_html=True)
     
@@ -1272,7 +1277,7 @@ else:
                     if st.button("지망 사항 저장", key=f"save_pref_{pref_member}"):
                         val1 = "" if p1 == "선택 안 함" else p1
                         val2 = "" if p2 == "선택 안 함" else p2
-                        val3 = "" if p3 == "선택 안 함" else p3
+                        val3 = "" if p3 == "선택 안 함" else val3
                         st.session_state.match_preferences[pref_member] = [val1, val2, val3]
                         st.success("수정되었습니다!")
 
