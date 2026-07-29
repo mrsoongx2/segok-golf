@@ -213,7 +213,7 @@ def set_menu(menu_name):
 
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Playfair+Display:wght@500;600;700&family=Montserrat:wght@400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
     
     #MainMenu {visibility: hidden;}
     header {visibility: hidden;}
@@ -226,49 +226,51 @@ st.markdown("""
     h2 { font-size: 1.15rem !important; font-weight: 700 !important; color: #0F2E1B !important; margin-bottom: 0.5rem !important; }
     h3 { font-size: 1.05rem !important; font-weight: 700 !important; color: #0F2E1B !important; }
     
-    /* 세련되고 심플한 하이엔드 골프 클럽 로고 배너 */
+    /* 우아하고 스타일리쉬한 하이엔드 세리프 로고 배너 */
     .logo-hero { 
         text-align: center; 
-        padding: 42px 20px; 
-        background: linear-gradient(135deg, #0A1F14 0%, #123524 50%, #0F2E1B 100%); 
+        padding: 45px 20px; 
+        background: linear-gradient(135deg, #091A11 0%, #112E20 50%, #0A2216 100%); 
         border-radius: 18px; 
         color: #FFFFFF; 
         margin-bottom: 20px; 
-        box-shadow: 0 10px 30px rgba(15,46,27,0.22); 
-        border: 1px solid rgba(212,180,117,0.35);
+        box-shadow: 0 12px 32px rgba(10,30,17,0.25); 
+        border: 1px solid rgba(212,180,117,0.4);
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
     }
     .logo-symbol {
-        font-size: 1.6rem;
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 1.4rem;
         color: #D4B475;
-        margin-bottom: 8px;
-        letter-spacing: 4px;
+        margin-bottom: 6px;
+        letter-spacing: 6px;
+        font-style: italic;
     }
     .logo-hero h1 { 
-        font-family: 'Montserrat', sans-serif; 
-        font-size: 1.7rem; 
-        font-weight: 700; 
-        letter-spacing: 4px; 
+        font-family: 'Playfair Display', serif; 
+        font-size: 1.9rem; 
+        font-weight: 600; 
+        letter-spacing: 3px; 
         margin: 0 0 6px 0; 
-        color: #F8F5F0; 
+        color: #FBF8F2; 
         text-transform: uppercase;
         text-align: center;
         width: 100%;
     }
     .logo-hero p { 
-        color: #C5A059; 
-        font-size: 0.62rem; 
-        letter-spacing: 4px; 
+        color: #D4B475; 
+        font-size: 0.65rem; 
+        letter-spacing: 5px; 
         text-transform: uppercase; 
-        font-weight: 500; 
+        font-weight: 400; 
         margin: 0; 
         font-family: 'Montserrat', sans-serif;
         text-align: center;
         width: 100%;
-        opacity: 0.9;
+        opacity: 0.85;
     }
     
     .menu-card-box { 
@@ -344,9 +346,9 @@ st.markdown("""
 if not st.session_state.get('logged_in_user'):
     st.markdown("""
     <div style="text-align: center; padding: 35px 15px 20px 15px;">
-        <div style="font-size: 2.2rem; color: #D4B475; letter-spacing: 6px; margin-bottom: 4px;">✦ ⛳ ✦</div>
-        <h1 style="font-family: 'Montserrat', sans-serif; color: #0F2E1B; margin: 6px 0 0 0; font-size: 1.7rem; font-weight: 700; letter-spacing: 2px;">SEGOK GOLF CLUB</h1>
-        <p style="color: #64748B; font-size: 0.62rem; letter-spacing: 4px; text-transform: uppercase; font-weight: 600; font-family: 'Montserrat', sans-serif;">PREMIUM GOLF SOCIETY</p>
+        <div style="font-size: 1.4rem; color: #D4B475; letter-spacing: 6px; margin-bottom: 4px; font-family: 'Cormorant Garamond', serif; font-style: italic;">✦ S.G.C ✦</div>
+        <h1 style="font-family: 'Playfair Display', serif; color: #0F2E1B; margin: 6px 0 0 0; font-size: 1.7rem; font-weight: 600; letter-spacing: 2px;">SEGOK GOLF CLUB</h1>
+        <p style="color: #64748B; font-size: 0.62rem; letter-spacing: 4px; text-transform: uppercase; font-weight: 500; font-family: 'Montserrat', sans-serif;">PREMIUM GOLF SOCIETY</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -464,10 +466,10 @@ with col_h2:
 st.markdown("<hr style='margin: 6px 0 12px 0; border-top: 1px solid #E2E8F0;'>", unsafe_allow_html=True)
 
 if st.session_state.current_menu == "HOME":
-    # 리디자인된 세련되고 심플한 하이엔드 로고 배너
+    # 우아한 세리프 폰트와 모던 심볼이 적용된 하이엔드 로고 배너
     st.markdown("""
     <div class="logo-hero">
-        <div class="logo-symbol">⛳</div>
+        <div class="logo-symbol">S · G · C</div>
         <h1>SEGOK GOLF CLUB</h1>
         <p>PREMIUM GOLF SOCIETY & COMMUNITY</p>
     </div>
@@ -1458,7 +1460,7 @@ else:
                     save_data(db)
                     st.success("등록되었습니다!")
 
-    # 6. 🏆 경기 결과 및 랭킹 (연도별 드롭박스 포함)
+    # 6. 🏆 경기 결과 및 랭킹
     elif menu == "경기 결과 및 랭킹":
         st.subheader("🏆 RESULTS & RANKING (경기 결과 및 랭킹)")
         
@@ -1659,7 +1661,7 @@ else:
                 display_l.index += 1
                 st.table(display_l)
 
-    # 7. 👑 명예의 전당 (연단위 드롭박스 포함)
+    # 7. 👑 명예의 전당
     elif menu == "명예의 전당":
         st.subheader("👑 HALL OF FAME (명예의 전당)")
         st.caption("클럽 회원들의 연도별 라운딩 스코어 이력, 평균 타수 및 출석 현황을 확인합니다.")
