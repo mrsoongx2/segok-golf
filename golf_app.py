@@ -222,17 +222,16 @@ st.markdown("""
     .stDeployButton {display: none !important;}
     div[data-testid="stStatusWidget"] {visibility: hidden;}
     
-    /* 깔끔하고 모던한 일체형 배경 색상 (누런 끼 제거, 고급스러운 화이트&그린 톤) */
     .stApp { background-color: #F8FAF8 !important; font-family: 'Noto Sans KR', sans-serif; color: #1E2923; font-size: 0.9rem; }
     
     h2 { font-size: 1.15rem !important; font-weight: 700 !important; color: #0F2E1B !important; margin-bottom: 0.5rem !important; }
     h3 { font-size: 1.05rem !important; font-weight: 700 !important; color: #0F2E1B !important; }
     
-    /* 로고 이미지가 주변과 완벽히 어우러지는 프리미엄 배너 카드 */
+    /* 로고가 딥 그린 배경과 완벽히 일치하는 프리미엄 배너 카드 */
     .logo-card {
         background: linear-gradient(135deg, #0F2E1B 0%, #1B4D33 100%);
         border-radius: 16px;
-        padding: 25px 15px;
+        padding: 22px 15px;
         text-align: center;
         margin-bottom: 24px;
         box-shadow: 0 8px 24px rgba(15,46,27,0.15);
@@ -242,11 +241,11 @@ st.markdown("""
         align-items: center;
     }
     .logo-card img {
-        max-width: 260px;
+        max-width: 280px;
         width: 100%;
         height: auto;
         border-radius: 10px;
-        filter: drop-shadow(0 4px 12px rgba(0,0,0,0.2));
+        filter: drop-shadow(0 4px 12px rgba(0,0,0,0.25));
     }
     
     .menu-card-box { 
@@ -318,7 +317,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 로고 이미지 Base64 인코딩 함수
 def get_image_base64(path):
     if os.path.exists(path):
         with open(path, "rb") as f:
@@ -331,7 +329,7 @@ logo_b64 = get_image_base64(LOGO_FILE)
 if not st.session_state.get('logged_in_user'):
     if logo_b64:
         st.markdown(f"""
-        <div style="text-align: center; padding: 30px 15px 15px 15px;">
+        <div style="text-align: center; padding: 25px 15px 15px 15px;">
             <img src="data:image/png;base64,{logo_b64}" style="max-width: 220px; width: 100%; height: auto; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
         </div>
         """, unsafe_allow_html=True)
@@ -456,7 +454,6 @@ with col_h2:
 st.markdown("<hr style='margin: 6px 0 12px 0; border-top: 1px solid #E2E8F0;'>", unsafe_allow_html=True)
 
 if st.session_state.current_menu == "HOME":
-    # 로고 이미지가 주변과 어우러지는 프리미엄 그린 배너 카드 적용
     if logo_b64:
         st.markdown(f"""
         <div class="logo-card">
