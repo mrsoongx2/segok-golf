@@ -1743,7 +1743,7 @@ else:
             m_loc = st.text_input("골프장 장소", value="남서울CC", key="manual_archive_loc")
             
             st.markdown("##### ⛳ 조별 구성원 입력 (최대 4개 조)")
-            approved_members = [k for k, v in member_db.items() if v.get("status", "approved"] == "approved"] # Wait, let's keep it safe.
+            approved_members = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"] # Wait, let's keep it safe.
             approved_members = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
             
             m_teams = []
