@@ -227,7 +227,6 @@ st.markdown("""
     h2 { font-size: 1.15rem !important; font-weight: 700 !important; color: #0F2E1B !important; margin-bottom: 0.5rem !important; }
     h3 { font-size: 1.05rem !important; font-weight: 700 !important; color: #0F2E1B !important; }
     
-    /* 로고가 딥 그린 배경과 완벽히 일치하는 프리미엄 배너 카드 */
     .logo-card {
         background: linear-gradient(135deg, #0F2E1B 0%, #1B4D33 100%);
         border-radius: 16px;
@@ -432,8 +431,12 @@ total_unread_alerts = unread_notices_count + unread_lounge_count
 
 alert_badge_label = f"🔔 INBOX ({total_unread_alerts})" if total_unread_alerts > 0 else "🔔 INBOX"
 
-# --- 상단 고정 헤더 ---
-col_h1, col_h2 = st.columns([1.2, 1.2])
+# --- 상단 고정 헤더 (뒤로가기 화살표 버튼 추가) ---
+col_h0, col_h1, col_h2 = st.columns([0.4, 1.2, 1.2])
+with col_h0:
+    if st.button("⬅️", key="global_back_btn", use_container_width=True):
+        set_menu("HOME")
+        st.rerun()
 with col_h1:
     left_header_cols = st.columns([1, 1])
     with left_header_cols[0]:
@@ -659,7 +662,7 @@ else:
                     st.rerun()
 
         st.markdown("##### 💬 내 게시물에 달린 댓글")
-        my_posts = [p for p in feed_posts if p.get("author") == current_user]
+        my_posts = [p for p in feed_posts if p.get("author"] == current_user]
         my_comments_found = False
         for p in my_posts:
             comments = p.get("comments", [])
@@ -972,7 +975,7 @@ else:
                             if cur_n_file:
                                 st.write(f"현재 파일: {cur_n_file}")
                                 rm_n_file = st.checkbox("기존 파일 삭제", key=f"edit_rm_n_file_{notice['id']}")
-                            new_n_file_up = st.file_uploader("새 파일 교체", type=["xlsx", "xls", "pdf", "txt", "csv"], key=f"edit_new_n_file_{notice['id']}")
+                            new_n_file_up = st.file_uploader("새 파일 교체", type=["xlsx", "xls", "pdf", "txt", "csv"], key=f"edit_new_file_{notice['id']}")
 
                             if st.button("수정 저장", key=f"btn_save_notice_{notice['id']}", use_container_width=True):
                                 notice['title'] = edit_n_title
@@ -1529,6 +1532,7 @@ else:
                                     nd = st.number_input(f"[{m_nick}] 니어(m)", min_value=0.0, max_value=50.0, value=float(curr['near']), step=0.1, key=f"nd_{r['id']}_{m}")
                                 entered_mod_scores[m] = {"score": sc, "long": ld, "near": nd}
                     else:
+                        approved_members = [k for k, v in member_db.items() if v.get("status", "approved"] == "approved"] # Wait, let's keep it safe.
                         approved_members = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
                         sel_mems = st.multiselect("참석 회원 선택", approved_members, default=list(r.get("scores", {}).keys()), key=f"melsel_{r['id']}")
                         for m in sel_mems:
@@ -1567,7 +1571,7 @@ else:
                                 "raw_nearest": nearest[0] if nearest else None,
                                 "raw_medalist_score": medalist[1]['score'],
                                 "raw_longist_dist": longist[1]['long'] if longist else 0,
-                                "raw_nearest_dist": nearest[1]['near'] if nearest else 999
+                                "raw_nearest_dist": nearest[1]['near'] if longist else 999
                             }
                             recalculate_all_stats(db)
                             save_data(db)
@@ -1739,6 +1743,7 @@ else:
             m_loc = st.text_input("골프장 장소", value="남서울CC", key="manual_archive_loc")
             
             st.markdown("##### ⛳ 조별 구성원 입력 (최대 4개 조)")
+            approved_members = [k for k, v in member_db.items() if v.get("status", "approved"] == "approved"] # Wait, let's keep it safe.
             approved_members = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
             
             m_teams = []
@@ -1749,7 +1754,7 @@ else:
                 st.markdown(f"**{j_idx+1}조 구성**")
                 mc1, mc2, mc3 = st.columns([2, 1, 1])
                 with mc1:
-                    j_members = st.multiselect(f"{j_idx+1}조 멤버 선택", approved_names, key=f"manual_team_{j_idx}")
+                    j_members = st.multiselect(f"{j_idx+1}조 멤버 선택", approved_members, key=f"manual_team_{j_idx}")
                 with mc2:
                     j_time = st.text_input(f"{j_idx+1}조 시간", value=f"08:{(j_idx*8):02d}", key=f"manual_time_{j_idx}")
                 with mc3:
