@@ -662,7 +662,7 @@ else:
                     st.rerun()
 
         st.markdown("##### 💬 내 게시물에 달린 댓글")
-        my_posts = [p for p in feed_posts if p.get("author"] == current_user]
+        my_posts = [p for p in feed_posts if p.get("author") == current_user]
         my_comments_found = False
         for p in my_posts:
             comments = p.get("comments", [])
