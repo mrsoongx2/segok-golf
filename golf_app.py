@@ -1532,7 +1532,7 @@ else:
                                     nd = st.number_input(f"[{m_nick}] 니어(m)", min_value=0.0, max_value=50.0, value=float(curr['near']), step=0.1, key=f"nd_{r['id']}_{m}")
                                 entered_mod_scores[m] = {"score": sc, "long": ld, "near": nd}
                     else:
-                        approved_members = [k for k, v in member_db.items() if v.get("status", "approved"] == "approved"] # Wait, let's keep it safe.
+                        approved_members = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"] # Wait, let's keep it safe.
                         approved_members = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
                         sel_mems = st.multiselect("참석 회원 선택", approved_members, default=list(r.get("scores", {}).keys()), key=f"melsel_{r['id']}")
                         for m in sel_mems:
