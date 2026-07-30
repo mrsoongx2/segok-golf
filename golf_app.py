@@ -994,7 +994,7 @@ else:
                             if cur_n_file:
                                 st.write(f"현재 파일: {cur_n_file}")
                                 rm_n_file = st.checkbox("기존 파일 삭제", key=f"edit_rm_n_file_{notice['id']}")
-                            new_n_file_up = st.file_uploader("새 파일 교체", type=["xlsx", "xls", "pdf", "txt", "csv"], key=f"edit_new_file_{notice['id']}")
+                            new_n_file_up = st.file_uploader("새 파일 교체", type=["xlsx", "xls", "pdf", "txt", "csv"], key=f"edit_new_n_file_{notice['id']}")
 
                             if st.button("수정 저장", key=f"btn_save_notice_{notice['id']}", use_container_width=True):
                                 notice['title'] = edit_n_title
@@ -1893,12 +1893,13 @@ else:
     # 10. 👤 마이페이지
     elif menu == "마이페이지":
         st.subheader("👤 MY PAGE (마이페이지)")
-        st.info("💡 회원 성함, 닉네임, 비밀번호, 프로필 사진 변경 및 클럽 탈퇴를 관리할 수 있습니다.")
+        st.info("💡 회원 성함, 닉네임, 비밀번호, 보안 질문 및 프로필 사진을 관리할 수 있습니다.")
         
         with st.form("edit_profile_form"):
             edit_name = st.text_input("회원 성함", value=current_user)
             edit_nickname = st.text_input("클럽 닉네임", value=user_info.get("nickname", current_user))
             edit_pw = st.text_input("비밀번호 변경", value=user_info.get("password", "1234"), type="password")
+            edit_friend = st.text_input("보안 질문: 어렸을 적 가장 친한 친구 이름", value=user_info.get("secret_friend", "친구"), key="edit_profile_friend")
             
             p_img_file = st.file_uploader("프로필 아바타 등록 (선택)", type=["jpg", "png", "jpeg"])
             if user_info.get("profile_img"):
@@ -1917,6 +1918,7 @@ else:
                 
                 user_info['nickname'] = edit_nickname
                 user_info['password'] = edit_pw
+                user_info['secret_friend'] = edit_friend.strip() if edit_friend else "친구"
                 
                 if p_img_file is not None:
                     img_bytes = p_img_file.getvalue()
