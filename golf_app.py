@@ -69,6 +69,8 @@ def load_data():
                         if m in data["member_db"]:
                             data["member_db"][m]["status"] = "approved"
                             data["member_db"][m]["is_admin"] = True if m in ADMIN_MEMBERS else False
+                            if "secret_friend" not in data["member_db"][m]:
+                                data["member_db"][m]["secret_friend"] = "친구"
                             if "last_notice_seen" not in data["member_db"][m]:
                                 data["member_db"][m]["last_notice_seen"] = ""
                             if "last_lounge_seen" not in data["member_db"][m]:
@@ -110,6 +112,7 @@ def load_data():
             "score_history": [],
             "status": "approved",
             "is_admin": True if name in ADMIN_MEMBERS else False,
+            "secret_friend": "친구",
             "last_notice_seen": "",
             "last_lounge_seen": ""
         }
@@ -341,15 +344,15 @@ if not st.session_state.get('logged_in_user'):
     
     col_login, _ = st.columns([1, 0.01])
     with col_login:
-        tab1, tab2 = st.tabs(["🔑 클럽 회원 로그인", "✨ 신입 회원 가입 신청"])
+        tab1, tab2, tab3 = st.tabs(["🔑 클럽 회원 로그인", "✨ 신입 회원 가입", "🔒 비밀번호 찾기"])
         
         with tab1:
             st.caption("초기 비밀번호는 '1234' 입니다.")
             approved_members = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
-            login_name = st.selectbox("회원 성함 선택", ["선택하세요"] + approved_members)
-            login_pw = st.text_input("비밀번호 입력", type="password")
+            login_name = st.selectbox("회원 성함 선택", ["선택하세요"] + approved_members, key="login_select_name")
+            login_pw = st.text_input("비밀번호 입력", type="password", key="login_input_pw")
             
-            if st.button("로그인", type="primary", use_container_width=True):
+            if st.button("로그인", type="primary", use_container_width=True, key="login_submit_btn"):
                 if login_name in member_db:
                     user = member_db[login_name]
                     if user.get("status", "approved") != "approved":
@@ -370,12 +373,13 @@ if not st.session_state.get('logged_in_user'):
                     
         with tab2:
             st.caption("가입 신청 후 운영진 승인을 거쳐 클럽 활동에 참여하실 수 있습니다.")
-            new_name = st.text_input("회원 성함")
-            new_nick = st.text_input("클럽 닉네임 (선택)")
-            new_pw = st.text_input("비밀번호 설정", type="password")
+            new_name = st.text_input("회원 성함", key="signup_name")
+            new_nick = st.text_input("클럽 닉네임 (선택)", key="signup_nick")
+            new_pw = st.text_input("비밀번호 설정", type="password", key="signup_pw")
+            new_friend = st.text_input("보안 질문: 어렸을 적 가장 친한 친구 이름", placeholder="비밀번호 찾기 시 사용됩니다", key="signup_friend")
             
-            if st.button("가입 신청서 제출", use_container_width=True):
-                if new_name and new_pw:
+            if st.button("가입 신청서 제출", use_container_width=True, key="signup_submit"):
+                if new_name and new_pw and new_friend:
                     if new_name in member_db:
                         st.error("이미 등록된 회원 성함입니다.")
                     else:
@@ -389,6 +393,7 @@ if not st.session_state.get('logged_in_user'):
                             "score_history": [],
                             "status": "pending",
                             "is_admin": True if new_name in ADMIN_MEMBERS else False,
+                            "secret_friend": new_friend.strip(),
                             "last_notice_seen": "",
                             "last_lounge_seen": ""
                         }
@@ -399,7 +404,25 @@ if not st.session_state.get('logged_in_user'):
                         save_data(db)
                         st.success("등록되었습니다!")
                 else:
-                    st.warning("성함과 비밀번호를 모두 입력해 주세요.")
+                    st.warning("성함, 비밀번호, 보안 질문(친구 이름)을 모두 입력해 주세요.")
+
+        with tab3:
+            st.caption("회원 가입 시 등록했던 '가장 친한 친구 이름'을 입력하여 비밀번호를 새로 설정하세요.")
+            find_name = st.selectbox("회원 성함 선택", ["선택하세요"] + list(member_db.keys()), key="find_pw_name")
+            find_friend = st.text_input("보안 질문: 어렸을 적 가장 친한 친구 이름", key="find_pw_friend")
+            new_reset_pw = st.text_input("새로 사용할 비밀번호 설정", type="password", key="find_pw_new")
+
+            if st.button("비밀번호 재설정", use_container_width=True, key="find_pw_submit"):
+                if find_name in member_db and find_friend and new_reset_pw:
+                    stored_friend = member_db[find_name].get("secret_friend", "친구")
+                    if find_friend.strip() == stored_friend:
+                        member_db[find_name]["password"] = new_reset_pw
+                        save_data(db)
+                        st.success("등록되었습니다! 새 비밀번호로 로그인해 주세요.")
+                    else:
+                        st.error("보안 질문 정답이 일치하지 않습니다.")
+                else:
+                    st.warning("모든 항목을 올바르게 입력해 주세요.")
     st.stop()
 
 current_user = st.session_state.logged_in_user
@@ -971,7 +994,7 @@ else:
                             if cur_n_file:
                                 st.write(f"현재 파일: {cur_n_file}")
                                 rm_n_file = st.checkbox("기존 파일 삭제", key=f"edit_rm_n_file_{notice['id']}")
-                            new_n_file_up = st.file_uploader("새 파일 교체", type=["xlsx", "xls", "pdf", "txt", "csv"], key=f"edit_new_file_{notice['id']}")
+                            new_n_file_up = st.file_uploader("새 파일 교체", type=["xlsx", "xls", "pdf", "txt", "csv"], key=f"edit_new_n_file_{notice['id']}")
 
                             if st.button("수정 저장", key=f"btn_save_notice_{notice['id']}", use_container_width=True):
                                 notice['title'] = edit_n_title
@@ -1252,7 +1275,6 @@ else:
             with col_op2:
                 gender_rule = st.radio("성별 맞춤 옵션", ["기본 (핸디캡 균등)", "동성 위주 배치", "성비 맞춤 위주 (남녀 균등)"])
 
-            approved_members = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"] # Wait, let's keep it safe.
             approved_members = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
             default_selected = approved_members[:16] if len(approved_members) >= 16 else approved_members
             selected_attendees = st.multiselect("오늘 참석자 선택", approved_members, default=default_selected)
