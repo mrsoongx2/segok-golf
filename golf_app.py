@@ -355,7 +355,7 @@ if not st.session_state.get('logged_in_user'):
             if st.button("로그인", type="primary", use_container_width=True, key="login_submit_btn"):
                 if login_name in member_db:
                     user = member_db[login_name]
-                    if user.get("status", "approved") != "approved":
+                    if user.get("status", "approved"] != "approved":
                         st.error("⌛ 운영진 승인 대기 중입니다.")
                     elif login_pw == user.get("password", "1234"):
                         st.session_state.logged_in_user = login_name
@@ -1296,7 +1296,7 @@ else:
                     if st.button("지망 사항 저장", key=f"save_pref_{pref_member}"):
                         val1 = "" if p1 == "선택 안 함" else p1
                         val2 = "" if p2 == "선택 안 함" else p2
-                        val3 = "" if p3 == "선택 안 함" else val3
+                        val3 = "" if p3 == "선택 안 함" else p3
                         st.session_state.match_preferences[pref_member] = [val1, val2, val3]
                         st.success("수정되었습니다!")
 
@@ -1771,7 +1771,7 @@ else:
                 st.markdown(f"**{j_idx+1}조 구성**")
                 mc1, mc2, mc3 = st.columns([2, 1, 1])
                 with mc1:
-                    j_members = st.multiselect(f"{j_idx+1}조 멤버 선택", approved_names, key=f"manual_team_{j_idx}")
+                    j_members = st.multiselect(f"{j_idx+1}조 멤버 선택", approved_members, key=f"manual_team_{j_idx}")
                 with mc2:
                     j_time = st.text_input(f"{j_idx+1}조 시간", value=f"08:{(j_idx*8):02d}", key=f"manual_time_{j_idx}")
                 with mc3:
