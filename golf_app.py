@@ -355,7 +355,7 @@ if not st.session_state.get('logged_in_user'):
             if st.button("로그인", type="primary", use_container_width=True, key="login_submit_btn"):
                 if login_name in member_db:
                     user = member_db[login_name]
-                    if user.get("status", "approved"] != "approved":
+                    if user.get("status", "approved") != "approved":
                         st.error("⌛ 운영진 승인 대기 중입니다.")
                     elif login_pw == user.get("password", "1234"):
                         st.session_state.logged_in_user = login_name
