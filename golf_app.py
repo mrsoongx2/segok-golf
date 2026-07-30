@@ -407,7 +407,7 @@ if not st.session_state.get('logged_in_user'):
                     st.warning("성함, 비밀번호, 보안 질문(친구 이름)을 모두 입력해 주세요.")
 
         with tab3:
-            st.caption("회원 가입 시 등록했던 '가장 친한 친구 이름'을 입력하여 비밀번호를 새로 설정하세요.")
+            st.caption("등록된 보안 질문('가장 친한 친구 이름')을 확인하여 비밀번호를 새로 설정합니다.")
             find_name = st.selectbox("회원 성함 선택", ["선택하세요"] + list(member_db.keys()), key="find_pw_name")
             find_friend = st.text_input("보안 질문: 어렸을 적 가장 친한 친구 이름", key="find_pw_friend")
             new_reset_pw = st.text_input("새로 사용할 비밀번호 설정", type="password", key="find_pw_new")
@@ -994,7 +994,7 @@ else:
                             if cur_n_file:
                                 st.write(f"현재 파일: {cur_n_file}")
                                 rm_n_file = st.checkbox("기존 파일 삭제", key=f"edit_rm_n_file_{notice['id']}")
-                            new_n_file_up = st.file_uploader("새 파일 교체", type=["xlsx", "xls", "pdf", "txt", "csv"], key=f"edit_new_n_file_{notice['id']}")
+                            new_n_file_up = st.file_uploader("새 파일 교체", type=["xlsx", "xls", "pdf", "txt", "csv"], key=f"edit_new_file_{notice['id']}")
 
                             if st.button("수정 저장", key=f"btn_save_notice_{notice['id']}", use_container_width=True):
                                 notice['title'] = edit_n_title
@@ -1589,7 +1589,7 @@ else:
                                 "raw_nearest": nearest[0] if nearest else None,
                                 "raw_medalist_score": medalist[1]['score'],
                                 "raw_longist_dist": longist[1]['long'] if longist else 0,
-                                "raw_nearest_dist": nearest[1]['near'] if nearest else 999
+                                "raw_nearest_dist": nearest[1]['near'] if longist else 999
                             }
                             recalculate_all_stats(db)
                             save_data(db)
