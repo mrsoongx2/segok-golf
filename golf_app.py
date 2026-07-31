@@ -352,7 +352,7 @@ if not st.session_state.get('logged_in_user'):
         
         with tab1:
             st.caption("초기 비밀번호는 '1234' 입니다.")
-            approved_members = [k for k, v in member_db.items() if v.get("status", "approved"] == "approved"] # Wait, let's keep it safe.
+            approved_members = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"] # Wait, let's keep it safe.
             approved_members = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
             login_name = st.selectbox("회원 성함 선택", ["선택하세요"] + approved_members, key="login_select_name")
             login_pw = st.text_input("비밀번호 입력", type="password", key="login_input_pw")
