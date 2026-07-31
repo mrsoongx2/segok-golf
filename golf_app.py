@@ -352,6 +352,7 @@ if not st.session_state.get('logged_in_user'):
         
         with tab1:
             st.caption("초기 비밀번호는 '1234' 입니다.")
+            approved_members = [k for k, v in member_db.items() if v.get("status", "approved"] == "approved"] # Wait, let's keep it safe.
             approved_members = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
             login_name = st.selectbox("회원 성함 선택", ["선택하세요"] + approved_members, key="login_select_name")
             login_pw = st.text_input("비밀번호 입력", type="password", key="login_input_pw")
@@ -1269,16 +1270,22 @@ else:
                 dm = db["draft_match"]
                 if st.button(f"📂 [임시저장 불러오기] ({dm.get('date')} | {dm.get('location', '장소미상')})", use_container_width=True, key="load_draft_btn"):
                     st.session_state.generated_teams = dm["teams"]
-                    st.session_state.draft_tee_times = dm.get("tee_times", [])
-                    st.session_state.draft_courses = dm.get("courses", [])
                     st.session_state.draft_location = dm.get("location", "")
                     st.session_state.draft_date = dm.get("date", "")
+                    
+                    # 각 조별 저장된 시간 및 코스를 위젯 세션 상태에 직접 주입하여 위젯 값 강제 동기화
+                    saved_times = dm.get("tee_times", [])
+                    saved_courses = dm.get("courses", [])
+                    for idx, t_val in enumerate(saved_times):
+                        st.session_state[f"tee_group_{idx}"] = t_val
+                    for idx, c_val in enumerate(saved_courses):
+                        st.session_state[f"course_group_{idx}"] = c_val
                     
                     # 불러온 팀들에 속한 멤버들을 자동으로 '오늘 참석자 선택' 목록에 반영
                     flatten_members = [m for t in dm["teams"] for m in t]
                     st.session_state.draft_attendees = flatten_members
                     
-                    st.success("임시저장된 조편성, 날짜, 장소, 시간 및 참석자 목록이 성공적으로 불러와졌습니다!")
+                    st.success("임시저장된 조편성, 날짜, 장소, 시간 및 코스가 성공적으로 불러와졌습니다!")
                     st.rerun()
 
             st.markdown("##### 📌 기본 라운드 정보 입력")
@@ -1320,7 +1327,7 @@ else:
                     if st.button("지망 사항 저장", key=f"save_pref_{pref_member}"):
                         val1 = "" if p1 == "선택 안 함" else p1
                         val2 = "" if p2 == "선택 안 함" else p2
-                        val3 = "" if p3 == "선택 안 함" else p3
+                        val3 = "" if p3 == "선택 안 함" else val3
                         st.session_state.match_preferences[pref_member] = [val1, val2, val3]
                         st.success("수정되었습니다!")
 
@@ -1399,8 +1406,6 @@ else:
                 user_prefs = st.session_state.get('match_preferences', {})
                 teams = generate_teams_smart_advanced(selected_attendees, pair_history, member_db, couple_rule, exclude_recent, gender_rule, user_prefs)
                 st.session_state.generated_teams = teams
-                st.session_state.draft_tee_times = []
-                st.session_state.draft_courses = []
                 st.success("등록되었습니다!")
 
             if 'generated_teams' in st.session_state and st.session_state.generated_teams:
@@ -1428,21 +1433,15 @@ else:
                 
                 group_tee_times = []
                 group_courses = []
-                
-                saved_times = st.session_state.get("draft_tee_times", [])
-                saved_courses = st.session_state.get("draft_courses", [])
 
                 for idx in range(len(teams)):
                     st.markdown(f"**⛳ {idx+1}조 설정**")
-                    default_time = saved_times[idx] if idx < len(saved_times) else f"08:{(idx*8):02d}"
-                    default_course = saved_courses[idx] if idx < len(saved_courses) else ("IN 코스" if idx%2==1 else "OUT 코스")
-
                     gc1, gc2 = st.columns(2)
                     with gc1:
-                        t_val = st.text_input(f"{idx+1}조 티오프 시간", value=default_time, key=f"tee_group_{idx}")
+                        t_val = st.text_input(f"{idx+1}조 티오프 시간", key=f"tee_group_{idx}")
                         group_tee_times.append(t_val)
                     with gc2:
-                        c_val = st.text_input(f"{idx+1}조 코스 정보", value=default_course, key=f"course_group_{idx}")
+                        c_val = st.text_input(f"{idx+1}조 코스 정보", key=f"course_group_{idx}")
                         group_courses.append(c_val)
 
                 date_str = r_date_input.strftime("%Y-%m-%d")
