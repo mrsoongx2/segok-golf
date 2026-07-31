@@ -1272,18 +1272,21 @@ else:
                     st.session_state.draft_tee_times = dm.get("tee_times", [])
                     st.session_state.draft_courses = dm.get("courses", [])
                     st.session_state.draft_location = dm.get("location", "")
+                    st.session_state.draft_date = dm.get("date", "")
                     
-                    # 불러온 팀들에 속한 멤버들을 자동으로 '오늘 참석자 선택' 목록(default_selected)에 반영
+                    # 불러온 팀들에 속한 멤버들을 자동으로 '오늘 참석자 선택' 목록에 반영
                     flatten_members = [m for t in dm["teams"] for m in t]
                     st.session_state.draft_attendees = flatten_members
                     
-                    st.success("임시저장된 조편성, 참석자 목록 및 시간이 성공적으로 불러와졌습니다!")
+                    st.success("임시저장된 조편성, 날짜, 장소, 시간 및 참석자 목록이 성공적으로 불러와졌습니다!")
                     st.rerun()
 
             st.markdown("##### 📌 기본 라운드 정보 입력")
             col_t1, col_t2 = st.columns(2)
             with col_t1:
-                r_date_input = st.date_input("라운드 일정 (날짜)")
+                saved_date_str = st.session_state.get("draft_date", "")
+                default_date_val = datetime.strptime(saved_date_str, "%Y-%m-%d").date() if saved_date_str else datetime.now().date()
+                r_date_input = st.date_input("라운드 일정 (날짜)", value=default_date_val)
             with col_t2:
                 default_loc = st.session_state.get("draft_location", "")
                 golf_location = st.text_input("골프장 장소", value=default_loc, placeholder="예: 남서울CC")
@@ -1317,7 +1320,7 @@ else:
                     if st.button("지망 사항 저장", key=f"save_pref_{pref_member}"):
                         val1 = "" if p1 == "선택 안 함" else p1
                         val2 = "" if p2 == "선택 안 함" else p2
-                        val3 = "" if p3 == "선택 안 함" else val3
+                        val3 = "" if p3 == "선택 안 함" else p3
                         st.session_state.match_preferences[pref_member] = [val1, val2, val3]
                         st.success("수정되었습니다!")
 
