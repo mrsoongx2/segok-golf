@@ -1264,12 +1264,20 @@ else:
         else:
             st.success("👑 **운영자 권한 완료** | 부부 동반 옵션, 직전 라운드 제외, 1~3지망 희망 멤버, 성비 맞춤 조건으로 최적화합니다.")
             
-            # --- 임시저장 불러오기 버튼 ---
+            # --- 임시저장 불러오기 기능 ---
             if db.get("draft_match"):
                 dm = db["draft_match"]
                 if st.button(f"📂 [임시저장 불러오기] ({dm.get('date')} | {dm.get('location', '장소미상')})", use_container_width=True, key="load_draft_btn"):
                     st.session_state.generated_teams = dm["teams"]
-                    st.success("임시저장된 조편성을 불러왔습니다!")
+                    st.session_state.draft_tee_times = dm.get("tee_times", [])
+                    st.session_state.draft_courses = dm.get("courses", [])
+                    st.session_state.draft_location = dm.get("location", "")
+                    
+                    # 불러온 팀들에 속한 멤버들을 자동으로 '오늘 참석자 선택' 목록(default_selected)에 반영
+                    flatten_members = [m for t in dm["teams"] for m in t]
+                    st.session_state.draft_attendees = flatten_members
+                    
+                    st.success("임시저장된 조편성, 참석자 목록 및 시간이 성공적으로 불러와졌습니다!")
                     st.rerun()
 
             st.markdown("##### 📌 기본 라운드 정보 입력")
@@ -1277,7 +1285,8 @@ else:
             with col_t1:
                 r_date_input = st.date_input("라운드 일정 (날짜)")
             with col_t2:
-                golf_location = st.text_input("골프장 장소", placeholder="예: 남서울CC")
+                default_loc = st.session_state.get("draft_location", "")
+                golf_location = st.text_input("골프장 장소", value=default_loc, placeholder="예: 남서울CC")
 
             st.markdown("##### ⚙️ 고급 조편성 옵션 설정")
             col_op1, col_op2 = st.columns(2)
@@ -1288,7 +1297,7 @@ else:
                 gender_rule = st.radio("성별 맞춤 옵션", ["기본 (핸디캡 균등)", "동성 위주 배치", "성비 맞춤 위주 (남녀 균등)"])
 
             approved_members = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
-            default_selected = approved_members[:16] if len(approved_members) >= 16 else approved_members
+            default_selected = st.session_state.get("draft_attendees", approved_members[:16] if len(approved_members) >= 16 else approved_members)
             selected_attendees = st.multiselect("오늘 참석자 선택", approved_members, default=default_selected)
 
             with st.expander("💌 회원별 동반 희망 멤버 (1, 2, 3지망) 설정"):
@@ -1387,6 +1396,8 @@ else:
                 user_prefs = st.session_state.get('match_preferences', {})
                 teams = generate_teams_smart_advanced(selected_attendees, pair_history, member_db, couple_rule, exclude_recent, gender_rule, user_prefs)
                 st.session_state.generated_teams = teams
+                st.session_state.draft_tee_times = []
+                st.session_state.draft_courses = []
                 st.success("등록되었습니다!")
 
             if 'generated_teams' in st.session_state and st.session_state.generated_teams:
@@ -1415,14 +1426,20 @@ else:
                 group_tee_times = []
                 group_courses = []
                 
+                saved_times = st.session_state.get("draft_tee_times", [])
+                saved_courses = st.session_state.get("draft_courses", [])
+
                 for idx in range(len(teams)):
                     st.markdown(f"**⛳ {idx+1}조 설정**")
+                    default_time = saved_times[idx] if idx < len(saved_times) else f"08:{(idx*8):02d}"
+                    default_course = saved_courses[idx] if idx < len(saved_courses) else ("IN 코스" if idx%2==1 else "OUT 코스")
+
                     gc1, gc2 = st.columns(2)
                     with gc1:
-                        t_val = st.text_input(f"{idx+1}조 티오프 시간", value=f"08:{(idx*8):02d}", key=f"tee_group_{idx}")
+                        t_val = st.text_input(f"{idx+1}조 티오프 시간", value=default_time, key=f"tee_group_{idx}")
                         group_tee_times.append(t_val)
                     with gc2:
-                        c_val = st.text_input(f"{idx+1}조 코스 정보", value="IN 코스" if idx%2==1 else "OUT 코스", key=f"course_group_{idx}")
+                        c_val = st.text_input(f"{idx+1}조 코스 정보", value=default_course, key=f"course_group_{idx}")
                         group_courses.append(c_val)
 
                 date_str = r_date_input.strftime("%Y-%m-%d")
@@ -1458,7 +1475,7 @@ else:
                             "courses": group_courses
                         }
                         save_data(db)
-                        st.success("조편성이 임시저장되었습니다!")
+                        st.success("조편성과 시간이 임시저장되었습니다!")
                 with col_act2:
                     final_save_btn = st.button("💾 최종 저장 및 결과 카드", use_container_width=True, key="final_save_match_btn")
                 
@@ -1498,7 +1515,6 @@ else:
                         "teams": teams
                     })
                     
-                    # 최종 저장 완료 시 임시저장 데이터는 초기화
                     db["draft_match"] = None
                     save_data(db)
                     st.success("등록되었습니다!")
