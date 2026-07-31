@@ -79,6 +79,8 @@ def load_data():
                         data["notices"] = []
                     if "annual_schedules" not in data:
                         data["annual_schedules"] = DEFAULT_SCHEDULES
+                    if "draft_match" not in data:
+                        data["draft_match"] = None
                     for notice in data.get("notices", []):
                         if "media_path" not in notice:
                             notice["media_path"] = None
@@ -122,6 +124,7 @@ def load_data():
     match_logs = []
     notices = []
     annual_schedules = DEFAULT_SCHEDULES
+    draft_match = None
     
     return {
         "total_events": 0,
@@ -131,7 +134,8 @@ def load_data():
         "rounds_data": rounds_data,
         "match_logs": match_logs,
         "notices": notices,
-        "annual_schedules": annual_schedules
+        "annual_schedules": annual_schedules,
+        "draft_match": draft_match
     }
 
 def save_data(data):
@@ -1260,6 +1264,14 @@ else:
         else:
             st.success("👑 **운영자 권한 완료** | 부부 동반 옵션, 직전 라운드 제외, 1~3지망 희망 멤버, 성비 맞춤 조건으로 최적화합니다.")
             
+            # --- 임시저장 불러오기 버튼 ---
+            if db.get("draft_match"):
+                dm = db["draft_match"]
+                if st.button(f"📂 [임시저장 불러오기] ({dm.get('date')} | {dm.get('location', '장소미상')})", use_container_width=True, key="load_draft_btn"):
+                    st.session_state.generated_teams = dm["teams"]
+                    st.success("임시저장된 조편성을 불러왔습니다!")
+                    st.rerun()
+
             st.markdown("##### 📌 기본 라운드 정보 입력")
             col_t1, col_t2 = st.columns(2)
             with col_t1:
@@ -1296,7 +1308,7 @@ else:
                     if st.button("지망 사항 저장", key=f"save_pref_{pref_member}"):
                         val1 = "" if p1 == "선택 안 함" else p1
                         val2 = "" if p2 == "선택 안 함" else p2
-                        val3 = "" if p3 == "선택 안 함" else p3
+                        val3 = "" if p3 == "선택 안 함" else val3
                         st.session_state.match_preferences[pref_member] = [val1, val2, val3]
                         st.success("수정되었습니다!")
 
@@ -1434,8 +1446,23 @@ else:
                 
                 st.subheader("📱 카카오톡 공지문 복사 (아래 복사 버튼 클릭)")
                 st.code(notice_text, language="text")
+
+                col_act1, col_act2 = st.columns(2)
+                with col_act1:
+                    if st.button("💾 조편성 임시저장", use_container_width=True, key="save_draft_btn"):
+                        db["draft_match"] = {
+                            "date": date_str,
+                            "location": golf_location or "필드",
+                            "teams": teams,
+                            "tee_times": group_tee_times,
+                            "courses": group_courses
+                        }
+                        save_data(db)
+                        st.success("조편성이 임시저장되었습니다!")
+                with col_act2:
+                    final_save_btn = st.button("💾 최종 저장 및 결과 카드", use_container_width=True, key="final_save_match_btn")
                 
-                if st.button("💾 조편성 저장 및 경기 결과 카드 생성", use_container_width=True):
+                if final_save_btn:
                     for team in teams:
                         for i in range(len(team)):
                             for j in range(i + 1, len(team)):
@@ -1471,6 +1498,8 @@ else:
                         "teams": teams
                     })
                     
+                    # 최종 저장 완료 시 임시저장 데이터는 초기화
+                    db["draft_match"] = None
                     save_data(db)
                     st.success("등록되었습니다!")
 
@@ -1771,7 +1800,7 @@ else:
                 st.markdown(f"**{j_idx+1}조 구성**")
                 mc1, mc2, mc3 = st.columns([2, 1, 1])
                 with mc1:
-                    j_members = st.multiselect(f"{j_idx+1}조 멤버 선택", approved_members, key=f"manual_team_{j_idx}")
+                    j_members = st.multiselect(f"{j_idx+1}조 멤버 선택", approved_names, key=f"manual_team_{j_idx}")
                 with mc2:
                     j_time = st.text_input(f"{j_idx+1}조 시간", value=f"08:{(j_idx*8):02d}", key=f"manual_time_{j_idx}")
                 with mc3:
