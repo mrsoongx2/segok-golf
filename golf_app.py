@@ -1821,7 +1821,7 @@ else:
             
         selected_hof_year = st.selectbox("📅 조회 연도 선택", all_hof_years, index=0 if current_year_str in all_hof_years else 0, key="hof_year_select")
         
-        approved_members = [k for k, v in member_db.items() if v.get("status", "approved"] == "approved"] # Wait, let's keep it safe.
+        approved_members = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"] # Wait, let's keep it safe.
         approved_members = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
         selected_member_name = st.selectbox("🔍 조회할 회원 선택", approved_members)
         
