@@ -1527,7 +1527,7 @@ else:
                     save_data(db)
                     st.success("등록되었습니다!")
 
-    # 6. 🏆 경기 결과 및 랭킹 (모바일/PC 밴드 캡처 완벽 대응 콤팩트 카드 디자인)
+    # 6. 🏆 경기 결과 및 랭킹 (모바일/PC 모두 꽉 차게 캡처 가능한 반응형 컴팩트 리더보드 디자인)
     elif menu == "경기 결과 및 랭킹":
         st.subheader("🏆 RESULTS & RANKING (경기 결과 및 랭킹)")
         
@@ -1578,28 +1578,14 @@ else:
 
                     rows_html += f"""
                     <tr style="border-bottom: 1px solid #E2E8F0;">
-                        <td style="padding: 10px 8px; text-align: center; font-weight: 700; white-space: nowrap;">{rank_badge}</td>
-                        <td style="padding: 10px 8px; font-weight: 600; color: #1E2923; white-space: nowrap;">{p_name}</td>
-                        <td style="padding: 10px 8px; text-align: center; font-weight: 600; color: #475569; white-space: nowrap;">{hc_str}</td>
-                        <td style="padding: 10px 8px; text-align: center; font-weight: 700; color: #1B4D33; white-space: nowrap;">{sc_val}</td>
-                        <td style="padding: 10px 8px; text-align: center; color: #475569; white-space: nowrap;">{ld_val}</td>
-                        <td style="padding: 10px 8px; text-align: center; color: #475569; white-space: nowrap;">{nd_val}</td>
+                        <td style="padding: 10px 6px; text-align: center; font-weight: 700; white-space: nowrap;">{rank_badge}</td>
+                        <td style="padding: 10px 6px; font-weight: 600; color: #1E2923; white-space: nowrap;">{p_name}</td>
+                        <td style="padding: 10px 6px; text-align: center; font-weight: 600; color: #475569; white-space: nowrap;">{hc_str}</td>
+                        <td style="padding: 10px 6px; text-align: center; font-weight: 700; color: #1B4D33; white-space: nowrap;">{sc_val}</td>
+                        <td style="padding: 10px 6px; text-align: center; color: #475569; white-space: nowrap;">{ld_val}</td>
+                        <td style="padding: 10px 6px; text-align: center; color: #475569; white-space: nowrap;">{nd_val}</td>
                     </tr>
                     """
-
-                # 밴드 캡처용 텍스트 공지문 생성
-                band_text_content = f"🏆 [{r['title']}] 공식 경기 결과\n"
-                band_text_content += f"📅 일자: {r['date']} | 🏟️ 장소: {r.get('location', '필드')}\n"
-                band_text_content += f"----------------------------------------\n"
-                band_text_content += f"🥇 메달리스트: {medalist_info}\n"
-                band_text_content += f"💣 롱기스트: {longist_info}\n"
-                band_text_content += f"🎯 니어리스트: {nearest_info}\n"
-                band_text_content += f"----------------------------------------\n"
-                for rank_idx, (p_name, p_info) in enumerate(sorted_scores, 1):
-                    band_text_content += f"{rank_idx}위: {p_name} ({p_info['score']}타)\n"
-
-                st.markdown("##### 📱 밴드/단톡방 공유용 텍스트 (아래 복사 버튼 클릭)")
-                st.code(band_text_content, language="text")
 
                 card_html = f"""
                 <!DOCTYPE html>
@@ -1608,51 +1594,51 @@ else:
                 <meta charset="utf-8">
                 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Playfair+Display:wght@600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
                 <style>
-                    body {{ font-family: 'Noto Sans KR', sans-serif; background-color: #F8FAF8; margin: 0; padding: 5px; color: #1E2923; }}
-                    .card-container {{ max-width: 480px; width: 100%; margin: 0 auto; background: #FFFFFF; border-radius: 16px; border: 2px solid #1B4D33; box-shadow: 0 10px 30px rgba(0,0,0,0.08); overflow: hidden; }}
-                    table {{ width: 100%; border-collapse: collapse; font-size: 0.82rem; }}
+                    body {{ font-family: 'Noto Sans KR', sans-serif; background-color: #F8FAF8; margin: 0; padding: 0; color: #1E2923; }}
+                    .card-container {{ max-width: 100%; width: 100%; margin: 0 auto; background: #FFFFFF; border-radius: 12px; border: 2px solid #1B4D33; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow: hidden; box-sizing: border-box; }}
+                    table {{ width: 100%; border-collapse: collapse; font-size: 0.8rem; table-layout: auto; }}
                 </style>
                 </head>
                 <body>
                 <div class="card-container">
-                    <div style="background: linear-gradient(135deg, #0F2E1B 0%, #1B4D33 100%); padding: 20px 15px; text-align: center; color: #FFFFFF; border-bottom: 3px solid #D4B475;">
-                        <div style="font-size: 0.7rem; letter-spacing: 2px; color: #D4B475; font-weight: 700; font-family: 'Montserrat', sans-serif; margin-bottom: 4px;">SEGOK GOLF CLUB • OFFICIAL RESULT</div>
-                        <h2 style="font-family: 'Playfair Display', serif; font-size: 1.25rem; font-weight: 700; color: #FFFFFF; margin: 0 0 6px 0; word-break: keep-all;">{r['title']}</h2>
-                        <div style="font-size: 0.75rem; color: #E2E8F0; font-weight: 500;">📅 {r['date']} &nbsp;|&nbsp; 🏟️ {r.get('location', '필드')}</div>
+                    <div style="background: linear-gradient(135deg, #0F2E1B 0%, #1B4D33 100%); padding: 16px 10px; text-align: center; color: #FFFFFF; border-bottom: 2px solid #D4B475;">
+                        <div style="font-size: 0.65rem; letter-spacing: 2px; color: #D4B475; font-weight: 700; font-family: 'Montserrat', sans-serif; margin-bottom: 2px;">SEGOK GOLF CLUB • OFFICIAL RESULT</div>
+                        <h2 style="font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; color: #FFFFFF; margin: 0 0 4px 0; word-break: keep-all; white-space: normal;">{r['title']}</h2>
+                        <div style="font-size: 0.72rem; color: #E2E8F0; font-weight: 500; white-space: nowrap;">📅 {r['date']} &nbsp;|&nbsp; 🏟️ {r.get('location', '필드')}</div>
                     </div>
                     
-                    <div style="background: #F8FAF8; padding: 15px 12px; border-bottom: 1px solid #E2E8F0;">
-                        <div style="font-family: 'Montserrat', sans-serif; font-size: 0.78rem; font-weight: 700; color: #0F2E1B; letter-spacing: 1px; margin-bottom: 10px; text-align: center;">🏆 공식 시상 내역 (HONOR ROLL)</div>
-                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
-                            <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 10px; padding: 10px 6px; text-align: center;">
-                                <div style="font-size: 1.2rem; margin-bottom: 2px;">🥇</div>
-                                <div style="font-size: 0.65rem; font-weight: 700; color: #D4B475; font-family: 'Montserrat', sans-serif; margin-bottom: 2px;">MEDALIST</div>
-                                <div style="font-size: 0.78rem; font-weight: 700; color: #1E2923; word-break: keep-all;">{medalist_info}</div>
+                    <div style="background: #F8FAF8; padding: 12px 10px; border-bottom: 1px solid #E2E8F0;">
+                        <div style="font-family: 'Montserrat', sans-serif; font-size: 0.72rem; font-weight: 700; color: #0F2E1B; letter-spacing: 1px; margin-bottom: 8px; text-align: center;">🏆 공식 시상 내역 (HONOR ROLL)</div>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
+                            <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 8px; padding: 8px 4px; text-align: center;">
+                                <div style="font-size: 1rem; margin-bottom: 2px;">🥇</div>
+                                <div style="font-size: 0.6rem; font-weight: 700; color: #D4B475; font-family: 'Montserrat', sans-serif; margin-bottom: 1px; white-space: nowrap;">MEDALIST</div>
+                                <div style="font-size: 0.72rem; font-weight: 700; color: #1E2923; word-break: keep-all; white-space: normal;">{medalist_info}</div>
                             </div>
-                            <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 10px; padding: 10px 6px; text-align: center;">
-                                <div style="font-size: 1.2rem; margin-bottom: 2px;">💣</div>
-                                <div style="font-size: 0.65rem; font-weight: 700; color: #D4B475; font-family: 'Montserrat', sans-serif; margin-bottom: 2px;">LONGEST</div>
-                                <div style="font-size: 0.78rem; font-weight: 700; color: #1E2923; word-break: keep-all;">{longist_info}</div>
+                            <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 8px; padding: 8px 4px; text-align: center;">
+                                <div style="font-size: 1rem; margin-bottom: 2px;">💣</div>
+                                <div style="font-size: 0.6rem; font-weight: 700; color: #D4B475; font-family: 'Montserrat', sans-serif; margin-bottom: 1px; white-space: nowrap;">LONGEST</div>
+                                <div style="font-size: 0.72rem; font-weight: 700; color: #1E2923; word-break: keep-all; white-space: normal;">{longist_info}</div>
                             </div>
-                            <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 10px; padding: 10px 6px; text-align: center;">
-                                <div style="font-size: 1.2rem; margin-bottom: 2px;">🎯</div>
-                                <div style="font-size: 0.65rem; font-weight: 700; color: #D4B475; font-family: 'Montserrat', sans-serif; margin-bottom: 2px;">NEAREST</div>
-                                <div style="font-size: 0.78rem; font-weight: 700; color: #1E2923; word-break: keep-all;">{nearest_info}</div>
+                            <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 8px; padding: 8px 4px; text-align: center;">
+                                <div style="font-size: 1rem; margin-bottom: 2px;">🎯</div>
+                                <div style="font-size: 0.6rem; font-weight: 700; color: #D4B475; font-family: 'Montserrat', sans-serif; margin-bottom: 1px; white-space: nowrap;">NEAREST</div>
+                                <div style="font-size: 0.72rem; font-weight: 700; color: #1E2923; word-break: keep-all; white-space: normal;">{nearest_info}</div>
                             </div>
                         </div>
                     </div>
                     
-                    <div style="padding: 15px 12px;">
-                        <div style="font-family: 'Montserrat', sans-serif; font-size: 0.78rem; font-weight: 700; color: #0F2E1B; letter-spacing: 1px; margin-bottom: 10px;">📊 리더보드 (LEADERBOARD)</div>
+                    <div style="padding: 12px 10px;">
+                        <div style="font-family: 'Montserrat', sans-serif; font-size: 0.72rem; font-weight: 700; color: #0F2E1B; letter-spacing: 1px; margin-bottom: 8px;">📊 리더보드 (LEADERBOARD)</div>
                         <table>
                             <thead>
-                                <tr style="background: #F1F5F9; color: #334155; font-family: 'Montserrat', sans-serif; font-size: 0.72rem; letter-spacing: 1px;">
-                                    <th style="padding: 8px 6px; text-align: center;">순위</th>
-                                    <th style="padding: 8px 6px; text-align: left;">회원명</th>
-                                    <th style="padding: 8px 6px; text-align: center;">HC</th>
-                                    <th style="padding: 8px 6px; text-align: center;">스코어</th>
-                                    <th style="padding: 8px 6px; text-align: center;">비거리</th>
-                                    <th style="padding: 8px 6px; text-align: center;">니어</th>
+                                <tr style="background: #F1F5F9; color: #334155; font-family: 'Montserrat', sans-serif; font-size: 0.68rem; letter-spacing: 0.5px;">
+                                    <th style="padding: 7px 4px; text-align: center; white-space: nowrap;">순위</th>
+                                    <th style="padding: 7px 4px; text-align: left; white-space: nowrap;">회원명</th>
+                                    <th style="padding: 7px 4px; text-align: center; white-space: nowrap;">HC</th>
+                                    <th style="padding: 7px 4px; text-align: center; white-space: nowrap;">스코어</th>
+                                    <th style="padding: 7px 4px; text-align: center; white-space: nowrap;">비거리</th>
+                                    <th style="padding: 7px 4px; text-align: center; white-space: nowrap;">니어</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -1661,14 +1647,14 @@ else:
                         </table>
                     </div>
                     
-                    <div style="background: #FAFAFA; padding: 10px 15px; text-align: center; font-size: 0.68rem; color: #64748B; border-top: 1px solid #E2E8F0; font-family: 'Montserrat', sans-serif; letter-spacing: 2px;">
-                        SEGOK GOLF CLUB • BAND SHARING CARD
+                    <div style="background: #FAFAFA; padding: 8px 10px; text-align: center; font-size: 0.62rem; color: #64748B; border-top: 1px solid #E2E8F0; font-family: 'Montserrat', sans-serif; letter-spacing: 1.5px; white-space: nowrap;">
+                        SEGOK GOLF CLUB • OFFICIAL LEADERBOARD
                     </div>
                 </div>
                 </body>
                 </html>
                 """
-                components.html(card_html, height=620, scrolling=True)
+                components.html(card_html, height=520, scrolling=False)
             else:
                 st.info("⌛ 아직 성적이 입력되지 않은 라운드입니다.")
                 
