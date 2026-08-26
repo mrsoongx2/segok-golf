@@ -1527,7 +1527,7 @@ else:
                     save_data(db)
                     st.success("등록되었습니다!")
 
-    # 6. 🏆 경기 결과 및 랭킹 (모바일/PC 모두 꽉 차게 캡처 가능한 반응형 컴팩트 리더보드 디자인)
+    # 6. 🏆 경기 결과 및 랭킹 (참석 인원에 맞춰 카드 높이가 자동으로 늘어나도록 동적 계산 적용)
     elif menu == "경기 결과 및 랭킹":
         st.subheader("🏆 RESULTS & RANKING (경기 결과 및 랭킹)")
         
@@ -1561,6 +1561,7 @@ else:
                 
                 # 스코어 순(오름차순)으로 정렬
                 sorted_scores = sorted(r['scores'].items(), key=lambda x: x[1]['score'])
+                total_players = len(sorted_scores)
                 
                 rows_html = ""
                 for rank_idx, (p_name, p_info) in enumerate(sorted_scores, 1):
@@ -1586,6 +1587,9 @@ else:
                         <td style="padding: 10px 6px; text-align: center; color: #475569; white-space: nowrap;">{nd_val}</td>
                     </tr>
                     """
+
+                # 동적 높이 계산 (기본 레이아웃 320px + 인원수당 약 42px씩 여유 확보)
+                dynamic_iframe_height = max(550, 320 + (total_players * 42))
 
                 card_html = f"""
                 <!DOCTYPE html>
@@ -1654,7 +1658,7 @@ else:
                 </body>
                 </html>
                 """
-                components.html(card_html, height=520, scrolling=False)
+                components.html(card_html, height=dynamic_iframe_height, scrolling=False)
             else:
                 st.info("⌛ 아직 성적이 입력되지 않은 라운드입니다.")
                 
@@ -1817,6 +1821,7 @@ else:
             
         selected_hof_year = st.selectbox("📅 조회 연도 선택", all_hof_years, index=0 if current_year_str in all_hof_years else 0, key="hof_year_select")
         
+        approved_members = [k for k, v in member_db.items() if v.get("status", "approved"] == "approved"] # Wait, let's keep it safe.
         approved_members = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
         selected_member_name = st.selectbox("🔍 조회할 회원 선택", approved_members)
         
@@ -1974,6 +1979,13 @@ else:
     elif menu.startswith("회원 리스트") or menu.startswith("회원 명부"):
         st.subheader("👥 MEMBER LIST (클럽 회원 리스트)")
         
+        df_data = [{
+            "성함": k, 
+            "닉네임": v.get('nickname', k),
+            "핸디캡": v.get('handicap', 0), 
+            "참석률": f"{v.get('attendance', 0)}%", 
+            "참석": f"{v.get('rounds_played', 0)}회"
+        } for k, v in member_db.items() if v.get("status", "approved"] == "approved"] # Wait, let's keep it safe.
         df_data = [{
             "성함": k, 
             "닉네임": v.get('nickname', k),
