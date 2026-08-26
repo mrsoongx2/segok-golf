@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import pandas as pd
 import numpy as np
 import random
@@ -1324,7 +1325,7 @@ else:
                     if st.button("지망 사항 저장", key=f"save_pref_{pref_member}"):
                         val1 = "" if p1 == "선택 안 함" else p1
                         val2 = "" if p2 == "선택 안 함" else p2
-                        val3 = "" if p3 == "선택 안 함" else val3
+                        val3 = "" if p3 == "선택 안 함" else p3
                         st.session_state.match_preferences[pref_member] = [val1, val2, val3]
                         st.success("수정되었습니다!")
 
@@ -1526,7 +1527,7 @@ else:
                     save_data(db)
                     st.success("등록되었습니다!")
 
-    # 6. 🏆 경기 결과 및 랭킹 (네이버 밴드 캡처용 프리미엄 토너먼트 결과 카드 디자인 적용 - 스코어 순 정렬)
+    # 6. 🏆 경기 결과 및 랭킹 (네이버 밴드 캡처용 프리미엄 토너먼트 결과 카드 디자인 적용 - st.components.v1.html로 정밀 렌더링)
     elif menu == "경기 결과 및 랭킹":
         st.subheader("🏆 RESULTS & RANKING (경기 결과 및 랭킹)")
         
@@ -1587,7 +1588,17 @@ else:
                     """
 
                 card_html = f"""
-                <div style="background: #FFFFFF; border-radius: 16px; border: 2px solid #1B4D33; box-shadow: 0 10px 30px rgba(0,0,0,0.08); overflow: hidden; margin-top: 15px; margin-bottom: 20px;">
+                <!DOCTYPE html>
+                <html>
+                <head>
+                <meta charset="utf-8">
+                <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Playfair+Display:wght@600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+                <style>
+                    body {{ font-family: 'Noto Sans KR', sans-serif; background-color: #F8FAF8; margin: 0; padding: 10px; color: #1E2923; }}
+                </style>
+                </head>
+                <body>
+                <div style="background: #FFFFFF; border-radius: 16px; border: 2px solid #1B4D33; box-shadow: 0 10px 30px rgba(0,0,0,0.08); overflow: hidden; margin: 0 auto;">
                     <div style="background: linear-gradient(135deg, #0F2E1B 0%, #1B4D33 100%); padding: 25px 20px; text-align: center; color: #FFFFFF; border-bottom: 3px solid #D4B475;">
                         <div style="font-size: 0.75rem; letter-spacing: 3px; color: #D4B475; font-weight: 700; font-family: 'Montserrat', sans-serif; margin-bottom: 4px;">SEGOK GOLF CLUB • OFFICIAL RESULT</div>
                         <h2 style="font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; color: #FFFFFF; margin: 0 0 6px 0;">{r['title']}</h2>
@@ -1638,8 +1649,10 @@ else:
                         SEGOK GOLF CLUB • BAND SHARING CARD
                     </div>
                 </div>
+                </body>
+                </html>
                 """
-                st.markdown(card_html, unsafe_allow_html=True)
+                components.html(card_html, height=750, scrolling=True)
             else:
                 st.info("⌛ 아직 성적이 입력되지 않은 라운드입니다.")
                 
