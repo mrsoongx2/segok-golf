@@ -1985,7 +1985,7 @@ else:
             "핸디캡": v.get('handicap', 0), 
             "참석률": f"{v.get('attendance', 0)}%", 
             "참석": f"{v.get('rounds_played', 0)}회"
-        } for k, v in member_db.items() if v.get("status", "approved"] == "approved"] # Wait, let's keep it safe.
+        } for k, v in member_db.items() if v.get("status", "approved") == "approved"] # Wait, let's keep it safe.
         df_data = [{
             "성함": k, 
             "닉네임": v.get('nickname', k),
