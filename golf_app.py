@@ -221,7 +221,7 @@ def set_menu(menu_name):
 
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Playfair+Display:wght@600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
     
     #MainMenu {visibility: hidden;}
     header {visibility: hidden;}
@@ -352,7 +352,6 @@ if not st.session_state.get('logged_in_user'):
         
         with tab1:
             st.caption("초기 비밀번호는 '1234' 입니다.")
-            approved_members = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"] # Wait, let's keep it safe.
             approved_members = [k for k, v in member_db.items() if v.get("status", "approved") == "approved"]
             login_name = st.selectbox("회원 성함 선택", ["선택하세요"] + approved_members, key="login_select_name")
             login_pw = st.text_input("비밀번호 입력", type="password", key="login_input_pw")
@@ -1273,7 +1272,6 @@ else:
                     st.session_state.draft_location = dm.get("location", "")
                     st.session_state.draft_date = dm.get("date", "")
                     
-                    # 각 조별 저장된 시간 및 코스를 위젯 세션 상태에 직접 주입하여 위젯 값 강제 동기화
                     saved_times = dm.get("tee_times", [])
                     saved_courses = dm.get("courses", [])
                     for idx, t_val in enumerate(saved_times):
@@ -1281,7 +1279,6 @@ else:
                     for idx, c_val in enumerate(saved_courses):
                         st.session_state[f"course_group_{idx}"] = c_val
                     
-                    # 불러온 팀들에 속한 멤버들을 자동으로 '오늘 참석자 선택' 목록에 반영
                     flatten_members = [m for t in dm["teams"] for m in t]
                     st.session_state.draft_attendees = flatten_members
                     
@@ -1406,6 +1403,8 @@ else:
                 user_prefs = st.session_state.get('match_preferences', {})
                 teams = generate_teams_smart_advanced(selected_attendees, pair_history, member_db, couple_rule, exclude_recent, gender_rule, user_prefs)
                 st.session_state.generated_teams = teams
+                st.session_state.draft_tee_times = []
+                st.session_state.draft_courses = []
                 st.success("등록되었습니다!")
 
             if 'generated_teams' in st.session_state and st.session_state.generated_teams:
@@ -1433,15 +1432,21 @@ else:
                 
                 group_tee_times = []
                 group_courses = []
+                
+                saved_times = st.session_state.get("draft_tee_times", [])
+                saved_courses = st.session_state.get("draft_courses", [])
 
                 for idx in range(len(teams)):
                     st.markdown(f"**⛳ {idx+1}조 설정**")
+                    default_time = saved_times[idx] if idx < len(saved_times) else f"08:{(idx*8):02d}"
+                    default_course = saved_courses[idx] if idx < len(saved_courses) else ("IN 코스" if idx%2==1 else "OUT 코스")
+
                     gc1, gc2 = st.columns(2)
                     with gc1:
-                        t_val = st.text_input(f"{idx+1}조 티오프 시간", key=f"tee_group_{idx}")
+                        t_val = st.text_input(f"{idx+1}조 티오프 시간", value=default_time, key=f"tee_group_{idx}")
                         group_tee_times.append(t_val)
                     with gc2:
-                        c_val = st.text_input(f"{idx+1}조 코스 정보", key=f"course_group_{idx}")
+                        c_val = st.text_input(f"{idx+1}조 코스 정보", value=default_course, key=f"course_group_{idx}")
                         group_courses.append(c_val)
 
                 date_str = r_date_input.strftime("%Y-%m-%d")
@@ -1521,7 +1526,7 @@ else:
                     save_data(db)
                     st.success("등록되었습니다!")
 
-    # 6. 🏆 경기 결과 및 랭킹
+    # 6. 🏆 경기 결과 및 랭킹 (네이버 밴드 캡처용 프리미엄 토너먼트 결과 카드 디자인 적용 - 스코어 순 정렬)
     elif menu == "경기 결과 및 랭킹":
         st.subheader("🏆 RESULTS & RANKING (경기 결과 및 랭킹)")
         
@@ -1547,34 +1552,96 @@ else:
             r = year_field_rounds[selected_r_idx]
             
             is_done = r.get("completed", False)
-            status_tag = "✅ 성적 입력 완료" if is_done else "⌛ 성적 입력 대기 중"
-            
-            st.markdown(f"""
-            <div class="css-card" style="margin-top: 15px;">
-                <h3 style="color:#0F2E1B; margin-top:0; font-size:1.1rem;">🚩 {r['date']} | {r['title']} [{status_tag}]</h3>
-            </div>
-            """, unsafe_allow_html=True)
             
             if is_done:
-                st.markdown(f"""
-                <div class="css-card">
-                    <h4 style="color:#92400E; margin-bottom:8px; font-size:1rem;">🏆 공식 시상 내역</h4>
-                    <p style="margin:4px 0;">🥇 <b>메달리스트:</b> {r['awards']['medalist']}</p>
-                    <p style="margin:4px 0;">💣 <b>롱기스트:</b> {r['awards']['longist']}</p>
-                    <p style="margin:4px 0;">🎯 <b>니어리스트:</b> {r['awards']['nearest']}</p>
-                </div>
-                """, unsafe_allow_html=True)
+                medalist_info = r['awards']['medalist']
+                longist_info = r['awards']['longist']
+                nearest_info = r['awards']['nearest']
                 
-                st.markdown("##### 📊 회원별 스코어 기록표")
-                score_table = []
-                for p_name, p_info in r['scores'].items():
-                    score_table.append({
-                        "회원(닉네임)": f"{p_name} ({member_db.get(p_name, {}).get('nickname', p_name)})",
-                        "스코어": f"{p_info['score']}타",
-                        "비거리": f"{p_info['long']}m" if p_info['long'] > 0 else "-",
-                        "니어": f"{p_info['near']}m" if p_info['near'] > 0 else "-"
-                    })
-                st.table(pd.DataFrame(score_table))
+                # 스코어 순(오름차순)으로 정렬
+                sorted_scores = sorted(r['scores'].items(), key=lambda x: x[1]['score'])
+                
+                rows_html = ""
+                for rank_idx, (p_name, p_info) in enumerate(sorted_scores, 1):
+                    p_nick = member_db.get(p_name, {}).get("nickname", p_name)
+                    p_hc = member_db.get(p_name, {}).get("handicap", 0)
+                    hc_str = f"({p_hc:+d})" if p_hc != 0 else "(0)"
+                    sc_val = f"{p_info['score']}타"
+                    ld_val = f"{p_info['long']}m" if p_info['long'] > 0 else "-"
+                    nd_val = f"{p_info['near']}m" if p_info['near'] > 0 else "-"
+                    
+                    rank_badge = f"<b>{rank_idx}위</b>"
+                    if rank_idx == 1: rank_badge = "🥇 <b style='color:#B45309;'>1위</b>"
+                    elif rank_idx == 2: rank_badge = "🥈 <b style='color:#475569;'>2위</b>"
+                    elif rank_idx == 3: rank_badge = "🥉 <b style='color:#9A3412;'>3위</b>"
+
+                    rows_html += f"""
+                    <tr style="border-bottom: 1px solid #E2E8F0;">
+                        <td style="padding: 12px 14px; text-align: center; font-weight: 700;">{rank_badge}</td>
+                        <td style="padding: 12px 14px; font-weight: 600; color: #1E2923;">{p_name} <span style="font-size:0.75rem; color:#64748B;">({p_nick})</span></td>
+                        <td style="padding: 12px 14px; text-align: center; font-weight: 600; color: #475569;">{hc_str}</td>
+                        <td style="padding: 12px 14px; text-align: center; font-weight: 700; color: #1B4D33;">{sc_val}</td>
+                        <td style="padding: 12px 14px; text-align: center; color: #475569;">{ld_val}</td>
+                        <td style="padding: 12px 14px; text-align: center; color: #475569;">{nd_val}</td>
+                    </tr>
+                    """
+
+                card_html = f"""
+                <div style="background: #FFFFFF; border-radius: 16px; border: 2px solid #1B4D33; box-shadow: 0 10px 30px rgba(0,0,0,0.08); overflow: hidden; margin-top: 15px; margin-bottom: 20px;">
+                    <div style="background: linear-gradient(135deg, #0F2E1B 0%, #1B4D33 100%); padding: 25px 20px; text-align: center; color: #FFFFFF; border-bottom: 3px solid #D4B475;">
+                        <div style="font-size: 0.75rem; letter-spacing: 3px; color: #D4B475; font-weight: 700; font-family: 'Montserrat', sans-serif; margin-bottom: 4px;">SEGOK GOLF CLUB • OFFICIAL RESULT</div>
+                        <h2 style="font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; color: #FFFFFF; margin: 0 0 6px 0;">{r['title']}</h2>
+                        <div style="font-size: 0.82rem; color: #E2E8F0; font-weight: 500;">📅 일자: {r['date']} &nbsp;|&nbsp; 🏟️ 장소: {r.get('location', '필드')} &nbsp;|&nbsp; ✅ 성적순 정렬 완료</div>
+                    </div>
+                    
+                    <div style="background: #F8FAF8; padding: 20px; border-bottom: 1px solid #E2E8F0;">
+                        <div style="font-family: 'Montserrat', sans-serif; font-size: 0.85rem; font-weight: 700; color: #0F2E1B; letter-spacing: 1px; margin-bottom: 12px; text-align: center;">🏆 공식 시상 내역 (HONOR ROLL)</div>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+                            <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 14px 10px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+                                <div style="font-size: 1.4rem; margin-bottom: 4px;">🥇</div>
+                                <div style="font-size: 0.7rem; font-weight: 700; color: #D4B475; font-family: 'Montserrat', sans-serif; margin-bottom: 2px;">MEDALIST</div>
+                                <div style="font-size: 0.85rem; font-weight: 700; color: #1E2923; word-break: keep-all;">{medalist_info}</div>
+                            </div>
+                            <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 14px 10px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+                                <div style="font-size: 1.4rem; margin-bottom: 4px;">💣</div>
+                                <div style="font-size: 0.7rem; font-weight: 700; color: #D4B475; font-family: 'Montserrat', sans-serif; margin-bottom: 2px;">LONGEST</div>
+                                <div style="font-size: 0.85rem; font-weight: 700; color: #1E2923; word-break: keep-all;">{longist_info}</div>
+                            </div>
+                            <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 14px 10px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+                                <div style="font-size: 1.4rem; margin-bottom: 4px;">🎯</div>
+                                <div style="font-size: 0.7rem; font-weight: 700; color: #D4B475; font-family: 'Montserrat', sans-serif; margin-bottom: 2px;">NEAREST</div>
+                                <div style="font-size: 0.85rem; font-weight: 700; color: #1E2923; word-break: keep-all;">{nearest_info}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="padding: 22px;">
+                        <div style="font-family: 'Montserrat', sans-serif; font-size: 0.85rem; font-weight: 700; color: #0F2E1B; letter-spacing: 1px; margin-bottom: 12px;">📊 스코어 순 리더보드 (LEADERBOARD)</div>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem;">
+                            <thead>
+                                <tr style="background: #F1F5F9; color: #334155; font-family: 'Montserrat', sans-serif; font-size: 0.78rem; letter-spacing: 1px;">
+                                    <th style="padding: 10px 14px; text-align: center; border-top-left-radius: 8px; border-bottom-left-radius: 8px;">순위</th>
+                                    <th style="padding: 10px 14px; text-align: left;">회원명</th>
+                                    <th style="padding: 10px 14px; text-align: center;">HC</th>
+                                    <th style="padding: 10px 14px; text-align: center;">스코어</th>
+                                    <th style="padding: 10px 14px; text-align: center;">비거리</th>
+                                    <th style="padding: 10px 14px; text-align: center; border-top-right-radius: 8px; border-bottom-right-radius: 8px;">니어</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {rows_html}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div style="background: #FAFAFA; padding: 14px 20px; text-align: center; font-size: 0.72rem; color: #64748B; border-top: 1px solid #E2E8F0; font-family: 'Montserrat', sans-serif; letter-spacing: 2px;">
+                        SEGOK GOLF CLUB • BAND SHARING CARD
+                    </div>
+                </div>
+                """
+                st.markdown(card_html, unsafe_allow_html=True)
+            else:
+                st.info("⌛ 아직 성적이 입력되지 않은 라운드입니다.")
                 
             if is_admin:
                 st.markdown("---")
